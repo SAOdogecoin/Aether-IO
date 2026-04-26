@@ -3,8 +3,9 @@ import { useGLTF, useAnimations, useTexture } from '@react-three/drei';
 import { Group, BufferGeometry, Mesh } from 'three';
 import { clone as skeletonClone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { useFrame } from '@react-three/fiber';
-import { ENEMY_PATHS, ENEMY_TEXTURE, SKELETON_ANIM_RIGS } from '../assetConfig';
+import { ENEMY_PATHS, ENEMY_TEXTURE, SKELETON_ANIM_RIGS, ASSET_FLAGS } from '../assetConfig';
 import { EnemyData } from '../types';
+import { MinionWeapons, WarriorWeapons, RogueWeapons, MageWeapons } from './SkeletonWeapons';
 
 // Preload unique skeleton variants + skeleton-specific animation rigs
 [...new Set(Object.values(ENEMY_PATHS))].forEach(p => useGLTF.preload(p));
@@ -122,6 +123,10 @@ function SkeletonMesh({ slot, skelType, ppRef }: { slot: EnemyData; skelType: nu
   return (
     <group ref={outerRef} visible={false}>
       <primitive ref={sceneRef} object={clone} />
+      {ASSET_FLAGS.useWeapons && skelType === 0 && <MinionWeapons  clone={clone} />}
+      {ASSET_FLAGS.useWeapons && skelType === 1 && <WarriorWeapons clone={clone} />}
+      {ASSET_FLAGS.useWeapons && skelType === 3 && <RogueWeapons   clone={clone} />}
+      {ASSET_FLAGS.useWeapons && skelType === 5 && <MageWeapons    clone={clone} />}
     </group>
   );
 }

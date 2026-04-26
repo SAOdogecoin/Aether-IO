@@ -92,10 +92,24 @@ export const HERO_WEAPON: Record<string, keyof typeof WEAPON_PATHS> = {
   BARBARIAN: 'axe_2h',
 };
 
-// Common hand bone name patterns — the loader tries each until one matches
+// ── Skeleton enemy weapons ─────────────────────────────────────
+export const SKELETON_WEAPON_PATHS = {
+  axe:    '/assets/characters/Skeleton_Axe.gltf',
+  arrow:  '/assets/characters/Skeleton_Arrow.gltf',
+  shield: '/assets/characters/Skeleton_Shield_Large_A.gltf',
+  staff:  '/assets/characters/Skeleton_Staff.gltf',
+};
+
+// Right-hand bone name hints (tried in order, case-insensitive)
 export const HAND_BONE_HINTS = [
   'hand_r', 'Hand_R', 'RightHand', 'mixamorig:RightHand',
   'Bip01_R_Hand', 'right_hand', 'R_Hand', 'weapon_r',
+];
+
+// Left-hand bone name hints (for shields / off-hand)
+export const OFF_HAND_BONE_HINTS = [
+  'hand_l', 'Hand_L', 'LeftHand', 'mixamorig:LeftHand',
+  'Bip01_L_Hand', 'left_hand', 'L_Hand', 'weapon_l',
 ];
 
 // ── Mannequin reference skeletons ──────────────────────────────
