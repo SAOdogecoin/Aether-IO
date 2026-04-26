@@ -518,11 +518,23 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
 
   return (
     <>
-        <instancedMesh ref={meshRef} args={[undefined, undefined, MAX_ENEMIES]} frustumCulled={false}>
+        {/* Keep instanced meshes for game logic (collision etc.) but hide
+            visually when 3D models are active */}
+        <instancedMesh
+          ref={meshRef}
+          args={[undefined, undefined, MAX_ENEMIES]}
+          frustumCulled={false}
+          visible={!ASSET_FLAGS.useEnemyModels}
+        >
             <boxGeometry args={[1, 1, 1]} />
             <meshStandardMaterial vertexColors roughness={0.5} metalness={0.2} />
         </instancedMesh>
-        <instancedMesh ref={stunIconsRef} args={[undefined, undefined, MAX_ENEMIES]} frustumCulled={false}>
+        <instancedMesh
+          ref={stunIconsRef}
+          args={[undefined, undefined, MAX_ENEMIES]}
+          frustumCulled={false}
+          visible={!ASSET_FLAGS.useEnemyModels}
+        >
             <torusGeometry args={[0.5, 0.1, 8, 16]} />
             <meshBasicMaterial color="#facc15" />
         </instancedMesh>

@@ -7,7 +7,7 @@
 export const ASSET_FLAGS = {
   usePlayerModels:  true,
   useEnemyModels:   true,
-  useWeapons:       false,  // flip true once .bin companion files are uploaded
+  useWeapons:       true,   // .bin files uploaded — weapons active
   useForestMap:     false,
   useGuiAssets:     false,
 };
@@ -97,6 +97,14 @@ export const HAND_BONE_HINTS = [
   'hand_r', 'Hand_R', 'RightHand', 'mixamorig:RightHand',
   'Bip01_R_Hand', 'right_hand', 'R_Hand', 'weapon_r',
 ];
+
+// ── Mannequin reference skeletons ──────────────────────────────
+// Mannequin_Medium: base skeleton matching Ranger/Mage/Barbarian + Rig_Medium_* anims
+// Mannequin_Large:  base skeleton for larger characters (potential boss use)
+export const MANNEQUIN_PATHS = {
+  medium: '/assets/characters/Mannequin_Medium.glb',
+  large:  '/assets/characters/Mannequin_Large.glb',
+};
 
 // ── Map ────────────────────────────────────────────────────────
 export const MAP_PATHS = {

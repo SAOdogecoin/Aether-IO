@@ -6,14 +6,12 @@ import { useFrame } from '@react-three/fiber';
 import { ENEMY_PATHS, ENEMY_TEXTURE, SKELETON_ANIM_RIGS } from '../assetConfig';
 import { EnemyData } from '../types';
 
-// Preload unique skeleton variants + the movement rig
+// Preload unique skeleton variants + skeleton-specific animation rigs
 [...new Set(Object.values(ENEMY_PATHS))].forEach(p => useGLTF.preload(p));
 useGLTF.preload(SKELETON_ANIM_RIGS.movementBasic);
 useGLTF.preload(SKELETON_ANIM_RIGS.general);
 
 // ── Smart clip resolver ───────────────────────────────────────
-// Tries exact name → case-insensitive substring → first clip.
-// You never need to configure clip names manually.
 function resolveClip(actions: Record<string, any>, ...hints: string[]): string {
   const keys = Object.keys(actions);
   for (const h of hints) { if (actions[h]) return h; }
@@ -24,7 +22,7 @@ function resolveClip(actions: Record<string, any>, ...hints: string[]): string {
   return keys[0] ?? '';
 }
 
-// ── Geometry extractor (used by InstancedMesh in EnemyManager) ─
+// ── Geometry extractor (kept for potential InstancedMesh fallback) ─
 export const useEnemyGeometry = (type: number): BufferGeometry | null => {
   const { scene } = useGLTF(ENEMY_PATHS[type] ?? ENEMY_PATHS[0]);
   return useMemo(() => {
@@ -36,16 +34,17 @@ export const useEnemyGeometry = (type: number): BufferGeometry | null => {
   }, [scene]);
 };
 
-// ── Single animated skeleton ──────────────────────────────────
-// One wrapper per variant keeps React hook counts stable across renders.
-const SkeletonMinion:   React.FC<{ slot: EnemyData }> = p => <SkeletonMesh {...p} skelType={0} />;
-const SkeletonWarrior:  React.FC<{ slot: EnemyData }> = p => <SkeletonMesh {...p} skelType={1} />;
-const SkeletonRogue:    React.FC<{ slot: EnemyData }> = p => <SkeletonMesh {...p} skelType={3} />;
-const SkeletonMageMesh: React.FC<{ slot: EnemyData }> = p => <SkeletonMesh {...p} skelType={5} />;
+// ── Per-variant wrappers (keeps hook count constant per component) ─
+type PRef = React.MutableRefObject<{ x: number; z: number }>;
 
-function SkeletonMesh({ slot, skelType }: { slot: EnemyData; skelType: number }) {
+const SkeletonMinion:   React.FC<{ slot: EnemyData; ppRef: PRef }> = p => <SkeletonMesh {...p} skelType={0} />;
+const SkeletonWarrior:  React.FC<{ slot: EnemyData; ppRef: PRef }> = p => <SkeletonMesh {...p} skelType={1} />;
+const SkeletonRogue:    React.FC<{ slot: EnemyData; ppRef: PRef }> = p => <SkeletonMesh {...p} skelType={3} />;
+const SkeletonMageMesh: React.FC<{ slot: EnemyData; ppRef: PRef }> = p => <SkeletonMesh {...p} skelType={5} />;
+
+function SkeletonMesh({ slot, skelType, ppRef }: { slot: EnemyData; skelType: number; ppRef: PRef }) {
   const outerRef = useRef<Group>(null);
-  const sceneRef = useRef<any>(null);       // primitive ref for AnimationMixer root
+  const sceneRef = useRef<any>(null);
 
   const { scene: rawScene } = useGLTF(ENEMY_PATHS[skelType]);
   const { animations: moveAnims }    = useGLTF(SKELETON_ANIM_RIGS.movementBasic);
@@ -58,11 +57,9 @@ function SkeletonMesh({ slot, skelType }: { slot: EnemyData; skelType: number })
       return true;
     });
   }, [moveAnims, generalAnims]);
-  const texture             = useTexture(ENEMY_TEXTURE);
 
-  // SkeletonUtils.clone() properly duplicates skinned meshes & bone hierarchies.
-  // Regular .clone() breaks animation bindings — this is the correct approach.
-  const clone = useMemo(() => skeletonClone(rawScene), [rawScene]);
+  const texture = useTexture(ENEMY_TEXTURE);
+  const clone   = useMemo(() => skeletonClone(rawScene), [rawScene]);
 
   useEffect(() => {
     clone.traverse((child: any) => {
@@ -75,16 +72,13 @@ function SkeletonMesh({ slot, skelType }: { slot: EnemyData; skelType: number })
     });
   }, [clone, texture]);
 
-  // Bind animations to the cloned scene root (sceneRef = <primitive> node)
   const { actions } = useAnimations(animations, sceneRef);
 
-  // Auto-discover clip names — works regardless of naming convention
-  const walkKey  = useMemo(() => resolveClip(actions, 'Walk', 'Run', 'walk', 'run', 'Walking', 'Running', 'Move', 'Jog'), [actions]);
-  const idleKey  = useMemo(() => resolveClip(actions, 'Idle', 'Stand', 'idle', 'Breathe', 'Breathing', 'Relax'), [actions]);
-  const dieKey   = useMemo(() => resolveClip(actions, 'Death', 'Die', 'death', 'die', 'Dead', 'Dying'), [actions]);
-  const stunKey  = useMemo(() => resolveClip(actions, 'Stun', 'Hit', 'Hurt', 'Flinch', 'stun', 'hurt'), [actions]);
+  const walkKey = useMemo(() => resolveClip(actions, 'Walk', 'Run', 'walk', 'run', 'Walking', 'Running', 'Move', 'Jog'), [actions]);
+  const idleKey = useMemo(() => resolveClip(actions, 'Idle', 'Stand', 'idle', 'Breathe', 'Breathing', 'Relax'), [actions]);
+  const dieKey  = useMemo(() => resolveClip(actions, 'Death', 'Die', 'death', 'die', 'Dead', 'Dying'), [actions]);
+  const stunKey = useMemo(() => resolveClip(actions, 'Stun', 'Hit', 'Hurt', 'Flinch', 'stun', 'hurt'), [actions]);
 
-  // Log available clips once in development so you can verify names
   useEffect(() => {
     if (import.meta.env.DEV && Object.keys(actions).length > 0) {
       console.log(`[Enemy skeleton ${skelType}] clips:`, Object.keys(actions));
@@ -107,9 +101,16 @@ function SkeletonMesh({ slot, skelType }: { slot: EnemyData; skelType: number })
     outerRef.current.position.set(slot.position.x, 0, slot.position.z);
     outerRef.current.scale.setScalar(slot.scale ?? 1);
 
+    // Rotate to face the player
+    const pp = ppRef.current;
+    const dx = pp.x - slot.position.x;
+    const dz = pp.z - slot.position.z;
+    outerRef.current.rotation.y = Math.atan2(dx, dz);
+
+    // Animation state
     let key = walkKey || idleKey;
-    if (slot.health <= 0)                               key = dieKey  || key;
-    else if (slot.freezeTimer && slot.freezeTimer > 0)  key = stunKey || idleKey || walkKey;
+    if (slot.health <= 0)                              key = dieKey  || key;
+    else if (slot.freezeTimer && slot.freezeTimer > 0) key = stunKey || idleKey || walkKey;
 
     if (!key || key === prevKey.current) return;
     prevKey.current = key;
@@ -125,13 +126,13 @@ function SkeletonMesh({ slot, skelType }: { slot: EnemyData; skelType: number })
   );
 }
 
-// Routes enemy type to the correct skeleton variant
-function AnimatedEnemy({ slot }: { slot: EnemyData }) {
+// Routes enemy type → skeleton variant
+function AnimatedEnemy({ slot, ppRef }: { slot: EnemyData; ppRef: PRef }) {
   const t = slot.type;
-  if (t === 0)            return <SkeletonMinion  slot={slot} />;
-  if (t === 1 || t === 2) return <SkeletonWarrior slot={slot} />;
-  if (t === 3 || t === 4) return <SkeletonRogue   slot={slot} />;
-  return                         <SkeletonMageMesh slot={slot} />;
+  if (t === 0)            return <SkeletonMinion  slot={slot} ppRef={ppRef} />;
+  if (t === 1 || t === 2) return <SkeletonWarrior slot={slot} ppRef={ppRef} />;
+  if (t === 3 || t === 4) return <SkeletonRogue   slot={slot} ppRef={ppRef} />;
+  return                         <SkeletonMageMesh slot={slot} ppRef={ppRef} />;
 }
 
 // ── NearbyEnemies ─────────────────────────────────────────────
@@ -173,7 +174,7 @@ export const NearbyEnemies: React.FC<NearbyEnemiesProps> = ({
   return (
     <>
       {slotsRef.current.map((slot, i) => (
-        <AnimatedEnemy key={i} slot={slot} />
+        <AnimatedEnemy key={i} slot={slot} ppRef={playerPositionRef} />
       ))}
     </>
   );
