@@ -8,6 +8,8 @@ import { COLORS, PLAYER_RADIUS, ARENA_SIZE } from '../constants';
 import { BulletManager } from './BulletManager';
 import { GameStatus, BulletData, EnemyData } from '../types';
 import { SpatialHashGrid } from '../utils/SpatialHashGrid';
+import { ASSET_FLAGS } from '../assetConfig';
+import { PlayerModel } from './PlayerModel';
 
 interface PlayerProps {
   bulletsDataRef: React.MutableRefObject<BulletData[]>;
@@ -21,6 +23,10 @@ interface PlayerProps {
 export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsDataRef, targetPosRef, enemiesDataRef, spatialGrid }) => {
   const meshRef = useRef<any>(null);
   const axeSpinRef = useRef<any>(null);
+
+  // Animation state signals for PlayerModel
+  const isMovingRef = useRef(false);
+  const isAttackingRef = useRef(false);
 
   const { stats, status, setPlayerPosition, skills, triggerSkillCooldown, tickCooldowns, takeDamage, equipment, useMana, triggerInvincibility, obstacles, crates, isInvincible, toggleInventory, breakCrate, hero, levelUpVisualTimer, health, mana, level, activeAbilityQ, activateRage, rageMode, skillLevels, activateEarthwall, activateWarVitality, activateSprint, reviveAnimTimer, dashCharges, getManaCost, addNotification } = useGameStore();
   const { camera, scene, raycaster, pointer } = useThree();
@@ -159,6 +165,7 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
     if (keys['KeyA'] || keys['ArrowLeft']) moveDir.x -= 1;
     if (keys['KeyD'] || keys['ArrowRight']) moveDir.x += 1;
     moveDir.normalize();
+    isMovingRef.current = moveDir.lengthSq() > 0;
 
     if (keys['KeyQ']) {
         if (skills.q > 0) notifyCooldown("Skill Q");
@@ -381,14 +388,26 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
             <meshStandardMaterial color="orange" transparent opacity={0.4} emissive="orange" emissiveIntensity={0.5} />
         </mesh>
 
-        <group position={[0, 0, 0]}>
+        {ASSET_FLAGS.usePlayerModels ? (
+          <PlayerModel
+            hero={hero as 'ARCHER' | 'WIZARD' | 'BARBARIAN'}
+            isMoving={isMovingRef.current}
+            isAttacking={isAttackingRef.current}
+            isDashing={dashTime.current > 0}
+            isDead={false}
+            isLevelingUp={levelUpVisualTimer > 0}
+            rageMode={rageMode}
+            modelScale={1}
+          />
+        ) : (
+          <group position={[0, 0, 0]}>
             <mesh castShadow receiveShadow position={[0, 0.5, 0]}>
                 <capsuleGeometry args={[0.4, 1, 4, 8]} />
-                <meshStandardMaterial 
-                    color={rageMode ? 'red' : (levelUpVisualTimer > 0 ? '#facc15' : COLORS.player)} 
+                <meshStandardMaterial
+                    color={rageMode ? 'red' : (levelUpVisualTimer > 0 ? '#facc15' : COLORS.player)}
                     emissive={rageMode ? '#991b1b' : (levelUpVisualTimer > 0 ? '#facc15' : 'black')}
                     emissiveIntensity={rageMode ? 1 : levelUpVisualTimer}
-                    roughness={0.4} metalness={0.6} 
+                    roughness={0.4} metalness={0.6}
                 />
             </mesh>
             <mesh castShadow position={[0, 1.4, 0]}>
@@ -403,7 +422,8 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
                 <boxGeometry args={[0.6, 1.2, 0.1]} />
                 <meshStandardMaterial color="#1e40af" />
             </mesh>
-        </group>
+          </group>
+        )}
 
         <group ref={axeSpinRef} visible={false}>
             {[0, 1, 2, 3].map((i) => (

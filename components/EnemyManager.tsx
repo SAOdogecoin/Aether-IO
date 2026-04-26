@@ -1,11 +1,13 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { InstancedMesh, Object3D, Vector3, Color } from 'three';
 import { useGameStore } from '../store';
 import { ARENA_SIZE, COLORS } from '../constants';
 import { GameStatus, EnemyData, BulletData } from '../types';
 import { SpatialHashGrid } from '../utils/SpatialHashGrid';
+import { ASSET_FLAGS } from '../assetConfig';
+import { NearbyEnemies } from './EnemyModels';
 
 const MAX_ENEMIES = 400;
 
@@ -24,6 +26,7 @@ interface EnemyManagerProps {
 export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enemyBulletsDataRef, enemiesDataRef, spatialGrid }) => {
   const meshRef = useRef<InstancedMesh>(null);
   const stunIconsRef = useRef<InstancedMesh>(null);
+  const playerPositionRef = useRef<{ x: number; z: number }>({ x: 0, z: 0 });
   const { playerPosition, addScore, takeDamage, status, level, stats, spawnDrop, wave, waveTimer, advanceWave, addNotification, setBossData, earthwall, updateMinimapEnemies, obstacles } = useGameStore();
 
   const enemies = enemiesDataRef;
@@ -55,6 +58,9 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
   useFrame((state, delta) => {
     if (status !== GameStatus.PLAYING) return;
     if (!meshRef.current) return;
+
+    playerPositionRef.current.x = playerPosition.x;
+    playerPositionRef.current.z = playerPosition.z;
 
     spatialGrid.current.clear();
     const activeBullets = bulletsDataRef.current;
@@ -520,6 +526,15 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
             <torusGeometry args={[0.5, 0.1, 8, 16]} />
             <meshBasicMaterial color="#facc15" />
         </instancedMesh>
+
+        {ASSET_FLAGS.useEnemyModels && (
+          <Suspense fallback={null}>
+            <NearbyEnemies
+              enemiesDataRef={enemiesDataRef}
+              playerPositionRef={playerPositionRef}
+            />
+          </Suspense>
+        )}
     </>
   );
 };

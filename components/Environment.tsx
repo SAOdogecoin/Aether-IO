@@ -1,8 +1,10 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, Suspense } from 'react';
 import { Instance, Instances } from '@react-three/drei';
 import { ARENA_SIZE, COLORS } from '../constants';
 import { useGameStore } from '../store';
+import { ASSET_FLAGS } from '../assetConfig';
+import { ForestEnvironment } from './ForestEnvironment';
 
 export const Environment: React.FC = React.memo(() => {
   const obstacles = useGameStore(state => state.obstacles);
@@ -64,6 +66,14 @@ export const Environment: React.FC = React.memo(() => {
   const rockRotations = useMemo(() => {
       return rocks.map(() => [Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI] as [number, number, number]);
   }, [rocks]);
+
+  if (ASSET_FLAGS.useForestMap) {
+    return (
+      <Suspense fallback={null}>
+        <ForestEnvironment />
+      </Suspense>
+    );
+  }
 
   return (
     <group>

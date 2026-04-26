@@ -1,6 +1,6 @@
 
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Plane, Grid } from '@react-three/drei';
 import { Player } from './Player';
@@ -118,13 +118,15 @@ export const World: React.FC = () => {
       {/* Game Logic Entities */}
       {(status === GameStatus.PLAYING || status === GameStatus.PAUSED || status === GameStatus.LEVEL_UP || status === GameStatus.GAME_OVER || status === GameStatus.INVENTORY || status === GameStatus.SHOP) && (
         <>
-          <Player 
-            bulletsDataRef={bulletsDataRef} 
-            enemyBulletsDataRef={enemyBulletsDataRef}
-            targetPosRef={targetPosRef}
-            enemiesDataRef={enemiesDataRef}
-            spatialGrid={spatialGrid}
-          />
+          <Suspense fallback={null}>
+            <Player
+              bulletsDataRef={bulletsDataRef}
+              enemyBulletsDataRef={enemyBulletsDataRef}
+              targetPosRef={targetPosRef}
+              enemiesDataRef={enemiesDataRef}
+              spatialGrid={spatialGrid}
+            />
+          </Suspense>
           <Pet />
           <EnemyManager 
             bulletsDataRef={bulletsDataRef} 
