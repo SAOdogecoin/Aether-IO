@@ -1,7 +1,8 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import { useGLTF, useAnimations, useTexture } from '@react-three/drei';
 import { Group, LoopOnce, AnimationClip } from 'three';
-import { CHARACTER_PATHS, CHARACTER_TEXTURES, HERO_RIGS } from '../assetConfig';
+import { CHARACTER_PATHS, CHARACTER_TEXTURES, HERO_RIGS, ASSET_FLAGS } from '../assetConfig';
+import { WeaponAttachment } from './WeaponAttachment';
 
 export type HeroType = 'ARCHER' | 'WIZARD' | 'BARBARIAN';
 
@@ -123,6 +124,9 @@ function HeroModel({
   return (
     <group ref={group} scale={[modelScale, modelScale, modelScale]}>
       <primitive object={scene} />
+      {ASSET_FLAGS.useWeapons && (
+        <WeaponAttachment hero={hero} characterScene={scene} />
+      )}
     </group>
   );
 }

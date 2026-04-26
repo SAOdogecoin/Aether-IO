@@ -5,32 +5,27 @@
 // ============================================================
 
 export const ASSET_FLAGS = {
-  usePlayerModels:  true,   // Barbarian / Mage / Ranger GLBs
-  useEnemyModels:   true,   // Skeleton variants
-  useForestMap:     false,  // no map GLB uploaded yet
-  useGuiAssets:     false,  // no GUI assets uploaded yet
+  usePlayerModels:  true,
+  useEnemyModels:   true,
+  useWeapons:       false,  // flip true once .bin companion files are uploaded
+  useForestMap:     false,
+  useGuiAssets:     false,
 };
 
-// ── Hero character models ─────────────────────────────────────
-// ARCHER  → Ranger.glb
-// WIZARD  → Mage.glb
-// BARBARIAN → Barbarian.glb
+// ── Hero character models ──────────────────────────────────────
 export const CHARACTER_PATHS: Record<string, string> = {
   ARCHER:    '/assets/characters/Ranger.glb',
   WIZARD:    '/assets/characters/Mage.glb',
   BARBARIAN: '/assets/characters/Barbarian.glb',
 };
 
-// Texture maps baked alongside each character model
 export const CHARACTER_TEXTURES: Record<string, string> = {
   ARCHER:    '/assets/characters/ranger_texture.png',
   WIZARD:    '/assets/characters/mage_texture.png',
   BARBARIAN: '/assets/characters/barbarian_texture.png',
 };
 
-// ── Animation rigs (separate GLBs, same skeleton as heroes) ──
-// Each rig GLB contains a set of animation clips.
-// The loader merges clips from all relevant rigs at runtime.
+// ── Hero animation rigs ────────────────────────────────────────
 export const ANIM_RIGS = {
   movementBasic:    '/assets/characters/Rig_Medium_MovementBasic.glb',
   movementAdvanced: '/assets/characters/Rig_Medium_MovementAdvanced.glb',
@@ -42,21 +37,22 @@ export const ANIM_RIGS = {
   tools:            '/assets/characters/Rig_Medium_Tools.glb',
 };
 
-// Which rig packs each hero loads (keeps preload count reasonable)
+// Rig packs loaded per hero class
 export const HERO_RIGS: Record<string, string[]> = {
   ARCHER:    [ANIM_RIGS.movementBasic, ANIM_RIGS.combatRanged,  ANIM_RIGS.general],
   WIZARD:    [ANIM_RIGS.movementBasic, ANIM_RIGS.combatRanged,  ANIM_RIGS.general, ANIM_RIGS.special],
   BARBARIAN: [ANIM_RIGS.movementBasic, ANIM_RIGS.combatMelee,   ANIM_RIGS.general, ANIM_RIGS.movementAdvanced],
 };
 
-// ── Enemy models ──────────────────────────────────────────────
-// type 0 = slime   → Skeleton_Minion
-// type 1 = orc     → Skeleton_Warrior
-// type 2 = boss    → Skeleton_Warrior (scaled up by EnemyManager)
-// type 3 = shooter → Skeleton_Rogue
-// type 4 = speedy  → Skeleton_Rogue
-// type 5 = elite   → Skeleton_Mage
-// type 6 = slow shooter → Skeleton_Mage
+// ── Skeleton enemy animation rigs ──────────────────────────────
+// These are the skeleton-specific rigs (different skeleton from heroes).
+export const SKELETON_ANIM_RIGS = {
+  movementBasic: '/assets/characters/Skeleton_Rig_Medium_MovementBasic.glb',
+  general:       '/assets/characters/Skeleton_Rig_Medium_General.glb',
+};
+
+// ── Enemy models ───────────────────────────────────────────────
+// type 0=slime, 1=orc, 2=boss, 3=shooter, 4=speedy, 5=elite, 6=slow
 export const ENEMY_PATHS: Record<number, string> = {
   0: '/assets/characters/Skeleton_Minion.glb',
   1: '/assets/characters/Skeleton_Warrior.glb',
@@ -69,12 +65,45 @@ export const ENEMY_PATHS: Record<number, string> = {
 
 export const ENEMY_TEXTURE = '/assets/characters/skeleton_texture.png';
 
-// ── Map ───────────────────────────────────────────────────────
-export const MAP_PATHS = {
-  forest: '/assets/map/forest.glb',   // not uploaded yet
+// ── Weapon models ──────────────────────────────────────────────
+// GLTF files — require companion .bin files in the same folder.
+// Upload the matching .bin files (bow.bin, staff.bin, etc.) then
+// set ASSET_FLAGS.useWeapons = true.
+export const WEAPON_PATHS = {
+  // Archer
+  bow:                '/assets/characters/bow.gltf',
+  quiver:             '/assets/characters/quiver.gltf',
+  arrow_bow:          '/assets/characters/arrow_bow.gltf',
+  crossbow:           '/assets/characters/crossbow_1handed.gltf',
+  arrow_crossbow:     '/assets/characters/arrow_crossbow.gltf',
+  // Wizard
+  staff:              '/assets/characters/staff.gltf',
+  wand:               '/assets/characters/wand.gltf',
+  // Barbarian
+  axe_1h:             '/assets/characters/axe_1handed.gltf',
+  axe_2h:             '/assets/characters/axe_2handed.gltf',
+  sword_1h:           '/assets/characters/sword_1handed.gltf',
 };
 
-// ── GUI textures ──────────────────────────────────────────────
+// Which weapon each hero holds in their right hand
+export const HERO_WEAPON: Record<string, keyof typeof WEAPON_PATHS> = {
+  ARCHER:    'bow',
+  WIZARD:    'staff',
+  BARBARIAN: 'axe_2h',
+};
+
+// Common hand bone name patterns — the loader tries each until one matches
+export const HAND_BONE_HINTS = [
+  'hand_r', 'Hand_R', 'RightHand', 'mixamorig:RightHand',
+  'Bip01_R_Hand', 'right_hand', 'R_Hand', 'weapon_r',
+];
+
+// ── Map ────────────────────────────────────────────────────────
+export const MAP_PATHS = {
+  forest: '/assets/map/forest.glb',
+};
+
+// ── GUI textures ───────────────────────────────────────────────
 export const GUI_PATHS = {
   healthBar: '/assets/gui/health_bar.png',
   manaBar:   '/assets/gui/mana_bar.png',
@@ -82,26 +111,4 @@ export const GUI_PATHS = {
   panel:     '/assets/gui/frame_panel.png',
   button:    '/assets/gui/button_base.png',
   iconSlot:  '/assets/gui/icon_slot.png',
-};
-
-// ── Animation clip name hints ─────────────────────────────────
-// Update these to match the exact names inside your GLBs if the
-// defaults don't fire.  Open a .glb in https://gltf.report/ to
-// inspect clip names without code.
-export const PLAYER_ANIM_NAMES = {
-  idle:    'Idle',
-  run:     'Run',
-  attack:  'Attack',
-  dash:    'Dash',
-  die:     'Death',
-  levelUp: 'Victory',
-  rage:    'Rage',
-};
-
-export const ENEMY_ANIM_NAMES = {
-  idle:   'Idle',
-  walk:   'Walk',
-  attack: 'Attack',
-  die:    'Death',
-  stun:   'Stun',
 };

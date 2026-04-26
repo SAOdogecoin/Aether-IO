@@ -3,12 +3,13 @@ import { useGLTF, useAnimations, useTexture } from '@react-three/drei';
 import { Group, BufferGeometry, Mesh } from 'three';
 import { clone as skeletonClone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { useFrame } from '@react-three/fiber';
-import { ENEMY_PATHS, ENEMY_TEXTURE, ANIM_RIGS } from '../assetConfig';
+import { ENEMY_PATHS, ENEMY_TEXTURE, SKELETON_ANIM_RIGS } from '../assetConfig';
 import { EnemyData } from '../types';
 
 // Preload unique skeleton variants + the movement rig
 [...new Set(Object.values(ENEMY_PATHS))].forEach(p => useGLTF.preload(p));
-useGLTF.preload(ANIM_RIGS.movementBasic);
+useGLTF.preload(SKELETON_ANIM_RIGS.movementBasic);
+useGLTF.preload(SKELETON_ANIM_RIGS.general);
 
 // ── Smart clip resolver ───────────────────────────────────────
 // Tries exact name → case-insensitive substring → first clip.
@@ -47,7 +48,16 @@ function SkeletonMesh({ slot, skelType }: { slot: EnemyData; skelType: number })
   const sceneRef = useRef<any>(null);       // primitive ref for AnimationMixer root
 
   const { scene: rawScene } = useGLTF(ENEMY_PATHS[skelType]);
-  const { animations }      = useGLTF(ANIM_RIGS.movementBasic);   // walk/idle clips
+  const { animations: moveAnims }    = useGLTF(SKELETON_ANIM_RIGS.movementBasic);
+  const { animations: generalAnims } = useGLTF(SKELETON_ANIM_RIGS.general);
+  const animations = useMemo(() => {
+    const seen = new Set<string>();
+    return [...moveAnims, ...generalAnims].filter(a => {
+      if (seen.has(a.name)) return false;
+      seen.add(a.name);
+      return true;
+    });
+  }, [moveAnims, generalAnims]);
   const texture             = useTexture(ENEMY_TEXTURE);
 
   // SkeletonUtils.clone() properly duplicates skinned meshes & bone hierarchies.
