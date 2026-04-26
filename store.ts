@@ -339,27 +339,7 @@ const generateObstacles = (): Obstacle[] => {
             });
         }
     }
-    for(let i=0; i<30; i++) {
-        const x = (Math.random() - 0.5) * ARENA_SIZE * 1.5; 
-        const z = (Math.random() - 0.5) * ARENA_SIZE * 1.5;
-        const c1 = x*x + z*z < (coreRadius * 0.8)**2;
-        if (c1 && Math.sqrt(x*x + z*z) > 15) {
-            obs.push({
-                id: Math.random(),
-                position: new Vector3(x, 0, z),
-                radius: 1.5,
-                type: 'ROCK',
-                scale: 0.5 + Math.random()
-            });
-        }
-    }
     
-    obs.push({ id: 9999, position: new Vector3(20, 0, 20), radius: 4, type: 'HOUSE', scale: 1 });
-
-    for(let i=0; i<10; i++) {
-        obs.push({ id: 10000+i, position: new Vector3(15 + i*1.5, 0, 25), radius: 0.5, type: 'FENCE', scale: 1 });
-    }
-
     return obs;
 };
 

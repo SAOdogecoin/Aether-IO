@@ -113,18 +113,13 @@ export const ForestEnvironment: React.FC = () => {
   const mGrass1    = useMemo(() => extractMat(sGrass1),   [sGrass1]);
   const mGrass2    = useMemo(() => extractMat(sGrass2),   [sGrass2]);
 
-  // ── Obstacle-placed trees & rocks ────────────────────────────
+  // ── Obstacle-placed trees ────────────────────────────────────
   const treesObs = useMemo(() => obstacles.filter(o => o.type === 'TREE'), [obstacles]);
-  const rocksObs = useMemo(() => obstacles.filter(o => o.type === 'ROCK'), [obstacles]);
 
-  // Split obstacle trees across 3 variants, rocks across 2
+  // Split obstacle trees across 3 variants
   const [treeV1, treeV2, treeV3] = useMemo(
     () => splitByVariant(treesObs.map(t => ({ x: t.position.x, z: t.position.z, scale: t.scale ?? 1 })), 3),
     [treesObs],
-  );
-  const [rockV1, rockV2] = useMemo(
-    () => splitByVariant(rocksObs.map(r => ({ x: r.position.x, z: r.position.z, scale: (r.scale ?? 1) * 0.8 })), 2),
-    [rocksObs],
   );
 
   // ── Boundary ring (replaces the 300 procedural cones) ────────
@@ -145,52 +140,10 @@ export const ForestEnvironment: React.FC = () => {
     return splitByVariant(raw, 5);
   }, []);
 
-  // ── Scattered bushes ─────────────────────────────────────────
-  const [bushV1, bushV2, bushV3] = useMemo(() => {
-    const rand = makeRand(99);
-    const half = ARENA_SIZE * 0.45;
-    const raw  = Array.from({ length: 72 }, () => ({
-      x: (rand() - 0.5) * half * 2,
-      z: (rand() - 0.5) * half * 2,
-      scale: 0.6 + rand() * 0.9,
-    }));
-    return splitByVariant(raw, 3);
-  }, []);
-
-  // ── Scattered grass ───────────────────────────────────────────
-  const [grassV1, grassV2] = useMemo(() => {
-    const rand = makeRand(77);
-    const half = ARENA_SIZE * 0.48;
-    const raw  = Array.from({ length: 100 }, () => ({
-      x: (rand() - 0.5) * half * 2,
-      z: (rand() - 0.5) * half * 2,
-      scale: 0.5 + rand() * 0.7,
-    }));
-    return splitByVariant(raw, 2);
-  }, []);
-
-  // ── Ground patches ────────────────────────────────────────────
-  const groundPatches = useMemo(() => {
-    const rand = makeRand(55);
-    return Array.from({ length: 24 }, (_, i) => ({
-      key: i,
-      size:  10 + rand() * 30,
-      x: (rand() - 0.5) * ARENA_SIZE,
-      z: (rand() - 0.5) * ARENA_SIZE,
-    }));
-  }, []);
 
   // ── Render ────────────────────────────────────────────────────
   return (
     <group>
-      {/* Decorative ground patches */}
-      {groundPatches.map(p => (
-        <mesh key={p.key} rotation={[-Math.PI / 2, 0, 0]} position={[p.x, -0.005, p.z]}>
-          <circleGeometry args={[p.size, 16]} />
-          <meshStandardMaterial color="#3d4e22" opacity={0.5} transparent depthWrite={false} />
-        </mesh>
-      ))}
-
       {/* Dark void ring at map boundary */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.09, 0]}>
         <ringGeometry args={[ARENA_SIZE / 2 + 20, ARENA_SIZE / 2 + 100, 64]} />
@@ -208,19 +161,6 @@ export const ForestEnvironment: React.FC = () => {
       {gTree3    && mTree3    && <GltfBatch geo={gTree3}    mat={mTree3}    transforms={boundV3} castShadow />}
       {gTreeBare1 && mTreeBare1 && <GltfBatch geo={gTreeBare1} mat={mTreeBare1} transforms={boundV4} castShadow />}
       {gTreeBare2 && mTreeBare2 && <GltfBatch geo={gTreeBare2} mat={mTreeBare2} transforms={boundV5} castShadow />}
-
-      {/* Rocks */}
-      {gRock1 && mRock1 && <GltfBatch geo={gRock1} mat={mRock1} transforms={rockV1} castShadow receiveShadow />}
-      {gRock2 && mRock2 && <GltfBatch geo={gRock2} mat={mRock2} transforms={rockV2} castShadow receiveShadow />}
-
-      {/* Scattered bushes */}
-      {gBush1 && mBush1 && <GltfBatch geo={gBush1} mat={mBush1} transforms={bushV1} castShadow />}
-      {gBush2 && mBush2 && <GltfBatch geo={gBush2} mat={mBush2} transforms={bushV2} castShadow />}
-      {gBush3 && mBush3 && <GltfBatch geo={gBush3} mat={mBush3} transforms={bushV3} castShadow />}
-
-      {/* Scattered grass */}
-      {gGrass1 && mGrass1 && <GltfBatch geo={gGrass1} mat={mGrass1} transforms={grassV1} />}
-      {gGrass2 && mGrass2 && <GltfBatch geo={gGrass2} mat={mGrass2} transforms={grassV2} />}
     </group>
   );
 };
