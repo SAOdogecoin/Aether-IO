@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import { useGLTF, useAnimations, useTexture } from '@react-three/drei';
 import { Group, BufferGeometry, Mesh } from 'three';
-import { SkeletonUtils } from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { clone as skeletonClone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { useFrame } from '@react-three/fiber';
 import { ENEMY_PATHS, ENEMY_TEXTURE, ANIM_RIGS } from '../assetConfig';
 import { EnemyData } from '../types';
@@ -52,7 +52,7 @@ function SkeletonMesh({ slot, skelType }: { slot: EnemyData; skelType: number })
 
   // SkeletonUtils.clone() properly duplicates skinned meshes & bone hierarchies.
   // Regular .clone() breaks animation bindings — this is the correct approach.
-  const clone = useMemo(() => SkeletonUtils.clone(rawScene), [rawScene]);
+  const clone = useMemo(() => skeletonClone(rawScene), [rawScene]);
 
   useEffect(() => {
     clone.traverse((child: any) => {
