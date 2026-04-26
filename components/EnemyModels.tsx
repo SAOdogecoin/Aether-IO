@@ -1,24 +1,34 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import { useGLTF, useAnimations, useTexture } from '@react-three/drei';
 import { Group, BufferGeometry, Mesh } from 'three';
+import { SkeletonUtils } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { useFrame } from '@react-three/fiber';
-import { ENEMY_PATHS, ENEMY_TEXTURE, ENEMY_ANIM_NAMES } from '../assetConfig';
+import { ENEMY_PATHS, ENEMY_TEXTURE, ANIM_RIGS } from '../assetConfig';
 import { EnemyData } from '../types';
 
-// Preload all four skeleton variants up front
-Object.values(ENEMY_PATHS)
-  .filter((v, i, a) => a.indexOf(v) === i)   // deduplicate
-  .forEach((p) => useGLTF.preload(p));
+// Preload unique skeleton variants + the movement rig
+[...new Set(Object.values(ENEMY_PATHS))].forEach(p => useGLTF.preload(p));
+useGLTF.preload(ANIM_RIGS.movementBasic);
 
-// ── Geometry extractor ────────────────────────────────────────
-// Returns the first BufferGeometry found in an enemy GLB.
-// Used to feed the existing InstancedMesh with real model shape.
+// ── Smart clip resolver ───────────────────────────────────────
+// Tries exact name → case-insensitive substring → first clip.
+// You never need to configure clip names manually.
+function resolveClip(actions: Record<string, any>, ...hints: string[]): string {
+  const keys = Object.keys(actions);
+  for (const h of hints) { if (actions[h]) return h; }
+  for (const h of hints) {
+    const hit = keys.find(k => k.toLowerCase().includes(h.toLowerCase()));
+    if (hit && actions[hit]) return hit;
+  }
+  return keys[0] ?? '';
+}
+
+// ── Geometry extractor (used by InstancedMesh in EnemyManager) ─
 export const useEnemyGeometry = (type: number): BufferGeometry | null => {
-  const path = ENEMY_PATHS[type] ?? ENEMY_PATHS[0];
-  const { scene } = useGLTF(path);
+  const { scene } = useGLTF(ENEMY_PATHS[type] ?? ENEMY_PATHS[0]);
   return useMemo(() => {
     let geo: BufferGeometry | null = null;
-    scene.traverse((child) => {
+    scene.traverse(child => {
       if (!geo && (child as Mesh).isMesh) geo = (child as Mesh).geometry.clone();
     });
     return geo;
@@ -26,69 +36,87 @@ export const useEnemyGeometry = (type: number): BufferGeometry | null => {
 };
 
 // ── Single animated skeleton ──────────────────────────────────
-interface AnimatedEnemyProps {
-  slot: EnemyData;
-}
+// One wrapper per variant keeps React hook counts stable across renders.
+const SkeletonMinion:   React.FC<{ slot: EnemyData }> = p => <SkeletonMesh {...p} skelType={0} />;
+const SkeletonWarrior:  React.FC<{ slot: EnemyData }> = p => <SkeletonMesh {...p} skelType={1} />;
+const SkeletonRogue:    React.FC<{ slot: EnemyData }> = p => <SkeletonMesh {...p} skelType={3} />;
+const SkeletonMageMesh: React.FC<{ slot: EnemyData }> = p => <SkeletonMesh {...p} skelType={5} />;
 
-// One component per skeleton variant keeps hook counts stable.
-const SkeletonMinion:   React.FC<AnimatedEnemyProps> = (p) => <SkeletonMesh {...p} type={0} />;
-const SkeletonWarrior:  React.FC<AnimatedEnemyProps> = (p) => <SkeletonMesh {...p} type={1} />;
-const SkeletonRogue:    React.FC<AnimatedEnemyProps> = (p) => <SkeletonMesh {...p} type={3} />;
-const SkeletonMageMesh: React.FC<AnimatedEnemyProps> = (p) => <SkeletonMesh {...p} type={5} />;
+function SkeletonMesh({ slot, skelType }: { slot: EnemyData; skelType: number }) {
+  const outerRef = useRef<Group>(null);
+  const sceneRef = useRef<any>(null);       // primitive ref for AnimationMixer root
 
-function SkeletonMesh({ slot, type }: AnimatedEnemyProps & { type: number }) {
-  const group = useRef<Group>(null);
-  const path = ENEMY_PATHS[type];
-  const { scene } = useGLTF(path);
-  const texture = useTexture(ENEMY_TEXTURE);
-  const { animations } = useGLTF(path);
-  const { actions } = useAnimations(animations, group);
-  const prevAnim = useRef('');
+  const { scene: rawScene } = useGLTF(ENEMY_PATHS[skelType]);
+  const { animations }      = useGLTF(ANIM_RIGS.movementBasic);   // walk/idle clips
+  const texture             = useTexture(ENEMY_TEXTURE);
+
+  // SkeletonUtils.clone() properly duplicates skinned meshes & bone hierarchies.
+  // Regular .clone() breaks animation bindings — this is the correct approach.
+  const clone = useMemo(() => SkeletonUtils.clone(rawScene), [rawScene]);
 
   useEffect(() => {
-    scene.traverse((child: any) => {
+    clone.traverse((child: any) => {
       if (child.isMesh && child.material) {
+        child.material = child.material.clone();
         child.material.map = texture;
         child.material.needsUpdate = true;
         child.castShadow = true;
       }
     });
-  }, [scene, texture]);
+  }, [clone, texture]);
+
+  // Bind animations to the cloned scene root (sceneRef = <primitive> node)
+  const { actions } = useAnimations(animations, sceneRef);
+
+  // Auto-discover clip names — works regardless of naming convention
+  const walkKey  = useMemo(() => resolveClip(actions, 'Walk', 'Run', 'walk', 'run', 'Walking', 'Running', 'Move', 'Jog'), [actions]);
+  const idleKey  = useMemo(() => resolveClip(actions, 'Idle', 'Stand', 'idle', 'Breathe', 'Breathing', 'Relax'), [actions]);
+  const dieKey   = useMemo(() => resolveClip(actions, 'Death', 'Die', 'death', 'die', 'Dead', 'Dying'), [actions]);
+  const stunKey  = useMemo(() => resolveClip(actions, 'Stun', 'Hit', 'Hurt', 'Flinch', 'stun', 'hurt'), [actions]);
+
+  // Log available clips once in development so you can verify names
+  useEffect(() => {
+    if (import.meta.env.DEV && Object.keys(actions).length > 0) {
+      console.log(`[Enemy skeleton ${skelType}] clips:`, Object.keys(actions));
+    }
+    const startKey = walkKey || idleKey;
+    if (startKey && actions[startKey]) actions[startKey]?.play();
+  }, [actions, walkKey, idleKey, skelType]);
+
+  const prevKey = useRef('');
 
   useFrame(() => {
-    if (!group.current) return;
+    if (!outerRef.current) return;
 
     if (!slot.active) {
-      group.current.visible = false;
+      outerRef.current.visible = false;
       return;
     }
 
-    group.current.visible = true;
-    group.current.position.set(slot.position.x, 0, slot.position.z);
-    group.current.scale.setScalar(slot.scale ?? 1);
+    outerRef.current.visible = true;
+    outerRef.current.position.set(slot.position.x, 0, slot.position.z);
+    outerRef.current.scale.setScalar(slot.scale ?? 1);
 
-    let target = ENEMY_ANIM_NAMES.walk;
-    if (slot.health <= 0) target = ENEMY_ANIM_NAMES.die;
-    else if (slot.freezeTimer && slot.freezeTimer > 0) target = ENEMY_ANIM_NAMES.stun;
+    let key = walkKey || idleKey;
+    if (slot.health <= 0)                               key = dieKey  || key;
+    else if (slot.freezeTimer && slot.freezeTimer > 0)  key = stunKey || idleKey || walkKey;
 
-    // Fall back to first available clip name if the expected name doesn't exist
-    const key = actions[target] ? target : Object.keys(actions)[0] ?? '';
-    if (!key || key === prevAnim.current) return;
-    prevAnim.current = key;
+    if (!key || key === prevKey.current) return;
+    prevKey.current = key;
 
-    Object.entries(actions).forEach(([n, a]) => { if (n !== key) a?.fadeOut(0.15); });
+    Object.values(actions).forEach(a => a?.fadeOut(0.15));
     actions[key]?.reset().fadeIn(0.15).play();
   });
 
   return (
-    <group ref={group} visible={false}>
-      <primitive object={scene.clone()} />
+    <group ref={outerRef} visible={false}>
+      <primitive ref={sceneRef} object={clone} />
     </group>
   );
 }
 
-// ── Skeleton router — picks correct variant from enemy type ───
-function AnimatedEnemy({ slot }: AnimatedEnemyProps) {
+// Routes enemy type to the correct skeleton variant
+function AnimatedEnemy({ slot }: { slot: EnemyData }) {
   const t = slot.type;
   if (t === 0)            return <SkeletonMinion  slot={slot} />;
   if (t === 1 || t === 2) return <SkeletonWarrior slot={slot} />;
@@ -96,7 +124,7 @@ function AnimatedEnemy({ slot }: AnimatedEnemyProps) {
   return                         <SkeletonMageMesh slot={slot} />;
 }
 
-// ── NearbyEnemies — full animated models for the 8 closest ───
+// ── NearbyEnemies ─────────────────────────────────────────────
 const MAX_VISIBLE = 8;
 
 interface NearbyEnemiesProps {
@@ -108,7 +136,6 @@ export const NearbyEnemies: React.FC<NearbyEnemiesProps> = ({
   enemiesDataRef,
   playerPositionRef,
 }) => {
-  // Stable slot objects — mutated in-place so React doesn't remount children
   const slotsRef = useRef<EnemyData[]>(
     Array.from({ length: MAX_VISIBLE }, (_, id) => ({
       id, active: false, type: 0,
@@ -122,18 +149,14 @@ export const NearbyEnemies: React.FC<NearbyEnemiesProps> = ({
   useFrame(() => {
     const pp = playerPositionRef.current;
     const active = enemiesDataRef.current.filter(e => e.active);
-
-    active.sort((a, b) => {
-      const da = (a.position.x - pp.x) ** 2 + (a.position.z - pp.z) ** 2;
-      const db = (b.position.x - pp.x) ** 2 + (b.position.z - pp.z) ** 2;
-      return da - db;
-    });
-
+    active.sort((a, b) =>
+      ((a.position.x - pp.x) ** 2 + (a.position.z - pp.z) ** 2) -
+      ((b.position.x - pp.x) ** 2 + (b.position.z - pp.z) ** 2)
+    );
     for (let i = 0; i < MAX_VISIBLE; i++) {
       const src = active[i];
-      const slot = slotsRef.current[i];
-      if (src) Object.assign(slot, src);
-      else slot.active = false;
+      if (src) Object.assign(slotsRef.current[i], src);
+      else slotsRef.current[i].active = false;
     }
   });
 
