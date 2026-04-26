@@ -8,7 +8,7 @@ export const ASSET_FLAGS = {
   usePlayerModels:  true,
   useEnemyModels:   true,
   useWeapons:       true,   // .bin files uploaded — weapons active
-  useForestMap:     false,
+  useForestMap:     true,
   useGuiAssets:     false,
 };
 
@@ -118,6 +118,27 @@ export const OFF_HAND_BONE_HINTS = [
 export const MANNEQUIN_PATHS = {
   medium: '/assets/characters/Mannequin_Medium.glb',
   large:  '/assets/characters/Mannequin_Large.glb',
+};
+
+// ── Forest environment props ───────────────────────────────────
+const C = '/assets/characters/'; // all assets share this base path for now
+export const ENV_PATHS = {
+  // Trees (4 variants)
+  tree1:    `${C}Tree_1_A_Color1.gltf`,
+  tree2:    `${C}Tree_2_B_Color1.gltf`,
+  tree3:    `${C}Tree_3_C_Color1.gltf`,
+  treeBare1:`${C}Tree_Bare_1_A_Color1.gltf`,
+  treeBare2:`${C}Tree_Bare_2_C_Color1.gltf`,
+  // Rocks
+  rock1:    `${C}Rock_1_A_Color1.gltf`,
+  rock2:    `${C}Rock_2_B_Color1.gltf`,
+  // Bushes (complete .gltf + .bin pairs only)
+  bush1:    `${C}Bush_1_A_Color1.gltf`,
+  bush2:    `${C}Bush_2_A_Color1.gltf`,
+  bush3:    `${C}Bush_3_A_Color1.gltf`,
+  // Grass
+  grass1:   `${C}Grass_1_A_Color1.gltf`,
+  grass2:   `${C}Grass_2_B_Color1.gltf`,
 };
 
 // ── Map ────────────────────────────────────────────────────────
