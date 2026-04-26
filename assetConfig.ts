@@ -101,13 +101,16 @@ export const SKELETON_WEAPON_PATHS = {
 };
 
 // Right-hand bone name hints (tried in order, case-insensitive)
+// Models use dot-notation: handslot.r / hand.r
 export const HAND_BONE_HINTS = [
+  'handslot.r', 'hand.r', 'wrist.r',
   'hand_r', 'Hand_R', 'RightHand', 'mixamorig:RightHand',
   'Bip01_R_Hand', 'right_hand', 'R_Hand', 'weapon_r',
 ];
 
 // Left-hand bone name hints (for shields / off-hand)
 export const OFF_HAND_BONE_HINTS = [
+  'handslot.l', 'hand.l', 'wrist.l',
   'hand_l', 'Hand_L', 'LeftHand', 'mixamorig:LeftHand',
   'Bip01_L_Hand', 'left_hand', 'L_Hand', 'weapon_l',
 ];
