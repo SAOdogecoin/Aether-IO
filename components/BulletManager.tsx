@@ -155,6 +155,33 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
                         trail.effect = undefined;
                     }
                 }
+            } else if (b.type === 'METEOR') {
+                b.position.y -= 15 * delta;
+                if (b.position.y <= 0) {
+                    b.position.y = 0;
+                    b.lifetime = 0;
+                }
+            } else if (b.type === 'HOMING_ARROW') {
+                let nearestEnemy = null;
+                let minDist = 30;
+                if (grid && enemies) {
+                    const candidateIds = grid.query(b.position.x, b.position.z);
+                    for (const id of candidateIds) {
+                        const e = enemies[id];
+                        if (e.active) {
+                            const d = b.position.distanceTo(e.position);
+                            if (d < minDist) {
+                                minDist = d;
+                                nearestEnemy = e;
+                            }
+                        }
+                    }
+                }
+                if (nearestEnemy) {
+                    const desiredDir = new Vector3().subVectors(nearestEnemy.position, b.position).normalize();
+                    b.velocity.lerp(desiredDir.multiplyScalar(25), delta * 5);
+                }
+                b.position.add(b.velocity.clone().multiplyScalar(delta));
             } else if (b.type === 'BLACKHOLE') {
                 b.rotation = (b.rotation || 0) + delta * 2;
             } else if (b.type === 'STORM') {
@@ -207,6 +234,19 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
                                 e.health -= dmg;
                                 window.dispatchEvent(new CustomEvent('damage', { 
                                     detail: { position: e.position, damage: dmg, isCrit: false, damageType: 'MAGIC' } 
+                                }));
+                         }
+                     }
+                } else if (b.type === 'METEOR' && enemies) {
+                     const nearbyIds = grid ? grid.query(b.position.x, b.position.z) : [];
+                     const idsToCheck = grid ? nearbyIds : enemies.map(e => e.id);
+                     for(const id of idsToCheck) {
+                         const e = enemies[id];
+                         if (e.active && e.position.distanceTo(b.position) < 10.0) {
+                                const dmg = stats.damage * 7.0;
+                                e.health -= dmg;
+                                window.dispatchEvent(new CustomEvent('damage', {
+                                    detail: { position: e.position, damage: dmg, isCrit: false, damageType: 'FIRE' }
                                 }));
                          }
                      }
@@ -367,6 +407,15 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
                      dummy.rotation.set(time*2, time*2, time*2);
                      dummy.scale.set(12, 12, 12); 
                      tempColor.set('#ff0000'); 
+                } else if (b.type === 'METEOR') {
+                     dummy.rotation.set(time*2, time*2, time*2);
+                     dummy.scale.set(15, 15, 15);
+                     tempColor.set('#f97316');
+                } else if (b.type === 'HOMING_ARROW') {
+                     const lookAtPos = b.position.clone().add(b.velocity);
+                     dummy.lookAt(lookAtPos);
+                     dummy.scale.set(2, 2, 2);
+                     tempColor.set('#a855f7');
                 } else if (b.type === 'FIRE_TRAIL') {
                      dummy.rotation.set(0, time, 0);
                      dummy.scale.set(12, 0.2, 12); 
@@ -415,7 +464,7 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
 
   return (
     <instancedMesh key={projectileType} ref={meshRef} args={[undefined, undefined, MAX_BULLETS]} frustumCulled={false}>
-      {(projectileType?.includes('ARROW')) && <cylinderGeometry args={[0.05, 0.05, 1.5, 6]} ref={onGeometryUpdate} />}
+      {(projectileType?.includes('ARROW') || projectileType === 'HOMING_ARROW') && <cylinderGeometry args={[0.05, 0.05, 1.5, 6]} ref={onGeometryUpdate} />}
       {projectileType === 'AXE' && <boxGeometry args={[1, 0.1, 1]} />}
       {projectileType === 'STORM' && <coneGeometry args={[0.5, 2, 8, 1, true]} />} 
       {(!projectileType?.includes('ARROW') && projectileType !== 'AXE' && projectileType !== 'STORM') && <dodecahedronGeometry args={[0.3, 0]} />} 

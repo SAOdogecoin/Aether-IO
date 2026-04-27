@@ -512,12 +512,12 @@ export const GameUI: React.FC = () => {
   const manaPotion = inventory.find(i => i.type === 'POTION' && (i.name === 'Mana Potion' || i.name === 'Big Mana Potion'));
 
   let weaponAbilityDesc = "Basic Attack.";
-  if (equipment.weapon?.ability === 'FIREBALL') weaponAbilityDesc = "Shoots a slow giant fireball.";
-  else if (equipment.weapon?.ability === 'ARROW_RAIN') weaponAbilityDesc = "Fires waves of arrows.";
+  if (equipment.weapon?.ability === 'FIREBALL' || equipment.weapon?.ability === 'METEOR') weaponAbilityDesc = hero === 'WIZARD' ? "Summon falling meteor." : "Shoots giant fireball.";
+  else if (equipment.weapon?.ability === 'ARROW_RAIN') weaponAbilityDesc = hero === 'ARCHER' ? "3x Atk Speed & Max Multishot." : "Fires waves of arrows.";
   else if (equipment.weapon?.ability === 'AXE_SPIN') weaponAbilityDesc = "Spinning blade barrier.";
   
   let qAbilityDesc = "Locked.";
-  if (activeAbilityQ === 'PIERCING_SHOT') qAbilityDesc = "Massive piercing arrow.";
+  if (activeAbilityQ === 'PIERCING_SHOT' || activeAbilityQ === 'HOMING_SHOT') qAbilityDesc = hero === 'ARCHER' ? "Fires 3 rounds of 10 homing arrows." : "Massive piercing arrow.";
   else if (activeAbilityQ === 'GRAVITY_SPELL') qAbilityDesc = "Summons blackhole.";
   else if (activeAbilityQ === 'RAGE') qAbilityDesc = "Doubles Attack Speed.";
 
@@ -787,9 +787,9 @@ export const GameUI: React.FC = () => {
             const fi = (Icon: any, size = 28) => <Icon size={size} fill={c} strokeWidth={0} style={{ color: c }} />;
             const fiC = (Icon: any, color: string, size = 24) => <Icon size={size} fill={color} strokeWidth={0} style={{ color }} />;
 
-            const weaponIcon = abilityToCheckR === 'FIREBALL' ? fi(Flame) :
+            const weaponIcon = (abilityToCheckR === 'FIREBALL' || abilityToCheckR === 'METEOR') ? fi(Flame) :
                                abilityToCheckR === 'AXE_SPIN' ? fi(RotateCcw) : fi(Zap);
-            const qIcon = activeAbilityQ === 'PIERCING_SHOT' ? fi(Crosshair) :
+            const qIcon = (activeAbilityQ === 'PIERCING_SHOT' || activeAbilityQ === 'HOMING_SHOT') ? fi(Crosshair) :
                           activeAbilityQ === 'GRAVITY_SPELL' ? fi(Hexagon) :
                           activeAbilityQ === 'RAGE'          ? fi(Flame) :
                           activeAbilityQ ? fi(Star) : <Lock size={22} className="text-gray-700"/>;
