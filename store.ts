@@ -83,7 +83,8 @@ interface GameState {
   invincibilityTimer: number;
   levelUpVisualTimer: number;
   reviveAnimTimer: number;
-  
+  revivingCountdown: number;
+
   petReviveCooldown: number;
 
   bossData: BossData;
@@ -510,7 +511,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   invincibilityTimer: 0,
   levelUpVisualTimer: 0,
   reviveAnimTimer: 0,
-  
+  revivingCountdown: 0,
+
   petReviveCooldown: 0,
 
   bossData: { active: false, name: '', hp: 0, maxHp: 0 },
@@ -650,6 +652,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         invincibilityTimer: 0,
         levelUpVisualTimer: 0,
         reviveAnimTimer: 0,
+        revivingCountdown: 0,
         bossData: { active: false, name: '', hp: 0, maxHp: 0 },
         notifications: [],
         rageMode: false,
@@ -736,14 +739,15 @@ export const useGameStore = create<GameState>((set, get) => ({
     }));
 
     if (newHealth <= 0) {
+      // Don't re-trigger revive if already counting down
+      if (state.revivingCountdown > 0) return;
+
       if (state.equipment.pet && state.equipment.pet.petSkill === 'REVIVE' && state.petReviveCooldown <= 0) {
           set({
-              health: state.stats.maxHealth * 0.5,
+              health: 0,
+              revivingCountdown: 5.0,
               petReviveCooldown: state.equipment.pet.petCooldown || 300,
-              reviveAnimTimer: 2.0
           });
-          get().triggerInvincibility(5.0);
-          get().addNotification("PHOENIX REVIVE!", COLORS.rarityLegendary, 'SYSTEM');
           return;
       }
 
@@ -757,12 +761,10 @@ export const useGameStore = create<GameState>((set, get) => ({
               newInv.splice(reviveIndex, 1);
           }
           set({
-              health: state.stats.maxHealth * 0.5,
+              health: 0,
               inventory: newInv,
-              reviveAnimTimer: 2.0
+              revivingCountdown: 5.0,
           });
-          get().triggerInvincibility(5.0);
-          get().addNotification("REVIVED BY GEM!", COLORS.rarityEpic, 'SYSTEM');
           return;
       }
 
@@ -1160,6 +1162,27 @@ export const useGameStore = create<GameState>((set, get) => ({
       const newLevelUpTimer = Math.max(0, state.levelUpVisualTimer - delta);
       const newReviveAnimTimer = Math.max(0, state.reviveAnimTimer - delta);
       const newPetReviveCooldown = Math.max(0, state.petReviveCooldown - delta);
+
+      // Revive countdown: tick down and execute revival when it hits zero
+      let newRevivingCountdown = state.revivingCountdown;
+      if (newRevivingCountdown > 0) {
+          newRevivingCountdown = Math.max(0, newRevivingCountdown - delta);
+          if (newRevivingCountdown <= 0) {
+              // Execute revival: restore health, grant invincibility + shield
+              const reviveHealth = state.stats.maxHealth * 0.5;
+              get().triggerInvincibility(5.0);
+              // Restore one shield charge for the barrier activation
+              const newCharges = Math.min(state.maxShieldCharges, state.shieldCharges + 1);
+              set({
+                  health: reviveHealth,
+                  reviveAnimTimer: 2.0,
+                  revivingCountdown: 0,
+                  shieldCharges: newCharges,
+              });
+              get().addNotification("REVIVED!", '#fbbf24', 'SYSTEM');
+              return;
+          }
+      }
       
       let newInvincibilityTimer = state.invincibilityTimer;
       let newIsInvincible = state.isInvincible;
@@ -1231,7 +1254,8 @@ export const useGameStore = create<GameState>((set, get) => ({
           invincibilityTimer: newInvincibilityTimer,
           isInvincible: newIsInvincible,
           levelUpVisualTimer: newLevelUpTimer,
-          reviveAnimTimer: newReviveAnimTimer, 
+          reviveAnimTimer: newReviveAnimTimer,
+          revivingCountdown: newRevivingCountdown,
           petReviveCooldown: newPetReviveCooldown,
       });
   },

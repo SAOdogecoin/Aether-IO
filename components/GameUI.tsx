@@ -114,14 +114,16 @@ const NotificationItem: React.FC<{ note: GameNotification; onRemove: (id: string
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: -20, opacity: 0, scale: 0.9 }}
             layout 
-            className="mb-2 px-4 py-2 rounded-full bg-slate-900/90 backdrop-blur text-white shadow-2xl flex items-center gap-3 pointer-events-auto min-w-[200px] border border-white/10"
+            className="mb-1 px-3 py-2 rounded text-white flex items-center gap-2.5 pointer-events-auto min-w-[180px]"
+            style={{ background: 'linear-gradient(180deg,rgba(28,28,40,0.97) 0%,rgba(16,16,24,0.97) 100%)', border: '1px solid rgba(180,150,70,0.25)', boxShadow: '0 4px 12px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04)' }}
         >
-            <div className={`w-2 h-2 rounded-full shadow-[0_0_8px]`} style={{ backgroundColor: note.color, boxShadow: `0 0 10px ${note.color}` }} />
-            <div className="font-bold text-sm tracking-wide">{note.message}</div>
+            <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: note.color }} />
+            <div className="font-bold text-xs tracking-wide rpg-text">{note.message}</div>
             {note.action && (
                 <button
                     onClick={() => { note.action!.onClick(); onRemove(note.id); }}
-                    className="ml-auto text-[10px] bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded-full font-bold uppercase transition-colors"
+                    className="ml-auto text-[9px] text-white px-2 py-0.5 rounded font-black uppercase"
+                    style={{ background: 'rgba(180,150,70,0.25)', border: '1px solid rgba(180,150,70,0.35)' }}
                 >
                     {note.action.label}
                 </button>
@@ -384,7 +386,8 @@ export const GameUI: React.FC = () => {
     isInventoryOpen, isShopOpen, toggleInventory, activeShopTab, closeAllUI, openSpecificShop,
     notifications, removeNotification, upgradeSkill, toggleCharacterSheet, isCharacterSheetOpen, baseStats, activeAbilityQ, activeAbilityR,
     recycleItem, massRecycle, combineMaterials, craftItem, buyInventorySlots, actionResult, clearActionResult, massSell,
-    isCodexOpen, toggleCodex, dashCharges, maxDashCharges, barrierCooldown, shieldCharges, maxShieldCharges, getManaCost
+    isCodexOpen, toggleCodex, dashCharges, maxDashCharges, barrierCooldown, shieldCharges, maxShieldCharges, getManaCost,
+    revivingCountdown
   } = useGameStore();
 
   const [hoveredItem, setHoveredItem] = useState<Item | null>(null);
@@ -655,32 +658,47 @@ export const GameUI: React.FC = () => {
           {/* Top Bar */}
           <div className="flex justify-between items-start pointer-events-auto w-full z-20">
 
-             {/* Player Status */}
+             {/* Player Status — hidden during reward popup and panel */}
+             {status !== GameStatus.LEVEL_UP && !panelOpen && (
              <div className="flex flex-col gap-1 w-64">
-                 <div className="p-2 rounded-md flex items-center gap-2" style={{ background:'rgba(12,12,18,0.92)', border:'1px solid rgba(180,150,70,0.2)', boxShadow:'0 2px 12px rgba(0,0,0,0.6)' }}>
+                 <div className="p-2 rounded-md flex items-center gap-2"
+                   style={{
+                     background: 'linear-gradient(135deg, rgba(18,18,28,0.97) 0%, rgba(12,12,20,0.97) 100%)',
+                     border: '1px solid rgba(180,150,70,0.22)',
+                     boxShadow: '0 4px 16px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -1px 0 rgba(0,0,0,0.4)'
+                   }}>
                     <div className="w-10 h-10 rounded-md flex items-center justify-center shrink-0" style={{ background: `${CLASS_COLOR[hero]??'#6366f1'}18`, border:`1.5px solid ${CLASS_COLOR[hero]??'#6366f1'}50` }}>
                         {hero === 'ARCHER'    && <Crosshair size={20} style={{color:CLASS_COLOR[hero]}}/>}
                         {hero === 'WIZARD'    && <Wand2     size={20} style={{color:CLASS_COLOR[hero]}}/>}
                         {hero === 'BARBARIAN' && <Axe       size={20} style={{color:CLASS_COLOR[hero]}}/>}
                     </div>
                     <div className="flex-1">
-                        <div className="flex justify-between items-baseline mb-1 px-0.5">
+                        <div className="flex justify-between items-baseline mb-1.5 px-0.5">
                             <span className="font-black text-white text-sm tracking-tight rpg-text">{hero} <span className="text-white/40 text-xs">LV{level}</span></span>
                             <span className="font-bold text-xs" style={{color: CLASS_COLOR[hero]??'#f97316'}}>CP {currentCP}</span>
                         </div>
-                        <div className="h-2 rounded-sm overflow-hidden mb-1" style={{background:'rgba(255,255,255,0.08)'}}>
-                            <motion.div className="h-full bg-red-500" initial={false} animate={{ width: `${hpPercent}%` }} style={{boxShadow:'0 0 6px rgba(239,68,68,0.6)'}}/>
+                        {/* HP bar — taller */}
+                        <div className="h-3.5 rounded-sm overflow-hidden mb-1.5 relative" style={{background:'rgba(0,0,0,0.5)', border:'1px solid rgba(0,0,0,0.6)', boxShadow:'inset 0 1px 3px rgba(0,0,0,0.8)'}}>
+                            <motion.div className="h-full" initial={false} animate={{ width: `${hpPercent}%` }}
+                              style={{ background: `linear-gradient(90deg, #b91c1c, #ef4444)` }}/>
+                            <span className="absolute inset-0 flex items-center justify-center text-[9px] font-black text-white/80" style={{textShadow:'0 1px 2px rgba(0,0,0,0.9)'}}>{Math.ceil(health)}/{stats.maxHealth}</span>
                         </div>
-                        <div className="h-2 rounded-sm overflow-hidden" style={{background:'rgba(255,255,255,0.08)'}}>
-                            <motion.div className="h-full bg-blue-500" initial={false} animate={{ width: `${manaPercent}%` }} style={{boxShadow:'0 0 6px rgba(59,130,246,0.6)'}}/>
+                        {/* MP bar — taller */}
+                        <div className="h-3.5 rounded-sm overflow-hidden relative" style={{background:'rgba(0,0,0,0.5)', border:'1px solid rgba(0,0,0,0.6)', boxShadow:'inset 0 1px 3px rgba(0,0,0,0.8)'}}>
+                            <motion.div className="h-full" initial={false} animate={{ width: `${manaPercent}%` }}
+                              style={{ background: `linear-gradient(90deg, #1d4ed8, #3b82f6)` }}/>
+                            <span className="absolute inset-0 flex items-center justify-center text-[9px] font-black text-white/80" style={{textShadow:'0 1px 2px rgba(0,0,0,0.9)'}}>{Math.ceil(mana)}/{stats.maxMana}</span>
                         </div>
                     </div>
                  </div>
                  {/* XP Bar */}
-                 <div className="h-1.5 rounded-sm overflow-hidden mx-2" style={{background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.04)'}}>
-                    <motion.div className="h-full bg-yellow-400" initial={false} animate={{ width: `${xpPercent}%` }} style={{boxShadow:'0 0 6px rgba(250,204,21,0.5)'}}/>
+                 <div className="h-1.5 rounded-sm overflow-hidden mx-2" style={{background:'rgba(0,0,0,0.5)', border:'1px solid rgba(0,0,0,0.4)'}}>
+                    <motion.div className="h-full" initial={false} animate={{ width: `${xpPercent}%` }} style={{ background: 'linear-gradient(90deg,#a16207,#facc15)' }}/>
                  </div>
              </div>
+             )}
+             {/* Spacer when player card hidden */}
+             {(status === GameStatus.LEVEL_UP || panelOpen) && <div className="w-64 shrink-0"/>}
 
              {/* Center: Wave + Boss */}
              <div className="flex flex-col items-center flex-1 mx-4 relative">
@@ -691,12 +709,12 @@ export const GameUI: React.FC = () => {
                              <span>{Math.ceil(bossData.hp).toLocaleString()}</span>
                          </div>
                          <div className="h-3 rounded-sm overflow-hidden" style={{background:'rgba(255,255,255,0.08)'}}>
-                             <motion.div className="h-full bg-red-500" animate={{ width: `${Math.max(0, (bossData.hp / bossData.maxHp) * 100)}%` }} style={{boxShadow:'0 0 8px rgba(239,68,68,0.7)'}}/>
+                             <motion.div className="h-full" animate={{ width: `${Math.max(0, (bossData.hp / bossData.maxHp) * 100)}%` }} style={{ background: 'linear-gradient(90deg,#b91c1c,#ef4444)' }}/>
                          </div>
                      </div>
                  ) : (
                      <div className="flex items-center gap-3">
-                         <div className="text-3xl font-black text-white rpg-text" style={{ textShadow: '0 0 20px rgba(180,150,70,0.5), 0 2px 4px rgba(0,0,0,0.9)', WebkitTextStroke: '0.5px rgba(0,0,0,0.7)' }}>
+                         <div className="text-3xl font-black text-white rpg-text" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)', WebkitTextStroke: '0.5px rgba(0,0,0,0.7)' }}>
                              WAVE {wave}
                          </div>
                          <div className="text-white/50 font-bold text-sm flex items-center gap-1">
@@ -854,42 +872,73 @@ export const GameUI: React.FC = () => {
         </div>
       )}
 
+      {/* REVIVE COUNTDOWN POPUP */}
+      <AnimatePresence>
+        {revivingCountdown > 0 && (
+          <motion.div
+            key="revive-popup"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="absolute inset-0 z-[150] flex items-center justify-center pointer-events-none"
+            style={{ background: 'rgba(0,0,0,0.65)' }}
+          >
+            <div className="flex flex-col items-center gap-4 p-8 rounded-md"
+              style={{ background: 'linear-gradient(180deg, rgba(20,8,8,0.98) 0%, rgba(10,5,5,0.98) 100%)', border: '2px solid rgba(239,68,68,0.5)', boxShadow: '0 8px 40px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
+              <Heart size={48} fill="#ef4444" strokeWidth={0} style={{color:'#ef4444'}}/>
+              <div className="text-2xl font-black text-white rpg-title" style={{WebkitTextStroke:'0.5px rgba(0,0,0,0.8)'}}>REVIVING...</div>
+              <div className="text-6xl font-black rpg-title" style={{color:'#ef4444', WebkitTextStroke:'1px rgba(0,0,0,0.7)'}}>
+                {Math.ceil(revivingCountdown)}
+              </div>
+              <div className="text-sm text-white/50 rpg-text uppercase tracking-widest">Shield activates on revival</div>
+              {/* Progress bar */}
+              <div className="w-48 h-2 rounded-sm overflow-hidden" style={{background:'rgba(0,0,0,0.5)', border:'1px solid rgba(0,0,0,0.6)'}}>
+                <div className="h-full" style={{
+                  width: `${((5 - revivingCountdown) / 5) * 100}%`,
+                  background: 'linear-gradient(90deg,#b91c1c,#ef4444)',
+                  transition: 'width 0.1s'
+                }}/>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* --- OVERLAYS --- */}
       <div className="absolute inset-0 pointer-events-none">
         <AnimatePresence>
-            
-            {/* LEVEL UP SCREEN */}
+
+            {/* LEVEL UP SCREEN — no black bg, game stays visible */}
             {status === GameStatus.LEVEL_UP && (
-                <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-md pointer-events-auto">
-                    <motion.div initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center gap-8 w-full max-w-3xl px-4">
+                <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center pointer-events-auto" style={{ background: 'rgba(0,0,0,0.45)' }}>
+                    <motion.div initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center gap-6 w-full max-w-3xl px-4">
                         <div className="text-center">
-                            <h2 className="text-5xl font-black text-yellow-400 mb-2 drop-shadow-xl tracking-tight rpg-title" style={{textShadow:'0 0 40px rgba(250,204,21,0.5)', WebkitTextStroke:'1px rgba(0,0,0,0.5)'}}>WAVE CLEARED!</h2>
-                            <p className="text-slate-400 font-bold tracking-widest text-sm uppercase rpg-text">Choose a Reward</p>
+                            <h2 className="text-5xl font-black text-yellow-300 mb-1 tracking-tight rpg-title" style={{WebkitTextStroke:'1px rgba(0,0,0,0.7)'}}>WAVE CLEARED!</h2>
+                            <p className="text-white/60 font-bold tracking-widest text-xs uppercase rpg-text">Choose a Reward</p>
                         </div>
-                        <div className="grid grid-cols-3 gap-5 w-full">
+                        <div className="grid grid-cols-3 gap-4 w-full">
                             {upgradeOptions.map((opt) => {
                                 const rarityAccent = opt.rarity === 'MYTHIC' ? '#f87171' : opt.rarity === 'LEGENDARY' ? '#fbbf24' : opt.rarity === 'EPIC' ? '#c084fc' : opt.rarity === 'RARE' ? '#60a5fa' : '#94a3b8';
-                                const rarityBg = opt.rarity === 'MYTHIC' ? 'rgba(220,38,38,0.15)' : opt.rarity === 'LEGENDARY' ? 'rgba(202,138,4,0.15)' : opt.rarity === 'EPIC' ? 'rgba(147,51,234,0.15)' : opt.rarity === 'RARE' ? 'rgba(59,130,246,0.12)' : 'rgba(255,255,255,0.04)';
+                                const rarityBg = opt.rarity === 'MYTHIC' ? 'rgba(220,38,38,0.18)' : opt.rarity === 'LEGENDARY' ? 'rgba(202,138,4,0.18)' : opt.rarity === 'EPIC' ? 'rgba(147,51,234,0.18)' : opt.rarity === 'RARE' ? 'rgba(59,130,246,0.15)' : 'rgba(30,30,40,0.92)';
                                 return (
                                 <motion.button
                                     key={opt.id}
-                                    initial={{ y: 20, opacity: 0 }}
+                                    initial={{ y: 16, opacity: 0 }}
                                     animate={{ y: 0, opacity: 1 }}
-                                    whileHover={{ scale: 1.04, y: -4 }}
+                                    whileHover={{ scale: 1.03, y: -3 }}
                                     onClick={() => selectUpgrade(opt)}
-                                    className="flex flex-col items-center rounded-md overflow-hidden cursor-pointer group transition-all"
+                                    className="flex flex-col items-center rounded-md overflow-hidden cursor-pointer group"
                                     style={{
-                                        background: `linear-gradient(180deg, ${rarityBg} 0%, rgba(12,12,18,0.98) 100%)`,
-                                        border: `1.5px solid ${rarityAccent}40`,
-                                        boxShadow: `0 0 32px ${rarityAccent}20, 0 8px 32px rgba(0,0,0,0.6)`,
-                                        minHeight: 280,
+                                        background: `linear-gradient(180deg, ${rarityBg} 0%, rgba(10,10,16,0.97) 100%)`,
+                                        border: `1.5px solid ${rarityAccent}55`,
+                                        boxShadow: `0 4px 20px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06)`,
+                                        minHeight: 260,
                                     }}
                                 >
                                     {/* Big icon area */}
-                                    <div className="flex-1 flex items-center justify-center w-full py-8"
-                                        style={{ background: `radial-gradient(ellipse at center, ${rarityAccent}18 0%, transparent 70%)` }}>
+                                    <div className="flex-1 flex items-center justify-center w-full py-8">
                                         <div className="flex items-center justify-center"
-                                            style={{ width: 80, height: 80, borderRadius: '50%', background: `${rarityAccent}18`, border: `2px solid ${rarityAccent}40`, boxShadow: `0 0 24px ${rarityAccent}30` }}>
+                                            style={{ width: 80, height: 80, borderRadius: 8, background: `${rarityAccent}15`, border: `2px solid ${rarityAccent}45` }}>
                                             {opt.type.includes('SKILL')
                                                 ? <Star size={40} fill={rarityAccent} strokeWidth={0} style={{color: rarityAccent}}/>
                                                 : <ArrowUpCircle size={40} fill={rarityAccent} strokeWidth={0} style={{color: rarityAccent}}/>
@@ -897,12 +946,12 @@ export const GameUI: React.FC = () => {
                                         </div>
                                     </div>
                                     {/* Text area */}
-                                    <div className="w-full px-5 pb-5 flex flex-col items-center gap-2">
-                                        <div className="text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full" style={{ color: rarityAccent, background: `${rarityAccent}18`, border: `1px solid ${rarityAccent}30` }}>{opt.rarity}</div>
-                                        <div className="font-black text-lg text-white leading-tight text-center">{opt.name}</div>
-                                        <div className="text-xs text-slate-500 font-medium leading-relaxed text-center">{opt.description}</div>
-                                        <div className="mt-2 w-full py-2.5 rounded-xl font-black text-sm text-center transition-colors group-hover:opacity-100 opacity-80"
-                                            style={{ background: `${rarityAccent}cc`, color: '#fff', boxShadow: `0 4px 16px ${rarityAccent}40` }}>
+                                    <div className="w-full px-4 pb-4 flex flex-col items-center gap-2">
+                                        <div className="text-[9px] font-black uppercase tracking-widest px-3 py-0.5 rounded" style={{ color: rarityAccent, background: `${rarityAccent}18`, border: `1px solid ${rarityAccent}30` }}>{opt.rarity}</div>
+                                        <div className="font-black text-base text-white leading-tight text-center rpg-text">{opt.name}</div>
+                                        <div className="text-xs text-slate-400 font-medium leading-relaxed text-center">{opt.description}</div>
+                                        <div className="mt-1 w-full py-2 rounded font-black text-sm text-center rpg-text"
+                                            style={{ background: `${rarityAccent}28`, color: rarityAccent, border: `1px solid ${rarityAccent}50` }}>
                                             SELECT
                                         </div>
                                     </div>
@@ -920,7 +969,7 @@ export const GameUI: React.FC = () => {
                 className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none"
               >
                 <div className="relative flex flex-col overflow-hidden pointer-events-auto"
-                  style={{ width: 'min(960px,95vw)', height: 'min(680px,88vh)', background: 'linear-gradient(160deg,#1a1a24 0%,#12121a 100%)', border: '1px solid rgba(180,150,70,0.32)', borderRadius: 8, boxShadow: '0 8px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.03)' }}>
+                  style={{ width: 'min(960px,95vw)', height: 'min(680px,88vh)', background: 'linear-gradient(160deg,#1e1e2c 0%,#10101a 100%)', border: '1px solid rgba(180,150,70,0.35)', borderRadius: 6, boxShadow: '0 16px 60px rgba(0,0,0,0.9), 0 2px 0 rgba(255,255,255,0.04) inset, 0 -3px 0 rgba(0,0,0,0.6) inset' }}>
 
                   {/* Tab bar */}
                   <div className="flex items-center shrink-0" style={{ borderBottom: '1px solid rgba(180,150,70,0.18)', background: 'rgba(0,0,0,0.3)' }}>
@@ -934,7 +983,7 @@ export const GameUI: React.FC = () => {
                         else if (tab==='CHARACTER' && !isCharacterSheetOpen) { closeAllUI(); setTimeout(toggleCharacterSheet,10); }
                       }}
                         className="relative px-5 py-4 text-xs font-black uppercase tracking-widest transition-colors rpg-text"
-                        style={{ color: panelTab===tab ? '#f0c040' : 'rgba(100,100,110,0.5)', textShadow: panelTab===tab ? '0 0 10px rgba(240,192,64,0.4)' : 'none' }}>
+                        style={{ color: panelTab===tab ? '#f0c040' : 'rgba(100,100,110,0.5)' }}>
                         {tab}
                         {panelTab===tab && <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg,transparent,#f0c040,transparent)' }} />}
                       </button>
@@ -950,7 +999,7 @@ export const GameUI: React.FC = () => {
                   {panelTab==='INVENTORY' && (
                     <div className="flex flex-1 overflow-hidden">
                       {/* Left: equip cards + grid */}
-                      <div className="flex flex-col p-4 gap-3 overflow-y-auto" style={{ width:'58%', borderRight:'1px solid rgba(180,150,70,0.12)' }}>
+                      <div className="flex flex-col p-4 gap-3 overflow-y-auto" style={{ width:'58%' }}>
                         {/* RPG Equipment Cards */}
                         <div className="flex gap-2 items-start">
                           {([
@@ -966,13 +1015,13 @@ export const GameUI: React.FC = () => {
                                 onClick={() => { if(s.i) { setSelectedItem(s.i); } }}
                                 onMouseEnter={() => s.i && setHoveredItem(s.i)}
                                 onMouseLeave={() => setHoveredItem(null)}
-                                className="flex flex-col items-center rounded-xl overflow-hidden relative transition-all"
+                                className="flex flex-col items-center rounded-md overflow-hidden relative transition-all active:translate-y-0.5"
                                 style={{
                                   width: isWeapon ? 96 : 76,
                                   height: isWeapon ? 120 : 96,
-                                  background: s.i ? getRarityBgDark(s.i.rarity) : 'rgba(255,255,255,0.02)',
-                                  border: s.i ? `1.5px solid ${rarityColor}55` : '1px solid rgba(255,255,255,0.06)',
-                                  boxShadow: s.i ? `0 0 18px ${rarityColor}30, inset 0 0 20px rgba(0,0,0,0.3)` : 'none',
+                                  background: s.i ? `linear-gradient(180deg, ${getRarityBgDark(s.i.rarity)} 0%, rgba(8,8,14,0.95) 100%)` : 'rgba(20,20,30,0.6)',
+                                  border: s.i ? `1px solid ${rarityColor}50` : '1px solid rgba(255,255,255,0.05)',
+                                  boxShadow: s.i ? `0 4px 0 rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)` : '0 3px 0 rgba(0,0,0,0.4)',
                                   flexShrink: 0,
                                 }}>
                                 {s.i ? (
@@ -999,9 +1048,9 @@ export const GameUI: React.FC = () => {
                           <div className="flex flex-col justify-between ml-auto gap-2">
                             <button
                               onClick={() => autoEquip()}
-                              className="px-4 py-2 text-xs font-black text-white uppercase rounded-xl transition-all active:scale-95"
-                              style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.7),rgba(59,130,246,0.7))', border:'1.5px solid rgba(99,102,241,0.5)', boxShadow:'0 0 16px rgba(99,102,241,0.3)' }}>
-                              ⚡ AUTO
+                              className="px-3 py-2 text-xs font-black text-white uppercase rounded-md transition-all active:scale-95 rpg-text"
+                              style={{ background: 'linear-gradient(180deg,rgba(99,102,241,0.8) 0%,rgba(59,130,246,0.65) 100%)', border:'1px solid rgba(99,102,241,0.5)', boxShadow:'0 3px 0 rgba(30,30,80,0.7), inset 0 1px 0 rgba(255,255,255,0.12)' }}>
+                              AUTO EQUIP
                             </button>
                             <span className="text-[10px] text-slate-600 font-bold text-right">{inventory.length}/{maxInventorySlots}</span>
                           </div>
@@ -1082,7 +1131,7 @@ export const GameUI: React.FC = () => {
                   {panelTab==='CRAFTING' && (
                     <div className="flex flex-1 overflow-hidden">
                       {/* Left: item selection + materials */}
-                      <div className="flex flex-col p-4 gap-3 overflow-y-auto" style={{ width:'45%', borderRight:'1px solid rgba(180,150,70,0.12)' }}>
+                      <div className="flex flex-col p-4 gap-3 overflow-y-auto" style={{ width:'45%' }}>
                         <div className="text-[9px] font-black text-slate-600 uppercase">Select item to upgrade/recycle</div>
                         <div className="grid grid-cols-5 gap-1.5">
                           {sortedInventory.filter(i=>i.type!=='POTION'&&i.type!=='CORE'&&i.type!=='REVIVE').map(item => (
@@ -1210,7 +1259,7 @@ export const GameUI: React.FC = () => {
                   {/* ── CHARACTER TAB ── */}
                   {panelTab==='CHARACTER' && (
                     <div className="flex-1 p-6 overflow-y-auto">
-                      <div className="flex items-center gap-4 mb-6 pb-4" style={{borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
+                      <div className="flex items-center gap-4 mb-6 pb-4">
                         <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background:`${CLASS_COLOR[hero]??'#6366f1'}18`, border:`1.5px solid ${CLASS_COLOR[hero]??'#6366f1'}50` }}>
                           {hero==='ARCHER' && <Crosshair size={32} style={{color:CLASS_COLOR[hero]}}/>}
                           {hero==='WIZARD' && <Wand2 size={32} style={{color:CLASS_COLOR[hero]}}/>}
@@ -1221,7 +1270,7 @@ export const GameUI: React.FC = () => {
                       </div>
                       <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
                         {([['Damage',Math.floor(stats.damage).toString()],['Health',`${Math.floor(health)} / ${stats.maxHealth}`],['Defense',stats.defense.toFixed(1)],['Mana',`${Math.floor(mana)} / ${stats.maxMana}`],['Move Speed',stats.moveSpeed.toFixed(1)],['Regen',`${stats.regen.toFixed(1)}/s`],['Crit Rate',`${(stats.critRate*100).toFixed(0)}%`],['Crit Dmg',`${(stats.critDamage*100).toFixed(0)}%`],['Atk Speed',stats.fireRate.toFixed(2)],['Cooldown',`-${(stats.cooldownReduction*100).toFixed(0)}%`]] as [string,string][]).map(([l,v]) => (
-                          <div key={l} className="flex justify-between items-center py-2 text-xs" style={{borderBottom:'1px solid rgba(255,255,255,0.04)'}}>
+                          <div key={l} className="flex justify-between items-center py-1.5 text-xs px-2 rounded-md" style={{background:'rgba(255,255,255,0.02)'}}>
                             <span className="text-slate-500 font-bold uppercase tracking-wider">{l}</span>
                             <span className="font-mono font-bold text-white">{v}</span>
                           </div>
