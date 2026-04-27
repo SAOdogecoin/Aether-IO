@@ -142,7 +142,7 @@ interface GameState {
   upgradeItem: (item: Item) => { success: boolean, msg: string, newItem?: Item };
   resetGame: () => void;
   
-  spawnDrop: (position: Vector3, type: 'ITEM' | 'XP' | 'GOLD' | 'GEM', value: number, rarityOverride?: Rarity) => void;
+  spawnDrop: (position: Vector3, type: 'ITEM' | 'XP' | 'GOLD' | 'GEM', value: number, rarityOverride?: Rarity, orbMultiplier?: 5 | 10) => void;
   collectDrop: (id: number) => void;
   triggerSkillCooldown: (skill: 'dash' | 'q' | 'r' | 'e') => void;
   activateRage: () => void;
@@ -192,14 +192,6 @@ const INITIAL_GAME_STATS: GameStatistics = {
     bestRunClass: null,
     classRuns: { ARCHER: 0, WIZARD: 0, BARBARIAN: 0 },
     classHighestWave: { ARCHER: 0, WIZARD: 0, BARBARIAN: 0 }
-};
-
-export const RARITY_LEVEL_REQ: Record<Rarity, number> = {
-    'COMMON': 1,
-    'RARE': 7,
-    'EPIC': 14,
-    'LEGENDARY': 21,
-    'MYTHIC': 28
 };
 
 export const calculateItemCP = (item: Item): number => {
@@ -912,14 +904,14 @@ export const useGameStore = create<GameState>((set, get) => ({
       isInvincible: true 
   })),
 
-  spawnDrop: (position, type, value, rarityOverride) => set((state) => {
+  spawnDrop: (position, type, value, rarityOverride, orbMultiplier) => set((state) => {
       if (state.drops.length > 99) return { drops: state.drops };
-      
+
       const maxDist = (ARENA_SIZE / 2) - 2;
       const dist = position.length();
       if (dist > maxDist) {
           position.normalize().multiplyScalar(maxDist);
-          position.y = 0; 
+          position.y = 0;
       }
 
       let item = null;
@@ -930,8 +922,8 @@ export const useGameStore = create<GameState>((set, get) => ({
               if (pool.length === 0) pool = ITEMS_POOL.filter(i => i.type !== 'POTION' && i.type !== 'CORE' && i.type !== 'PET');
           } else {
                const r = Math.random();
-               if (r > 0.90) { pool = pool.filter(i => i.type === 'POTION'); } 
-               else if (r > 0.60) { pool = pool.filter(i => i.type === 'CORE'); } 
+               if (r > 0.90) { pool = pool.filter(i => i.type === 'POTION'); }
+               else if (r > 0.60) { pool = pool.filter(i => i.type === 'CORE'); }
                else { pool = pool.filter(i => (i.rarity === 'COMMON' || i.rarity === 'RARE') && i.type !== 'POTION' && i.type !== 'CORE'); }
           }
 
@@ -939,11 +931,11 @@ export const useGameStore = create<GameState>((set, get) => ({
               const hero = get().hero;
               const weightedPool: Item[] = [];
               pool.forEach(p => {
-                  weightedPool.push(p); weightedPool.push(p); 
+                  weightedPool.push(p); weightedPool.push(p);
                   if (p.type === 'WEAPON' && p.classType === hero) { weightedPool.push(p); }
               });
               const template = weightedPool[Math.floor(Math.random() * weightedPool.length)];
-              item = { ...template, id: Math.random().toString(), stats: { ...template.stats }, onHitEffect: template.onHitEffect }; 
+              item = { ...template, id: Math.random().toString(), stats: { ...template.stats }, onHitEffect: template.onHitEffect };
               item.quantity = 1;
               if (item.type === 'WEAPON' || item.type === 'ARMOR' || item.type === 'ACCESSORY') {
                    const plusChance = Math.random();
@@ -961,8 +953,8 @@ export const useGameStore = create<GameState>((set, get) => ({
               }
           }
       }
-      const orbMultiplier = (type === 'GOLD' || type === 'XP') && Math.random() < 0.5 ? 10 : 5;
-      return { drops: [...state.drops, { id: Math.random(), position: position.clone(), type, value, item, active: true, rotation: Math.random() * Math.PI, orbMultiplier }] };
+      const finalOrbMultiplier = orbMultiplier || ((type === 'GOLD' || type === 'XP') && Math.random() < 0.5 ? 10 : 5);
+      return { drops: [...state.drops, { id: Math.random(), position: position.clone(), type, value, item, active: true, rotation: Math.random() * Math.PI, orbMultiplier: finalOrbMultiplier }] };
   }),
 
   handleInventoryFull: () => {

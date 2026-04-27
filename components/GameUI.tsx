@@ -2,9 +2,9 @@
 import React, { useEffect, useState, useMemo, useRef, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { useGLTF, PresentationControls } from '@react-three/drei';
-import { useGameStore, calculateItemCP, calculateTotalCP, RARITY_LEVEL_REQ } from '../store';
+import { useGameStore, calculateItemCP, calculateTotalCP } from '../store';
 import { GameStatus, Upgrade, Item, Rarity, GameNotification, HeroClass, SkillLevels, ActionResult, PlayerStats } from '../types';
-import { UPGRADES_POOL, ITEMS_POOL, HERO_STATS, PETS_POOL, SKILLS_INFO, ARENA_SIZE, SHOP_POSITIONS, RECYCLE_YIELDS, CRAFTING_COSTS, MATERIAL_COMBINE_COST } from '../constants';
+import { UPGRADES_POOL, ITEMS_POOL, HERO_STATS, PETS_POOL, SKILLS_INFO, ARENA_SIZE, SHOP_POSITIONS, RECYCLE_YIELDS, CRAFTING_COSTS, MATERIAL_COMBINE_COST, RARITY_LEVEL_REQ } from '../constants';
 import { WEAPON_PATHS } from '../assetConfig';
 import {
   Heart, Zap, Sparkles, RotateCcw,

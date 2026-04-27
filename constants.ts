@@ -9,6 +9,14 @@ export const CAMERA_HEIGHT = 45;
 export const INVENTORY_LIMIT = 50;
 export const POTION_STACK_LIMIT = 50;
 
+export const RARITY_LEVEL_REQ: Record<Rarity, number> = {
+    'COMMON': 1,
+    'RARE': 7,
+    'EPIC': 14,
+    'LEGENDARY': 21,
+    'MYTHIC': 28
+};
+
 export const RECYCLE_YIELDS: Record<Rarity, number> = {
     'COMMON': 1,
     'RARE': 1,

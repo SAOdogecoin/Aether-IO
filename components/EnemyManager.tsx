@@ -443,23 +443,27 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                     if (wave >= 60 && roll < Math.min(0.20, (wave - 50) * 0.01)) { spawnDrop(e.position, 'ITEM', 0, 'MYTHIC'); dropped = true; }
                     if (!dropped && wave >= 30 && Math.random() < Math.min(0.50, (wave - 20) * 0.02)) { spawnDrop(e.position, 'ITEM', 0, 'LEGENDARY'); dropped = true; }
                     if (!dropped) spawnDrop(e.position, 'ITEM', 0, 'EPIC');
-                    if (isGoldDrop) spawnDrop(e.position.clone().add(tempVec.set(1,0,0)), 'GOLD', 100);
-                    else spawnDrop(e.position.clone().add(tempVec.set(1,0,0)), 'XP', 1000);
+                    if (isGoldDrop) spawnDrop(e.position.clone().add(tempVec.set(1,0,0)), 'GOLD', 100, undefined, 10);
+                    else spawnDrop(e.position.clone().add(tempVec.set(1,0,0)), 'XP', 1000, undefined, 10);
                 }
                 else if (e.type === 1 || e.type === 5) {
                      if (Math.random() > 0.5) spawnDrop(e.position, 'ITEM', 0);
-                     if (isGoldDrop) spawnDrop(e.position.clone().add(tempVec.set(1,0,0)), 'GOLD', 50);
+                     if (isGoldDrop) spawnDrop(e.position.clone().add(tempVec.set(1,0,0)), 'GOLD', 50, undefined, 5);
                      else {
                          for(let k=0; k<5; k++) {
                              const offset = tempVec.set((Math.random()-0.5)*2, 0, (Math.random()-0.5)*2);
-                             spawnDrop(e.position.clone().add(offset), 'XP', 100);
+                             spawnDrop(e.position.clone().add(offset), 'XP', 100, undefined, 5);
                          }
                      }
                 }
                 else {
                     if (Math.random() > 0.90) spawnDrop(e.position, 'ITEM', 0);
-                    else if (isGoldDrop) spawnDrop(e.position, 'GOLD', e.type >= 3 ? 10 : 5);
-                    else spawnDrop(e.position, 'XP', e.type >= 3 ? 30 : 20);
+                    else {
+                        const blackOrbChance = Math.max(0, (wave - 10) * 0.02);
+                        const orbMult = Math.random() < blackOrbChance ? 10 : 5;
+                        if (isGoldDrop) spawnDrop(e.position, 'GOLD', e.type >= 3 ? 10 : 5, undefined, orbMult);
+                        else spawnDrop(e.position, 'XP', e.type >= 3 ? 30 : 20, undefined, orbMult);
+                    }
                 }
                 dummy.position.set(0, -100, 0);
                 if (stunIconsRef.current) stunIconsRef.current.setMatrixAt(i, dummy.matrix);
