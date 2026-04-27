@@ -190,7 +190,7 @@ export interface DropData {
   active: boolean;
   value: number;
   rotation: number;
-  orbMultiplier?: 5 | 10;
+  orbMultiplier: 5 | 10;
 }
 
 export interface SkillLevels {
