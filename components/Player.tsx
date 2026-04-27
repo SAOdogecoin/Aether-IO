@@ -44,6 +44,7 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
   const axeSpinTime = useRef(0);
   const axeDamageTimer = useRef(0);
   const arrowRainState = useRef({ active: false, wavesLeft: 0, timer: 0 });
+  const homingShotState = useRef({ active: false, roundsLeft: 0, timer: 0 });
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -93,6 +94,10 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
           if (overrides.trailTimer !== undefined) bullet.trailTimer = overrides.trailTimer;
           if (overrides.maxPullCount) bullet.maxPullCount = overrides.maxPullCount;
           
+          if (overrides.position) {
+              bullet.position.copy(overrides.position);
+          }
+
           return bullet;
       }
       return null;
@@ -105,25 +110,39 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
           
           if (ability === 'RAGE') {
               activateRage();
-          } else if (ability === 'PIERCING_SHOT') {
-              if (hero === 'ARCHER') activateRage();
+          } else if (ability === 'PIERCING_SHOT' || ability === 'HOMING_SHOT') {
+              if (hero === 'ARCHER') {
+                  homingShotState.current.active = true;
+                  homingShotState.current.roundsLeft = 3;
+                  homingShotState.current.timer = 0;
+              }
               else spawnBullet('PIERCING_ARROW', 50, 1.75, { pierce: 99, knockback: 4.0, lifetime: 3.0 });
           } else if (ability === 'GRAVITY_SPELL') {
               const limit = 8 + (skillLevels.gravity * 1);
               spawnBullet('BLACKHOLE', 0, 5.0, { pierce: 99, lifetime: 2.6, trailTimer: 0.1, maxPullCount: limit }); 
           } else if (ability === 'ARROW_RAIN') {
-              if (hero === 'ARCHER') activateRage();
+              if (hero === 'ARCHER') activateRage(2.8);
               else {
                   arrowRainState.current.active = true;
                   arrowRainState.current.wavesLeft = 1;
                   arrowRainState.current.timer = 0;
               }
-          } else if (ability === 'FIREBALL') {
-              spawnBullet('FIREBALL', 10, 2.0 * 0.63, { 
-                  pierce: 100, 
-                  lifetime: 8.0, 
-                  effect: { type: 'BURN', duration: 5, value: stats.damage * 0.6 } 
-              });
+          } else if (ability === 'FIREBALL' || ability === 'METEOR') {
+              if (hero === 'WIZARD') {
+                  const spawnPos = targetPosRef.current.clone();
+                  const dist = spawnPos.distanceTo(pos);
+                  const maxRange = 18.0;
+                  if (dist > maxRange) {
+                      spawnPos.sub(pos).normalize().multiplyScalar(maxRange).add(pos);
+                  }
+                  spawnBullet('METEOR', 0, 3.5, { position: spawnPos.add(new Vector3(0, 15, 0)), lifetime: 5.0 });
+              } else {
+                  spawnBullet('FIREBALL', 10, 2.0 * 0.63, {
+                      pierce: 100,
+                      lifetime: 8.0,
+                      effect: { type: 'BURN', duration: 5, value: stats.damage * 0.6 }
+                  });
+              }
           } else if (ability === 'AXE_SPIN') {
               axeSpinTime.current = 3.0;
               axeDamageTimer.current = 0.2; 
@@ -216,6 +235,30 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
             arrowRainState.current.wavesLeft--;
             arrowRainState.current.timer = 0.2; 
             if (arrowRainState.current.wavesLeft <= 0) arrowRainState.current.active = false;
+        }
+    }
+
+    if (homingShotState.current.active) {
+        homingShotState.current.timer -= delta;
+        if (homingShotState.current.timer <= 0) {
+            const count = 10;
+            for (let i = 0; i < count; i++) {
+                const bullet = bulletsDataRef.current.find(b => !b.active);
+                if (bullet) {
+                    bullet.active = true;
+                    bullet.lifetime = 4.0;
+                    bullet.position.copy(pos).add(new Vector3(0, 1.5, 0));
+                    const angle = (Math.PI * 2 * i) / count;
+                    bullet.velocity.set(Math.cos(angle), 0, Math.sin(angle)).multiplyScalar(15);
+                    bullet.type = 'HOMING_ARROW';
+                    bullet.pierce = 1;
+                    bullet.damageMultiplier = 1.0 * stats.skillDamage * 2.0;
+                    bullet.hitIds = [];
+                }
+            }
+            homingShotState.current.roundsLeft--;
+            homingShotState.current.timer = 0.4;
+            if (homingShotState.current.roundsLeft <= 0) homingShotState.current.active = false;
         }
     }
 

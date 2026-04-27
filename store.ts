@@ -144,7 +144,7 @@ interface GameState {
   spawnDrop: (position: Vector3, type: 'ITEM' | 'XP' | 'GOLD' | 'GEM', value: number, rarityOverride?: Rarity) => void;
   collectDrop: (id: number) => void;
   triggerSkillCooldown: (skill: 'dash' | 'q' | 'r' | 'e') => void;
-  activateRage: () => void;
+  activateRage: (duration?: number) => void;
   updatePassiveCooldowns: (state: Partial<PassiveSkillState>) => void;
   tickCooldowns: (delta: number) => void;
   updateMinimapEnemies: (enemies: { x: number, z: number, type: number }[]) => void;
@@ -1031,9 +1031,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       return { skills: { ...state.skills, [skill]: cooldown } };
   }),
 
-  activateRage: () => set((state) => {
+  activateRage: (duration: number = 4.0) => set((state) => {
       const newStats = calculateStats(state.baseStats, state.equipment, true, state.sprintTimer > 0, state.hero);
-      return { rageMode: true, rageTimer: 4.0, stats: newStats };
+      return { rageMode: true, rageTimer: duration, stats: newStats };
   }),
 
   activateEarthwall: (pos) => set((state) => ({ 

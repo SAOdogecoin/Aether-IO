@@ -105,19 +105,19 @@ export const SKILLS_INFO = {
     special: { name: 'Class Special (E)', description: 'Unlocks your unique Class Ability. Costs 5 SP.', type: 'ACTIVE' },
 
     // Archer Only
-    piercing: { name: 'Wind Speed', description: 'Active (Q): 3x Atk Speed and Max Multishot.', classType: 'ARCHER', type: 'ACTIVE' },
+    piercing: { name: 'Homing Shot', description: 'Active (R): Fires 3 rounds of 10 homing arrows.', classType: 'ARCHER', type: 'ACTIVE' },
     burning: { name: 'Burning Arrow', description: 'Passive: Periodically fires explosive fire arrows.', classType: 'ARCHER', type: 'PASSIVE' },
     freezing: { name: 'Freezing Arrow', description: 'Passive: Periodically fires explosive ice arrows.', classType: 'ARCHER', type: 'PASSIVE' },
     
     // Wizard Only
     thunder: { name: 'Thundercaller', description: 'Passive: Strikes random enemies with lightning.', classType: 'WIZARD', type: 'PASSIVE' },
-    gravity: { name: 'Gravity Well', description: 'Active (Q): Summon a black hole.', classType: 'WIZARD', type: 'ACTIVE' },
+    gravity: { name: 'Gravity Well', description: 'Active (R): Summon a black hole.', classType: 'WIZARD', type: 'ACTIVE' },
     freezeSpell: { name: 'Blizzard', description: 'Passive: Freezes enemies in large area.', classType: 'WIZARD', type: 'PASSIVE' },
     storm: { name: 'Storm', description: 'Passive: Summons a bouncing typhoon.', classType: 'WIZARD', type: 'PASSIVE' },
     
     // Barbarian Only
     orbital: { name: 'Orbital Blades', description: 'Passive: Blades orbit and damage enemies.', classType: 'BARBARIAN', type: 'PASSIVE' },
-    rage: { name: 'Rage', description: 'Active (Q): Double Attack Speed for 4s.', classType: 'BARBARIAN', type: 'ACTIVE' },
+    rage: { name: 'Rage', description: 'Active (R): Double Attack Speed for 4s.', classType: 'BARBARIAN', type: 'ACTIVE' },
     stamp: { name: 'Mega Stamp', description: 'Passive: Periodically creates a stunning shockwave.', classType: 'BARBARIAN', type: 'PASSIVE' },
 };
 
@@ -144,14 +144,14 @@ export const UPGRADES_POOL: Upgrade[] = [
   { id: 'u_orb', type: 'SKILL_ORBITAL', name: 'Orbitals', description: 'Level Up: +1 Blade', rarity: 'RARE', value: 1, classType: 'BARBARIAN' },
   { id: 'u_thun', type: 'SKILL_THUNDER', name: 'Thundercaller', description: 'Level Up: +1 Target', rarity: 'RARE', value: 1, classType: 'WIZARD' },
 
-  { id: 'u_pierce', type: 'SKILL_PIERCING', name: 'Piercing Arrow', description: 'Active (Q) Level Up', rarity: 'EPIC', value: 1, classType: 'ARCHER' },
+  { id: 'u_pierce', type: 'SKILL_PIERCING', name: 'Homing Shot', description: 'Active (R) Level Up', rarity: 'EPIC', value: 1, classType: 'ARCHER' },
   { id: 'u_burn', type: 'SKILL_BURNING', name: 'Burning Arrow', description: 'Passive Level Up', rarity: 'EPIC', value: 1, classType: 'ARCHER' },
   { id: 'u_freeze', type: 'SKILL_FREEZING', name: 'Freezing Arrow', description: 'Passive Level Up', rarity: 'EPIC', value: 1, classType: 'ARCHER' },
   
-  { id: 'u_grav', type: 'SKILL_GRAVITY', name: 'Gravity Spell', description: 'Active (Q) Level Up', rarity: 'LEGENDARY', value: 1, classType: 'WIZARD' },
+  { id: 'u_grav', type: 'SKILL_GRAVITY', name: 'Gravity Well', description: 'Active (R) Level Up', rarity: 'LEGENDARY', value: 1, classType: 'WIZARD' },
   { id: 'u_blizz', type: 'SKILL_FREEZE_SPELL', name: 'Blizzard', description: 'Passive Level Up', rarity: 'EPIC', value: 1, classType: 'WIZARD' },
   
-  { id: 'u_rage', type: 'SKILL_RAGE', name: 'Rage', description: 'Active (Q) Level Up', rarity: 'RARE', value: 1, classType: 'BARBARIAN' },
+  { id: 'u_rage', type: 'SKILL_RAGE', name: 'Rage', description: 'Active (R) Level Up', rarity: 'RARE', value: 1, classType: 'BARBARIAN' },
   { id: 'u_stamp', type: 'SKILL_STAMP', name: 'Mega Stamp', description: 'Passive Level Up', rarity: 'EPIC', value: 1, classType: 'BARBARIAN' },
 ];
 
@@ -217,42 +217,42 @@ export const ITEMS_POOL: Item[] = [
   { id: 'revive_ankh', name: 'Ankh of Life', type: 'REVIVE', stats: {}, rarity: 'EPIC', price: 2000, level: 1, description: 'Auto-revive on death.' },
 
   // --- WEAPONS (1 Stat Common, 2 Rare, 3 Epic, 4 Leg, 5 Mythic) ---
-  { id: 'staff_1', name: 'Novice Staff', classType: 'WIZARD', type: 'WEAPON', rarity: 'COMMON', price: 100, level: 1, projectileType: 'MAGIC', ability: 'FIREBALL', 
-    stats: { damage: 15 }, description: 'Basic magic.' },
+  { id: 'staff_1', name: 'Novice Staff', classType: 'WIZARD', type: 'WEAPON', rarity: 'COMMON', price: 100, level: 1, projectileType: 'MAGIC', ability: 'METEOR',
+    stats: { damage: 15 }, description: 'Active (Q): Summon falling meteor.' },
   { id: 'bow_1', name: 'Shortbow', classType: 'ARCHER', type: 'WEAPON', rarity: 'COMMON', price: 100, level: 1, projectileType: 'ARROW', ability: 'ARROW_RAIN', 
-    stats: { damage: 8 }, description: 'Basic bow.' },
+    stats: { damage: 8 }, description: 'Active (Q): 3x Fire Rate & Max Multishot for 2.8s.' },
   { id: 'axe_1', name: 'Hand Axe', classType: 'BARBARIAN', type: 'WEAPON', rarity: 'COMMON', price: 100, level: 1, projectileType: 'AXE', ability: 'AXE_SPIN', 
     stats: { damage: 18 }, description: 'Basic axe.' },
   
   // RARE (2 Stats)
-  { id: 'staff_rare', name: 'Adept Staff', classType: 'WIZARD', type: 'WEAPON', rarity: 'RARE', price: 600, level: 1, projectileType: 'MAGIC', ability: 'FIREBALL', 
-    stats: { damage: 25, manaRegen: 1.0 }, description: 'Balanced magic.' },
+  { id: 'staff_rare', name: 'Adept Staff', classType: 'WIZARD', type: 'WEAPON', rarity: 'RARE', price: 600, level: 1, projectileType: 'MAGIC', ability: 'METEOR',
+    stats: { damage: 25, manaRegen: 1.0 }, description: 'Active (Q): Summon falling meteor.' },
   { id: 'bow_2', name: 'Elven Bow', classType: 'ARCHER', type: 'WEAPON', rarity: 'RARE', price: 600, level: 1, projectileType: 'ARROW', ability: 'ARROW_RAIN', 
-    stats: { damage: 15, fireRate: 0.2 }, onHitEffect: { type: 'POISON', duration: 4, value: 3, chance: 1.0 }, description: 'Poison arrows.' },
+    stats: { damage: 15, fireRate: 0.2 }, onHitEffect: { type: 'POISON', duration: 4, value: 3, chance: 1.0 }, description: 'Active (Q): 3x Fire Rate & Max Multishot for 2.8s.' },
   { id: 'axe_2', name: 'Viking Axe', classType: 'BARBARIAN', type: 'WEAPON', rarity: 'RARE', price: 600, level: 1, projectileType: 'AXE', ability: 'AXE_SPIN', 
     stats: { damage: 35, knockback: 1.0 }, onHitEffect: { type: 'STUN', duration: 1.0, chance: 0.25 }, description: 'Stunning blows.' },
 
   // EPIC (3 Stats)
-  { id: 'staff_3', name: 'Inferno Rod', classType: 'WIZARD', type: 'WEAPON', rarity: 'EPIC', price: 1500, level: 1, projectileType: 'MAGIC', ability: 'FIREBALL', 
-    stats: { damage: 60, critRate: 0.1, skillDamage: 0.2 }, description: 'High Crit Magic.' },
+  { id: 'staff_3', name: 'Inferno Rod', classType: 'WIZARD', type: 'WEAPON', rarity: 'EPIC', price: 1500, level: 1, projectileType: 'MAGIC', ability: 'METEOR',
+    stats: { damage: 60, critRate: 0.1, skillDamage: 0.2 }, description: 'Active (Q): Summon falling meteor.' },
   { id: 'bow_epic', name: 'Composite Bow', classType: 'ARCHER', type: 'WEAPON', rarity: 'EPIC', price: 1500, level: 1, projectileType: 'ARROW', ability: 'ARROW_RAIN', 
-    stats: { damage: 30, fireRate: 0.5, critDamage: 0.5 }, description: 'Fast and deadly.' },
+    stats: { damage: 30, fireRate: 0.5, critDamage: 0.5 }, description: 'Active (Q): 3x Fire Rate & Max Multishot for 2.8s.' },
   { id: 'axe_epic', name: 'Double Axe', classType: 'BARBARIAN', type: 'WEAPON', rarity: 'EPIC', price: 1500, level: 1, projectileType: 'AXE', ability: 'AXE_SPIN', 
     stats: { damage: 70, defense: 10, maxHealth: 25 }, description: 'Tanky weapon.' }, // HP Halved
 
   // LEGENDARY (4 Stats)
   { id: 'bow_legend', name: 'Windforce', classType: 'ARCHER', type: 'WEAPON', rarity: 'LEGENDARY', price: 3000, level: 1, projectileType: 'ARROW', ability: 'ARROW_RAIN', 
-    stats: { damage: 50, fireRate: 1.0, critRate: 0.2, knockback: 2.0 }, onHitEffect: { type: 'SLOW', duration: 3, value: 0.7, chance: 1.0 }, description: 'Knockback king.' },
-  { id: 'staff_legend', name: 'Archon Staff', classType: 'WIZARD', type: 'WEAPON', rarity: 'LEGENDARY', price: 3000, level: 1, projectileType: 'MAGIC', ability: 'FIREBALL', 
-    stats: { damage: 120, manaRegen: 3.0, skillDamage: 0.5, cooldownReduction: 0.1 }, description: 'Spell spam.' },
+    stats: { damage: 50, fireRate: 1.0, critRate: 0.2, knockback: 2.0 }, onHitEffect: { type: 'SLOW', duration: 3, value: 0.7, chance: 1.0 }, description: 'Active (Q): 3x Fire Rate & Max Multishot for 2.8s.' },
+  { id: 'staff_legend', name: 'Archon Staff', classType: 'WIZARD', type: 'WEAPON', rarity: 'LEGENDARY', price: 3000, level: 1, projectileType: 'MAGIC', ability: 'METEOR',
+    stats: { damage: 120, manaRegen: 3.0, skillDamage: 0.5, cooldownReduction: 0.1 }, description: 'Active (Q): Summon falling meteor.' },
   { id: 'axe_legend', name: 'World Breaker', classType: 'BARBARIAN', type: 'WEAPON', rarity: 'LEGENDARY', price: 3000, level: 1, projectileType: 'AXE', ability: 'AXE_SPIN', 
     stats: { damage: 150, defense: 30, maxHealth: 50, regen: 2.0 }, description: 'Unstoppable.' }, // HP Halved
 
   // MYTHIC (5 Stats)
-  { id: 'staff_god', name: 'Staff of Aether', classType: 'WIZARD', type: 'WEAPON', rarity: 'MYTHIC', price: 5000, level: 1, projectileType: 'MAGIC', ability: 'FIREBALL', 
-    stats: { damage: 200, critRate: 0.3, critDamage: 1.0, skillDamage: 1.0, cooldownReduction: 0.2 }, description: 'Godly Power' },
+  { id: 'staff_god', name: 'Staff of Aether', classType: 'WIZARD', type: 'WEAPON', rarity: 'MYTHIC', price: 5000, level: 1, projectileType: 'MAGIC', ability: 'METEOR',
+    stats: { damage: 200, critRate: 0.3, critDamage: 1.0, skillDamage: 1.0, cooldownReduction: 0.2 }, description: 'Active (Q): Summon falling meteor.' },
   { id: 'bow_god', name: 'Apollo Bow', classType: 'ARCHER', type: 'WEAPON', rarity: 'MYTHIC', price: 5000, level: 1, projectileType: 'ARROW', ability: 'ARROW_RAIN', 
-    stats: { damage: 100, fireRate: 2.0, critRate: 0.4, critDamage: 1.0, moveSpeed: 0.5 }, description: 'Rain of Destruction' },
+    stats: { damage: 100, fireRate: 2.0, critRate: 0.4, critDamage: 1.0, moveSpeed: 0.5 }, description: 'Active (Q): 3x Fire Rate & Max Multishot for 2.8s.' },
   { id: 'axe_god', name: 'Titan Killer', classType: 'BARBARIAN', type: 'WEAPON', rarity: 'MYTHIC', price: 5000, level: 1, projectileType: 'AXE', ability: 'AXE_SPIN', 
     stats: { damage: 300, maxHealth: 250, defense: 60, regen: 5.0, knockback: 3.0 }, description: 'Slays immortals.' }, // HP Halved
 
