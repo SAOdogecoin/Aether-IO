@@ -606,7 +606,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             { ...ITEMS_POOL.find(i => i.id === 'potion_hp')!, id: `start_hp_${Math.random()}`, quantity: 10 },
             { ...ITEMS_POOL.find(i => i.id === 'potion_mana')!, id: `start_mana_${Math.random()}`, quantity: 10 },
             { ...ITEMS_POOL.find(i => i.id === 'revive_ankh')!, id: `start_revive_${Math.random()}`, quantity: 1 },
-            { ...ITEMS_POOL.find(i => i.id === 'upgrade_core')!, id: `start_cores_${Math.random()}`, quantity: 30 } 
+            { ...ITEMS_POOL.find(i => i.id === 'upgrade_core')!, id: `start_cores_${Math.random()}`, quantity: 5 } 
           ];
       }
 

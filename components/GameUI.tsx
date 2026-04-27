@@ -214,7 +214,7 @@ const UniversalSkillSlot: React.FC<{
     const isDimmed = !active || level === 0;
     const isPotion = label === '1' || label === '2';
     const qty = isPotion ? level : 0;
-    const slotSize = isPassive ? 'w-12 h-12' : 'w-14 h-14';
+    const slotSize = 'w-14 h-14';
 
     return (
         <div className="flex flex-col items-center gap-0.5">
@@ -808,6 +808,14 @@ export const GameUI: React.FC = () => {
                     onClick={() => fireKey('KeyQ')}
                 />
 
+                {/* E = special */}
+                <UniversalSkillSlot
+                    icon={eIcon} level={skillLevels.special} cooldown={skills.e} maxCooldown={skillMaxCooldowns.e * (1 - stats.cooldownReduction)}
+                    label="E" desc={eAbilityDesc} active={skillLevels.special > 0}
+                    manaCost={getManaCost('e')} currentMana={mana} heroClass={hero}
+                    onClick={() => fireKey('KeyE')}
+                />
+
                 {/* R = active skill */}
                 <UniversalSkillSlot
                     icon={qIcon}
@@ -815,14 +823,6 @@ export const GameUI: React.FC = () => {
                     label="R" desc={qAbilityDesc} active={!!activeAbilityQ}
                     manaCost={getManaCost('q')} currentMana={mana} heroClass={hero}
                     onClick={() => fireKey('KeyR')}
-                />
-
-                {/* E = special */}
-                <UniversalSkillSlot
-                    icon={eIcon} level={skillLevels.special} cooldown={skills.e} maxCooldown={skillMaxCooldowns.e * (1 - stats.cooldownReduction)}
-                    label="E" desc={eAbilityDesc} active={skillLevels.special > 0}
-                    manaCost={getManaCost('e')} currentMana={mana} heroClass={hero}
-                    onClick={() => fireKey('KeyE')}
                 />
 
                 <div className="w-px h-12 bg-white/15 self-center mx-0.5" />
