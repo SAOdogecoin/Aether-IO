@@ -173,7 +173,7 @@ const INITIAL_STATS: PlayerStats = {
   projectileSpeed: 20,
   multishot: 1,
   spread: 0.2,
-  dashCooldown: 4.0, 
+  dashCooldown: 4.0,
   cooldownReduction: 0,
   magnetRadius: 5.0,
   critRate: 0.05,
@@ -182,6 +182,7 @@ const INITIAL_STATS: PlayerStats = {
   skillDamage: 1.0,
   knockback: 0.5,
   dodge: 0,
+  attackRange: 25.0,
 };
 
 const INITIAL_GAME_STATS: GameStatistics = {
@@ -306,15 +307,22 @@ const calculateStats = (base: PlayerStats, equipment: GameState['equipment'], ra
   if (equipment.weapon && equipment.weapon.projectileType === 'MAGIC') {
       final.fireRate *= 0.5;
   }
-  
+
+  // Reduce attack range for ranged characters (Wizard, Archer)
+  if (equipment.weapon) {
+      if (equipment.weapon.projectileType === 'MAGIC' || equipment.weapon.projectileType === 'ARROW') {
+          final.attackRange *= 0.6; // 60% of default range (15 units instead of 25)
+      }
+  }
+
   if (rageMode) {
       final.fireRate *= 2.0;
   }
-  
+
   if (sprintActive) {
       final.moveSpeed *= 2.0;
   }
-  
+
   if (final.multishot > 7) final.multishot = 7;
 
   return final;
@@ -1004,8 +1012,14 @@ export const useGameStore = create<GameState>((set, get) => ({
           return { drops: newDrops, inventory: [...state.inventory, { ...item, quantity: 1 }] };
       }
       
-      if (drop.type === 'XP') { addExperience(drop.value); } 
-      else if (drop.type === 'GOLD') { addScore(drop.value); } 
+      if (drop.type === 'XP') {
+          addExperience(drop.value);
+          addNotification(`+${drop.value} XP`, '#fbbf24', 'SYSTEM');
+      }
+      else if (drop.type === 'GOLD') {
+          addScore(drop.value);
+          addNotification(`+${drop.value} G`, '#fbbf24', 'SYSTEM');
+      }
       else if (drop.type === 'GEM') { addGems(drop.value); } 
       
       return { drops: newDrops };

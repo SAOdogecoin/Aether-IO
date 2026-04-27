@@ -71,7 +71,15 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
     const fireInterval = 1 / boostedFireRate;
     const targetPos = targetPosRef.current;
 
-    if (targetPos && time - lastShot.current > fireInterval) {
+    // Check if there's an enemy within attack range
+    let hasEnemyInRange = false;
+    if (enemiesDataRef && enemiesDataRef.current) {
+      hasEnemyInRange = enemiesDataRef.current.some(e =>
+        e.active && playerPos.distanceTo(e.position) <= stats.attackRange
+      );
+    }
+
+    if (targetPos && hasEnemyInRange && time - lastShot.current > fireInterval) {
       lastShot.current = time;
       const dir = new Vector3().subVectors(targetPos, playerPos).normalize();
       const count = hasPiercingBoost ? 7 : Math.min(7, stats.multishot); 
