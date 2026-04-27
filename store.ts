@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
 import { GameStatus, PlayerStats, Upgrade, Item, DropData, SkillLevels, Rarity, HeroClass, PassiveSkillState, Obstacle, CrateData, ItemType, GameNotification, BossData, AbilityType, GameStatistics, UpgradeType, ActionResult } from './types';
-import { ITEMS_POOL, HERO_STATS, PETS_POOL, ARENA_SIZE, COLORS, INVENTORY_LIMIT, UPGRADES_POOL, POTION_STACK_LIMIT, SKILLS_INFO, RECYCLE_YIELDS, CRAFTING_COSTS, MATERIAL_COMBINE_COST } from './constants';
+import { ITEMS_POOL, HERO_STATS, PETS_POOL, ARENA_SIZE, COLORS, INVENTORY_LIMIT, UPGRADES_POOL, POTION_STACK_LIMIT, SKILLS_INFO, RECYCLE_YIELDS, CRAFTING_COSTS, MATERIAL_COMBINE_COST, RARITY_LEVEL_REQ } from './constants';
 import { Vector3 } from 'three';
 
 interface GameState {
