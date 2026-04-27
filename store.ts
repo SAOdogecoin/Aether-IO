@@ -448,7 +448,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   level: 1,
   experience: 0,
   experienceToNextLevel: 250, 
-  skillPoints: 30,
+  skillPoints: 0,
   health: 100,
   mana: 100,
   playerPosition: new Vector3(0, 0, 0),
@@ -615,7 +615,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         level: 1,
         experience: 0,
         experienceToNextLevel: 250, 
-        skillPoints: 30, 
+        skillPoints: 0,
         health: startStats.maxHealth, 
         mana: startStats.maxMana,
         baseStats: startStats,
@@ -1337,7 +1337,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       level: 1,
       experience: 0,
       experienceToNextLevel: 250,
-      skillPoints: 30,
+      skillPoints: 0,
       health: 100,
       mana: 100,
       playerPosition: new Vector3(0, 0, 0),
@@ -1777,3 +1777,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   clearGachaResults: () => set({ gachaResults: [] }),
 
 }));
+
+if (typeof window !== 'undefined') {
+    (window as any).useGameStore = useGameStore;
+}
