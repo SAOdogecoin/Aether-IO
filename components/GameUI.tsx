@@ -214,7 +214,7 @@ const UniversalSkillSlot: React.FC<{
     const isDimmed = !active || level === 0;
     const isPotion = label === '1' || label === '2';
     const qty = isPotion ? level : 0;
-    const slotSize = isPassive ? 'w-12 h-12' : 'w-14 h-14';
+    const slotSize = 'w-14 h-14';
 
     return (
         <div className="flex flex-col items-center gap-0.5">
@@ -776,6 +776,14 @@ export const GameUI: React.FC = () => {
                     onClick={() => fireKey('KeyQ')}
                 />
 
+                {/* E = special */}
+                <UniversalSkillSlot
+                    icon={eIcon} level={skillLevels.special} cooldown={skills.e} maxCooldown={skillMaxCooldowns.e * (1 - stats.cooldownReduction)}
+                    label="E" desc={eAbilityDesc} active={skillLevels.special > 0}
+                    manaCost={getManaCost('e')} currentMana={mana} heroClass={hero}
+                    onClick={() => fireKey('KeyE')}
+                />
+
                 {/* R = active skill */}
                 <UniversalSkillSlot
                     icon={qIcon}
@@ -783,14 +791,6 @@ export const GameUI: React.FC = () => {
                     label="R" desc={qAbilityDesc} active={!!activeAbilityQ}
                     manaCost={getManaCost('q')} currentMana={mana} heroClass={hero}
                     onClick={() => fireKey('KeyR')}
-                />
-
-                {/* E = special */}
-                <UniversalSkillSlot
-                    icon={eIcon} level={skillLevels.special} cooldown={skills.e} maxCooldown={skillMaxCooldowns.e * (1 - stats.cooldownReduction)}
-                    label="E" desc={eAbilityDesc} active={skillLevels.special > 0}
-                    manaCost={getManaCost('e')} currentMana={mana} heroClass={hero}
-                    onClick={() => fireKey('KeyE')}
                 />
 
                 <div className="w-px h-12 bg-white/15 self-center mx-0.5" />
@@ -1067,7 +1067,7 @@ export const GameUI: React.FC = () => {
                             const isHovered = hoveredItem?.id === item.id;
                             return (
                               <button key={item.id}
-                                onClick={() => { if(!locked) { setSelectedItem(isSelected ? null : item); } }}
+                                onClick={() => { setSelectedItem(isSelected ? null : item); }}
                                 onMouseEnter={() => setHoveredItem(item)}
                                 onMouseLeave={() => setHoveredItem(null)}
                                 className="aspect-square rounded-xl flex items-center justify-center relative transition-transform"
@@ -1119,6 +1119,9 @@ export const GameUI: React.FC = () => {
                             <div className="flex gap-2 mt-1">
                               {selectedItem.type!=='POTION' && selectedItem.type!=='CORE' && selectedItem.type!=='REVIVE' && (
                                 <button onClick={() => { equipItem(selectedItem); setSelectedItem(null); }} className="flex-1 py-2.5 rounded-xl text-sm font-black text-white" style={{ background:'rgba(99,102,241,0.6)', border:'1px solid rgba(99,102,241,0.4)' }}>EQUIP</button>
+                              )}
+                              {selectedItem.type!=='POTION' && selectedItem.type!=='CORE' && selectedItem.type!=='REVIVE' && (
+                                <button onClick={() => { setSelectedUpgradeItem(selectedItem); setPanelTab('CRAFTING'); }} className="flex-1 py-2.5 rounded-xl text-sm font-black text-white flex items-center justify-center gap-1" style={{ background:'rgba(239,68,68,0.6)', border:'1px solid rgba(239,68,68,0.4)' }}><Plus size={16}/> UPGRADE</button>
                               )}
                               <button onClick={() => { setSellDialogItem(selectedItem); setSellAmount(1); setSelectedItem(null); }} className="flex-1 py-2.5 rounded-xl text-sm font-black" style={{ background:'rgba(239,68,68,0.12)', border:'1px solid rgba(239,68,68,0.3)', color:'#ef4444' }}>SELL</button>
                             </div>
