@@ -308,10 +308,12 @@ const calculateStats = (base: PlayerStats, equipment: GameState['equipment'], ra
       final.fireRate *= 0.5;
   }
 
-  // Reduce attack range for ranged characters (Wizard, Archer)
+  // Reduce attack range for ranged characters based on projectile type
   if (equipment.weapon) {
-      if (equipment.weapon.projectileType === 'MAGIC' || equipment.weapon.projectileType === 'ARROW') {
-          final.attackRange *= 0.6; // 60% of default range (15 units instead of 25)
+      if (equipment.weapon.projectileType === 'ARROW') {
+          final.attackRange *= 0.55; // Archer: ~13.75 units
+      } else if (equipment.weapon.projectileType === 'MAGIC') {
+          final.attackRange *= 0.44; // Wizard: ~11 units (slow projectiles, shorter trigger range)
       }
   }
 
@@ -1015,10 +1017,16 @@ export const useGameStore = create<GameState>((set, get) => ({
       if (drop.type === 'XP') {
           addExperience(drop.value);
           addNotification(`+${drop.value} XP`, '#fbbf24', 'SYSTEM');
+          window.dispatchEvent(new CustomEvent('loot-text', {
+              detail: { position: state.playerPosition.clone().add(new Vector3(0, 3.5, 0)), text: `+${drop.value} XP`, color: '#a3e635' }
+          }));
       }
       else if (drop.type === 'GOLD') {
           addScore(drop.value);
           addNotification(`+${drop.value} G`, '#fbbf24', 'SYSTEM');
+          window.dispatchEvent(new CustomEvent('loot-text', {
+              detail: { position: state.playerPosition.clone().add(new Vector3(0, 3.5, 0)), text: `+${drop.value} G`, color: '#fbbf24' }
+          }));
       }
       else if (drop.type === 'GEM') { addGems(drop.value); } 
       

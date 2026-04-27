@@ -106,23 +106,32 @@ export const SkillManager: React.FC<SkillManagerProps> = ({ enemyBulletsDataRef,
 
     const time = state.clock.getElapsedTime();
 
+    const enemies = enemiesDataRef ? enemiesDataRef.current : [];
+    const hasEnemyInRange = enemies.some(
+      e => e.active && e.position.distanceTo(playerPosition) <= stats.attackRange
+    );
+
     if (skillLevels.burning > 0) {
         burningTimer.current += delta;
         const maxCd = Math.max(2.0, 8.0 - (skillLevels.burning * 0.5));
         updatePassiveCooldowns({ burningCooldown: maxCd - burningTimer.current, burningMaxCooldown: maxCd });
 
         if (burningTimer.current >= maxCd) {
-            if (useMana(getManaCost('burning'))) {
-                burningTimer.current = 0;
-                const baseDir = new Vector3().subVectors(targetPosRef.current, playerPosition).normalize(); 
-                const damageMult = 0.525;
-                const spread = 0.5;
-                for(let i=-1; i<=1; i++) {
-                    const dir = baseDir.clone().applyAxisAngle(new Vector3(0,1,0), i * spread);
-                    spawnBullet('BURNING_ARROW', 30, damageMult, { 
-                        pierce: 5, 
-                        effect: { type: 'BURN', duration: 4, value: stats.damage * 0.3 } 
-                    }, dir);
+            if (hasEnemyInRange) {
+                if (useMana(getManaCost('burning'))) {
+                    burningTimer.current = 0;
+                    const baseDir = new Vector3().subVectors(targetPosRef.current, playerPosition).normalize();
+                    const damageMult = 0.525;
+                    const spread = 0.5;
+                    for(let i=-1; i<=1; i++) {
+                        const dir = baseDir.clone().applyAxisAngle(new Vector3(0,1,0), i * spread);
+                        spawnBullet('BURNING_ARROW', 30, damageMult, {
+                            pierce: 5,
+                            effect: { type: 'BURN', duration: 4, value: stats.damage * 0.3 }
+                        }, dir);
+                    }
+                } else {
+                    burningTimer.current = maxCd;
                 }
             } else {
                 burningTimer.current = maxCd;
@@ -136,16 +145,20 @@ export const SkillManager: React.FC<SkillManagerProps> = ({ enemyBulletsDataRef,
         updatePassiveCooldowns({ freezingCooldown: maxCd - freezingTimer.current, freezingMaxCooldown: maxCd });
 
         if (freezingTimer.current >= maxCd) {
-            if (useMana(getManaCost('freezing'))) {
-                freezingTimer.current = 0;
-                const baseDir = new Vector3().subVectors(targetPosRef.current, playerPosition).normalize();
-                const spread = 0.5;
-                for(let i=-1; i<=1; i++) {
-                    const dir = baseDir.clone().applyAxisAngle(new Vector3(0,1,0), i * spread);
-                    spawnBullet('FREEZING_ARROW', 30, 0.75, { 
-                        pierce: 5, 
-                        effect: { type: 'FREEZE', duration: 1.5 } 
-                    }, dir);
+            if (hasEnemyInRange) {
+                if (useMana(getManaCost('freezing'))) {
+                    freezingTimer.current = 0;
+                    const baseDir = new Vector3().subVectors(targetPosRef.current, playerPosition).normalize();
+                    const spread = 0.5;
+                    for(let i=-1; i<=1; i++) {
+                        const dir = baseDir.clone().applyAxisAngle(new Vector3(0,1,0), i * spread);
+                        spawnBullet('FREEZING_ARROW', 30, 0.75, {
+                            pierce: 5,
+                            effect: { type: 'FREEZE', duration: 1.5 }
+                        }, dir);
+                    }
+                } else {
+                    freezingTimer.current = maxCd;
                 }
             } else {
                 freezingTimer.current = maxCd;
@@ -159,21 +172,24 @@ export const SkillManager: React.FC<SkillManagerProps> = ({ enemyBulletsDataRef,
         updatePassiveCooldowns({ blizzardCooldown: maxCd - blizzardTimer.current, blizzardMaxCooldown: maxCd });
 
         if (blizzardTimer.current >= maxCd) {
-            if (useMana(getManaCost('freezeSpell'))) {
-                blizzardTimer.current = 0;
-                blizzardVisualTimer.current = 1.5; 
-                
-                const enemies = enemiesDataRef ? enemiesDataRef.current : [];
-                for (let i = 0; i < enemies.length; i++) {
-                    const enemy = enemies[i];
-                    if (enemy.active && enemy.position.distanceTo(playerPosition) < 27.0) {
-                        enemy.freezeTimer = 5.1; 
-                        const dmg = stats.damage * 0.75 * stats.skillDamage; 
-                        enemy.health -= dmg;
-                        window.dispatchEvent(new CustomEvent('damage', { 
-                            detail: { position: enemy.position, damage: dmg, isCrit: false, damageType: 'ICE' } 
-                        }));
+            if (hasEnemyInRange) {
+                if (useMana(getManaCost('freezeSpell'))) {
+                    blizzardTimer.current = 0;
+                    blizzardVisualTimer.current = 1.5;
+
+                    for (let i = 0; i < enemies.length; i++) {
+                        const enemy = enemies[i];
+                        if (enemy.active && enemy.position.distanceTo(playerPosition) < 27.0) {
+                            enemy.freezeTimer = 5.1;
+                            const dmg = stats.damage * 0.75 * stats.skillDamage;
+                            enemy.health -= dmg;
+                            window.dispatchEvent(new CustomEvent('damage', {
+                                detail: { position: enemy.position, damage: dmg, isCrit: false, damageType: 'ICE' }
+                            }));
+                        }
                     }
+                } else {
+                    blizzardTimer.current = maxCd;
                 }
             } else {
                 blizzardTimer.current = maxCd;
@@ -187,14 +203,18 @@ export const SkillManager: React.FC<SkillManagerProps> = ({ enemyBulletsDataRef,
         updatePassiveCooldowns({ stormCooldown: maxCd - stormTimer.current, stormMaxCooldown: maxCd });
 
         if (stormTimer.current >= maxCd) {
-            stormTimer.current = 0;
-            const dir = new Vector3().subVectors(targetPosRef.current, playerPosition).normalize();
-            spawnBullet('STORM', 4, 1.5, { 
-                pierce: 99, 
-                lifetime: 10.0, 
-                knockback: 1.0,
-                bouncesLeft: 6
-            }, dir);
+            if (hasEnemyInRange) {
+                stormTimer.current = 0;
+                const dir = new Vector3().subVectors(targetPosRef.current, playerPosition).normalize();
+                spawnBullet('STORM', 4, 1.5, {
+                    pierce: 99,
+                    lifetime: 10.0,
+                    knockback: 1.0,
+                    bouncesLeft: 6
+                }, dir);
+            } else {
+                stormTimer.current = maxCd;
+            }
         }
     }
 
@@ -205,10 +225,12 @@ export const SkillManager: React.FC<SkillManagerProps> = ({ enemyBulletsDataRef,
             updatePassiveCooldowns({ stampCooldown: maxCd - stampTimer.current, stampMaxCooldown: maxCd });
 
             if (stampTimer.current >= maxCd) {
-                if (useMana(getManaCost('stamp'))) {
+                if (hasEnemyInRange && useMana(getManaCost('stamp'))) {
                     stampStage.current = 1;
                     stampSequenceTimer.current = 0;
-                    performStomp(1); 
+                    performStomp(1);
+                } else if (!hasEnemyInRange) {
+                    stampTimer.current = maxCd;
                 }
             }
         } else if (stampStage.current === 1) {
@@ -389,45 +411,46 @@ export const SkillManager: React.FC<SkillManagerProps> = ({ enemyBulletsDataRef,
         const maxCd = 7.0;
         updatePassiveCooldowns({ thunderCooldown: maxCd - thunderTimer.current, thunderMaxCooldown: maxCd });
         
-        if (thunderTimer.current > maxCd) { 
-            const enemies = enemiesDataRef ? enemiesDataRef.current : [];
+        if (thunderTimer.current > maxCd) {
             const activeEnemies: any[] = [];
             for(const e of enemies) {
                 if (e.active && e.position.distanceTo(playerPosition) < 40) {
                     activeEnemies.push(e);
                 }
             }
-            
-            if (activeEnemies.length > 0) {
+
+            if (hasEnemyInRange && activeEnemies.length > 0) {
                 if (useMana(getManaCost('thunder'))) {
                     thunderTimer.current = 0;
-                    const hitCount = Math.max(5, skillLevels.thunder); 
+                    const hitCount = Math.max(5, skillLevels.thunder);
                     const hits: Vector3[] = [];
 
                     for(let i=0; i<hitCount; i++) {
                             if (activeEnemies.length === 0) break;
                             const idx = Math.floor(Math.random() * activeEnemies.length);
                             const target = activeEnemies[idx];
-                            
+
                             const isCrit = Math.random() < stats.critRate;
-                            const baseDmg = stats.damage * 0.75 * (1 + (skillLevels.thunder * 0.1)); 
+                            const baseDmg = stats.damage * 0.75 * (1 + (skillLevels.thunder * 0.1));
                             const dmg = baseDmg * (isCrit ? stats.critDamage : 1);
-                            
+
                             target.health -= dmg;
-                            
-                            window.dispatchEvent(new CustomEvent('damage', { 
-                            detail: { position: target.position, damage: dmg, isCrit, damageType: 'MAGIC' } 
+
+                            window.dispatchEvent(new CustomEvent('damage', {
+                            detail: { position: target.position, damage: dmg, isCrit, damageType: 'MAGIC' }
                             }));
-                            
+
                             hits.push(target.position.clone());
                             activeEnemies.splice(idx, 1);
                     }
-                    
+
                     setThunderPositions(hits);
                     thunderVisualTimer.current = 0.25;
                 } else {
-                    thunderTimer.current = maxCd; 
+                    thunderTimer.current = maxCd;
                 }
+            } else if (!hasEnemyInRange) {
+                thunderTimer.current = maxCd;
             }
         }
     }

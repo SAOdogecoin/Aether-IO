@@ -40,36 +40,52 @@ export const DamageTextManager: React.FC = () => {
     const handleDamage = (e: CustomEvent) => {
       const { position, damage, isCrit, isPlayer, isDoT, damageType } = e.detail;
       const text = textsRef.current.find(t => !t.active);
-      
+
       if (text) {
         text.active = true;
         text.position.copy(position).add(new Vector3(0, 1.5 + Math.random(), 0));
         text.velocity.set((Math.random() - 0.5) * 2, 4, (Math.random() - 0.5) * 2);
-        text.life = 0.8; 
+        text.life = 0.8;
         text.text = Math.round(damage).toString();
-        
+
         if (isPlayer) {
-            text.color = '#ff0000'; // Red for player damage
+            text.color = '#ff0000';
             text.scale = 1.2;
         } else {
-            // Determine Color based on Type
-            if (damageType === 'FIRE') text.color = '#ef4444'; // Red/Orange
-            else if (damageType === 'ICE') text.color = '#3b82f6'; // Blue
-            else if (damageType === 'POISON') text.color = '#22c55e'; // Green
-            else if (damageType === 'MAGIC') text.color = '#d8b4fe'; // Light Purple
+            if (damageType === 'FIRE') text.color = '#ef4444';
+            else if (damageType === 'ICE') text.color = '#3b82f6';
+            else if (damageType === 'POISON') text.color = '#22c55e';
+            else if (damageType === 'MAGIC') text.color = '#d8b4fe';
             else if (damageType === 'PHYSICAL') text.color = isCrit ? '#facc15' : 'white';
-            else text.color = isCrit ? '#facc15' : 'white'; // Default
+            else text.color = isCrit ? '#facc15' : 'white';
 
-            // Overrides for old flags if type not set
-            if (!damageType && isDoT) text.color = '#f97316'; 
-            
+            if (!damageType && isDoT) text.color = '#f97316';
+
             text.scale = isCrit ? 1.5 : 0.8;
         }
       }
     };
 
+    const handleLootText = (e: CustomEvent) => {
+      const { position, text: label, color } = e.detail;
+      const text = textsRef.current.find(t => !t.active);
+      if (text) {
+        text.active = true;
+        text.position.copy(position);
+        text.velocity.set((Math.random() - 0.5) * 1.5, 3, (Math.random() - 0.5) * 1.5);
+        text.life = 1.4;
+        text.text = label;
+        text.color = color;
+        text.scale = 1.3;
+      }
+    };
+
     window.addEventListener('damage', handleDamage as EventListener);
-    return () => window.removeEventListener('damage', handleDamage as EventListener);
+    window.addEventListener('loot-text', handleLootText as EventListener);
+    return () => {
+      window.removeEventListener('damage', handleDamage as EventListener);
+      window.removeEventListener('loot-text', handleLootText as EventListener);
+    };
   }, []);
 
   useFrame((state, delta) => {
