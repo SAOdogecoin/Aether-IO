@@ -121,14 +121,14 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
               spawnBullet('BLACKHOLE', 0, 5.0, { pierce: 99, lifetime: 2.6, trailTimer: 0.1, maxPullCount: limit });
           } else if (ability === 'ARROW_RAIN') {
               arrowRainState.current.active = true;
-              arrowRainState.current.wavesLeft = 3;
+              arrowRainState.current.wavesLeft = 6;
               arrowRainState.current.timer = 0;
           } else if (ability === 'FIREBALL') {
-              // Wizard Q: 50% less range (lifetime 2.5s instead of 5.0s)
+              // Wizard Q: Slightly longer range and 2x burn damage
               spawnBullet('FIREBALL', 5, 2.0 * 0.63, {
                   pierce: 100,
-                  lifetime: 2.5,
-                  effect: { type: 'BURN', duration: 5, value: stats.damage * 0.3 }
+                  lifetime: 4.0,
+                  effect: { type: 'BURN', duration: 5, value: stats.damage * 0.6 }
               });
           } else if (ability === 'AXE_SPIN') {
               axeSpinTime.current = 3.0;

@@ -311,9 +311,9 @@ const calculateStats = (base: PlayerStats, equipment: GameState['equipment'], ra
   // Reduce attack range for ranged characters based on projectile type
   if (equipment.weapon) {
       if (equipment.weapon.projectileType === 'ARROW') {
-          final.attackRange *= 0.55; // Archer: ~13.75 units
+          final.attackRange *= 0.88; // Archer: ~22 units
       } else if (equipment.weapon.projectileType === 'MAGIC') {
-          final.attackRange *= 0.44; // Wizard: ~11 units (slow projectiles, shorter trigger range)
+          final.attackRange *= 0.572; // Wizard: ~14.3 units
       }
   }
 
@@ -1359,9 +1359,10 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   resetGame: () => {
     const state = get();
+    const persistedInventory = state.inventory.filter(i => i.type === 'POTION' || i.type === 'CORE' || i.type === 'REVIVE');
     const initialState = {
       status: GameStatus.MENU,
-      score: 0,
+      score: state.score,
       gems: 0,
       level: 1,
       experience: 0,
@@ -1374,7 +1375,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       baseStats: { ...INITIAL_STATS },
       wave: 1,
       waveTimer: 0,
-      skillLevels: { 
+      skillLevels: {
           orbital: 0, thunder: 0, regen: 0, magnet: 1, dash: 1, weapon: 1, barrier: 1, storm: 0, special: 0,
           piercing: 0, burning: 0, freezing: 0, freezeSpell: 0, gravity: 0, stamp: 0, rage: 0
       },
@@ -1389,7 +1390,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       },
       activeAbilityQ: null,
       activeAbilityR: null,
-      inventory: [],
+      inventory: persistedInventory,
       maxInventorySlots: INVENTORY_LIMIT,
       equipment: { weapon: null, armor: null, accessory: null, pet: null },
       gachaResults: [],

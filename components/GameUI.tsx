@@ -371,13 +371,13 @@ const Minimap: React.FC = () => {
 };
 
 export const GameUI: React.FC = () => {
-  const { 
+  const {
     status, health, mana, stats, score, gems, level, experience, experienceToNextLevel, skillPoints,
     inventory, maxInventorySlots, materials, equipment, setStatus, skills, skillMaxCooldowns, skillLevels, passiveSkillState,
     startGame, resetGame, applyUpgrade, selectUpgrade, upgradeOptions, equipItem, unequipItem, buyItem, upgradeItem, sellItem, sellItems, autoEquip, selectHero, hero, hpPotionCooldown, mpPotionCooldown,
     wave, waveTimer, recentRuns, bossData, gameStats,
     isInventoryOpen, isShopOpen, toggleInventory, activeShopTab, closeAllUI, openSpecificShop,
-    notifications, removeNotification, upgradeSkill, toggleCharacterSheet, isCharacterSheetOpen, baseStats, activeAbilityQ, activeAbilityR,
+    notifications, removeNotification, addNotification, upgradeSkill, toggleCharacterSheet, isCharacterSheetOpen, baseStats, activeAbilityQ, activeAbilityR,
     recycleItem, massRecycle, combineMaterials, craftItem, buyInventorySlots, actionResult, clearActionResult, massSell,
     isCodexOpen, toggleCodex, dashCharges, maxDashCharges, barrierCooldown, shieldCharges, maxShieldCharges, getManaCost,
     revivingCountdown
@@ -892,10 +892,9 @@ export const GameUI: React.FC = () => {
 
             {/* LEVEL UP SCREEN — no black bg, game stays visible */}
             {status === GameStatus.LEVEL_UP && (
-                <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center pointer-events-auto" style={{ background: 'rgba(0,0,0,0.45)' }}>
+                <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center pointer-events-auto" style={{ background: 'rgba(0,0,0,0)' }}>
                     <motion.div initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center gap-6 w-full max-w-3xl px-4">
                         <div className="text-center">
-                            <h2 className="text-5xl font-black text-yellow-300 mb-1 tracking-tight rpg-title" style={{WebkitTextStroke:'1px rgba(0,0,0,0.7)'}}>WAVE CLEARED!</h2>
                             <p className="text-white/60 font-bold tracking-widest text-xs uppercase rpg-text">Choose a Reward</p>
                         </div>
                         {(() => {
