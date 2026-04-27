@@ -441,9 +441,9 @@ const generateUpgradeOptions = (heroClass: HeroClass, skillLevels: SkillLevels):
 export const useGameStore = create<GameState>((set, get) => ({
   status: GameStatus.MENU,
   hero: 'ARCHER',
-  score: 10000, 
+  score: 0,
   accumulatedWaveGold: 0,
-  gems: 10000, 
+  gems: 0,
   level: 1,
   experience: 0,
   experienceToNextLevel: 250, 
@@ -464,14 +464,14 @@ export const useGameStore = create<GameState>((set, get) => ({
       orbital: 0, thunder: 0, regen: 0, magnet: 1, dash: 1, weapon: 1, barrier: 1, storm: 0, special: 0,
       piercing: 0, burning: 0, freezing: 0, freezeSpell: 0, gravity: 0, stamp: 0, rage: 0
   },
-  passiveSkillState: { 
-      orbitalCooldown: 0, orbitalMaxCooldown: 1, 
-      thunderCooldown: 0, thunderMaxCooldown: 1, 
-      burningCooldown: 0, burningMaxCooldown: 8, 
-      freezingCooldown: 0, freezingMaxCooldown: 7,
-      blizzardCooldown: 0, blizzardMaxCooldown: 10,
-      stampCooldown: 0, stampMaxCooldown: 10,
-      stormCooldown: 0, stormMaxCooldown: 15
+  passiveSkillState: {
+      orbitalCooldown: 0, orbitalMaxCooldown: 0.5,
+      thunderCooldown: 0, thunderMaxCooldown: 0.5,
+      burningCooldown: 0, burningMaxCooldown: 4,
+      freezingCooldown: 0, freezingMaxCooldown: 3.5,
+      blizzardCooldown: 0, blizzardMaxCooldown: 5,
+      stampCooldown: 0, stampMaxCooldown: 5,
+      stormCooldown: 0, stormMaxCooldown: 7.5
   },
   activeAbilityQ: null,
   activeAbilityR: null,
@@ -489,7 +489,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   minimapEnemies: [],
   
   skills: { dash: 0, q: 0, r: 0, e: 0 },
-  skillMaxCooldowns: { dash: 4.0, q: 7.0, r: 15.0, e: 20.0 }, 
+  skillMaxCooldowns: { dash: 2.0, q: 3.5, r: 7.5, e: 10.0 },
   dashCharges: 1,
   maxDashCharges: 1,
   
@@ -629,7 +629,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         equipment: finalEquipment,
         drops: [],
         skills: { dash: 0, q: 0, r: 0, e: 0 },
-        skillMaxCooldowns: { dash: 4.0, q: 7.0, r: 15.0, e: 20.0 }, 
+        skillMaxCooldowns: { dash: 2.0, q: 3.5, r: 7.5, e: 10.0 },
         dashCharges: 1,
         maxDashCharges: 1,
         shieldCharges: 1,
@@ -1309,8 +1309,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     const state = get();
     const initialState = {
       status: GameStatus.MENU,
-      score: 10000,
-      gems: 10000,
+      score: 0,
+      gems: 0,
       level: 1,
       experience: 0,
       experienceToNextLevel: 250,
@@ -1326,14 +1326,14 @@ export const useGameStore = create<GameState>((set, get) => ({
           orbital: 0, thunder: 0, regen: 0, magnet: 1, dash: 1, weapon: 1, barrier: 1, storm: 0, special: 0,
           piercing: 0, burning: 0, freezing: 0, freezeSpell: 0, gravity: 0, stamp: 0, rage: 0
       },
-      passiveSkillState: { 
-          orbitalCooldown: 0, orbitalMaxCooldown: 1, 
-          thunderCooldown: 0, thunderMaxCooldown: 1, 
-          burningCooldown: 0, burningMaxCooldown: 8, 
-          freezingCooldown: 0, freezingMaxCooldown: 7,
-          blizzardCooldown: 0, blizzardMaxCooldown: 10,
-          stampCooldown: 0, stampMaxCooldown: 10,
-          stormCooldown: 0, stormMaxCooldown: 15
+      passiveSkillState: {
+          orbitalCooldown: 0, orbitalMaxCooldown: 0.5,
+          thunderCooldown: 0, thunderMaxCooldown: 0.5,
+          burningCooldown: 0, burningMaxCooldown: 4,
+          freezingCooldown: 0, freezingMaxCooldown: 3.5,
+          blizzardCooldown: 0, blizzardMaxCooldown: 5,
+          stampCooldown: 0, stampMaxCooldown: 5,
+          stormCooldown: 0, stormMaxCooldown: 7.5
       },
       activeAbilityQ: null,
       activeAbilityR: null,

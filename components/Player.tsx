@@ -350,6 +350,18 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
 
       <group ref={meshRef} position={[0, 1, 0]}>
         
+        {/* Floating HP/MP bars */}
+        <Html position={[0, 3.2, 0]} center zIndexRange={[50, 0]} style={{ pointerEvents: 'none' }}>
+            <div style={{ width: 64, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <div style={{ height: 5, background: 'rgba(0,0,0,0.6)', borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.12)' }}>
+                    <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, (health / stats.maxHealth) * 100))}%`, background: '#ef4444', boxShadow: '0 0 4px rgba(239,68,68,0.8)', borderRadius: 3, transition: 'width 0.1s' }} />
+                </div>
+                <div style={{ height: 4, background: 'rgba(0,0,0,0.6)', borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.12)' }}>
+                    <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, (mana / stats.maxMana) * 100))}%`, background: '#3b82f6', boxShadow: '0 0 4px rgba(59,130,246,0.8)', borderRadius: 3, transition: 'width 0.1s' }} />
+                </div>
+            </div>
+        </Html>
+
         {levelUpVisualTimer > 0 && (
             <>
                 <Html position={[0, 2.5, 0]} center zIndexRange={[100, 0]}>

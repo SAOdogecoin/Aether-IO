@@ -108,12 +108,6 @@ export const World: React.FC = () => {
         <meshStandardMaterial color={COLORS.ground} roughness={1} metalness={0} />
       </mesh>
 
-      {/* Dark wall cylinder just outside the tree ring — seen from inside */}
-      <mesh position={[0, 6, 0]}>
-        <cylinderGeometry args={[ARENA_SIZE / 2 - 2, ARENA_SIZE / 2 - 2, 18, 80, 1, true]} />
-        <meshBasicMaterial color="#010a01" side={THREE.BackSide} transparent opacity={0.95} />
-      </mesh>
-
       <Environment />
 
       {/* Earthwall Visual */}

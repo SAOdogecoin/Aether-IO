@@ -375,6 +375,7 @@ export const GameUI: React.FC = () => {
   } = useGameStore();
 
   const [hoveredItem, setHoveredItem] = useState<Item | null>(null);
+  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [blacksmithTab, setBlacksmithTab] = useState<'UPGRADE' | 'RECYCLE' | 'CRAFT'>('UPGRADE');
   const [selectedUpgradeItem, setSelectedUpgradeItem] = useState<Item | null>(null);
@@ -516,7 +517,31 @@ export const GameUI: React.FC = () => {
 
   return (
     <div className="absolute inset-0 pointer-events-none z-10 font-sans text-slate-800 select-none">
-      
+
+      {/* FLOATING ITEM TOOLTIP on hover */}
+      {hoveredItem && (
+        <div className="fixed z-[200] pointer-events-none"
+          style={{ left: mousePos.x + 14, top: mousePos.y - 10, maxWidth: 200 }}>
+          <div className="rounded-xl p-3 shadow-2xl flex flex-col gap-1"
+            style={{ background: 'rgba(12,12,20,0.97)', border: `1.5px solid ${getRarityTextColorDark(hoveredItem.rarity)}50`, boxShadow: `0 4px 24px rgba(0,0,0,0.8), 0 0 12px ${getRarityTextColorDark(hoveredItem.rarity)}20` }}>
+            <div className="font-black text-white text-sm leading-tight">{hoveredItem.name}{hoveredItem.level>1 && <span className="text-yellow-400 ml-1 text-xs">+{hoveredItem.level-1}</span>}</div>
+            <div className="text-[10px] font-bold uppercase" style={{color: getRarityTextColorDark(hoveredItem.rarity)}}>{hoveredItem.rarity} {hoveredItem.type}</div>
+            {hoveredItem.description && <div className="text-[10px] text-slate-400 leading-snug mt-0.5">{hoveredItem.description}</div>}
+            {hoveredItem.stats && Object.keys(hoveredItem.stats).length > 0 && (
+              <div className="mt-1 flex flex-col gap-0.5">
+                {Object.entries(hoveredItem.stats).slice(0, 4).map(([k,v]) => (
+                  <div key={k} className="flex justify-between text-[10px]">
+                    <span className="text-slate-500 capitalize">{k}</span>
+                    <span className="text-green-400 font-mono font-bold">{formatStat(k,v as number)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="text-[10px] font-black text-yellow-500 flex items-center gap-1 mt-0.5"><Coins size={9}/>{Math.floor(hoveredItem.price*0.3)}g</div>
+          </div>
+        </div>
+      )}
+
       {/* WARNING NOTIFICATIONS - TOP CENTER */}
       <div className="absolute top-24 left-1/2 -translate-x-1/2 flex flex-col gap-2 items-center pointer-events-none z-[100] w-full">
           <AnimatePresence>
@@ -666,10 +691,10 @@ export const GameUI: React.FC = () => {
                      </div>
                  ) : (
                      <div className="flex flex-col items-center gap-1">
-                         {waveTimer > 30 && (
+                         {waveTimer > 20 && (
                              <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                                 className="px-4 py-1 bg-red-500/80 text-white font-black text-xs rounded-full shadow-lg animate-pulse border border-red-400/60">
-                                 NEXT WAVE IN {(40 - waveTimer).toFixed(0)}s
+                                 NEXT WAVE IN {Math.max(0, 30 - waveTimer).toFixed(0)}s
                              </motion.div>
                          )}
                          <div className="px-8 py-3 rounded-2xl flex flex-col items-center" style={{background:'rgba(18,18,26,0.88)',border:'1px solid rgba(255,255,255,0.09)',boxShadow:'0 4px 20px rgba(0,0,0,0.5)'}}>
@@ -684,10 +709,6 @@ export const GameUI: React.FC = () => {
 
              {/* Currency */}
              <div className="flex gap-2">
-                 <div className="px-4 py-2 rounded-full flex items-center gap-2" style={{background:'rgba(18,18,26,0.88)',border:'1px solid rgba(255,255,255,0.09)',boxShadow:'0 4px 16px rgba(0,0,0,0.4)'}}>
-                    <Gem size={15} className="text-emerald-400"/>
-                    <span className="font-mono font-bold text-white text-sm">{gems.toLocaleString()}</span>
-                 </div>
                  <div className="px-4 py-2 rounded-full flex items-center gap-2" style={{background:'rgba(18,18,26,0.88)',border:'1px solid rgba(255,255,255,0.09)',boxShadow:'0 4px 16px rgba(0,0,0,0.4)'}}>
                     <Coins size={15} className="text-yellow-400"/>
                     <span className="font-mono font-bold text-white text-sm">{score.toLocaleString()}</span>
@@ -827,41 +848,55 @@ export const GameUI: React.FC = () => {
             
             {/* LEVEL UP SCREEN */}
             {status === GameStatus.LEVEL_UP && (
-                <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md pointer-events-auto">
-                    <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="flex flex-col items-center gap-8 w-full max-w-4xl px-4">
+                <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-md pointer-events-auto">
+                    <motion.div initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center gap-8 w-full max-w-3xl px-4">
                         <div className="text-center">
-                            <h2 className="text-5xl font-black text-yellow-400 mb-2 drop-shadow-xl">WAVE CLEARED!</h2>
-                            <p className="text-slate-300 font-bold text-lg">Choose a Reward</p>
+                            <h2 className="text-5xl font-black text-yellow-400 mb-2 drop-shadow-xl tracking-tight" style={{textShadow:'0 0 40px rgba(250,204,21,0.5)'}}>WAVE CLEARED!</h2>
+                            <p className="text-slate-400 font-bold tracking-widest text-sm uppercase">Choose a Reward</p>
                         </div>
-                        <div className="grid grid-cols-3 gap-6 w-full">
-                            {upgradeOptions.map((opt) => (
-                                <button
+                        <div className="grid grid-cols-3 gap-5 w-full">
+                            {upgradeOptions.map((opt) => {
+                                const rarityAccent = opt.rarity === 'MYTHIC' ? '#f87171' : opt.rarity === 'LEGENDARY' ? '#fbbf24' : opt.rarity === 'EPIC' ? '#c084fc' : opt.rarity === 'RARE' ? '#60a5fa' : '#94a3b8';
+                                const rarityBg = opt.rarity === 'MYTHIC' ? 'rgba(220,38,38,0.15)' : opt.rarity === 'LEGENDARY' ? 'rgba(202,138,4,0.15)' : opt.rarity === 'EPIC' ? 'rgba(147,51,234,0.15)' : opt.rarity === 'RARE' ? 'rgba(59,130,246,0.12)' : 'rgba(255,255,255,0.04)';
+                                return (
+                                <motion.button
                                     key={opt.id}
+                                    initial={{ y: 20, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    whileHover={{ scale: 1.04, y: -4 }}
                                     onClick={() => selectUpgrade(opt)}
-                                    className="bg-white hover:bg-yellow-50 border-4 border-slate-200 hover:border-yellow-400 rounded-3xl p-6 flex flex-col gap-4 text-left transition-all hover:scale-105 shadow-xl group h-64"
+                                    className="flex flex-col items-center rounded-2xl overflow-hidden cursor-pointer group transition-all"
+                                    style={{
+                                        background: `linear-gradient(180deg, ${rarityBg} 0%, rgba(12,12,18,0.98) 100%)`,
+                                        border: `1.5px solid ${rarityAccent}40`,
+                                        boxShadow: `0 0 32px ${rarityAccent}20, 0 8px 32px rgba(0,0,0,0.6)`,
+                                        minHeight: 280,
+                                    }}
                                 >
-                                    <div className="flex justify-between items-start w-full">
-                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-xl 
-                                            ${opt.rarity === 'COMMON' ? 'bg-slate-200 text-slate-600' :
-                                              opt.rarity === 'RARE' ? 'bg-blue-100 text-blue-500' :
-                                              opt.rarity === 'EPIC' ? 'bg-purple-100 text-purple-500' :
-                                              'bg-yellow-100 text-yellow-600'}
-                                        `}>
-                                            {opt.type.includes('SKILL') ? <Star size={24}/> : <ArrowUpCircle size={24}/>}
+                                    {/* Big icon area */}
+                                    <div className="flex-1 flex items-center justify-center w-full py-8"
+                                        style={{ background: `radial-gradient(ellipse at center, ${rarityAccent}18 0%, transparent 70%)` }}>
+                                        <div className="flex items-center justify-center"
+                                            style={{ width: 80, height: 80, borderRadius: '50%', background: `${rarityAccent}18`, border: `2px solid ${rarityAccent}40`, boxShadow: `0 0 24px ${rarityAccent}30` }}>
+                                            {opt.type.includes('SKILL')
+                                                ? <Star size={40} fill={rarityAccent} strokeWidth={0} style={{color: rarityAccent}}/>
+                                                : <ArrowUpCircle size={40} fill={rarityAccent} strokeWidth={0} style={{color: rarityAccent}}/>
+                                            }
                                         </div>
-                                        <span className={`text-[10px] font-black px-2 py-1 rounded-full uppercase ${getRarityBg(opt.rarity)} ${getRarityTextColor(opt.rarity)}`}>
-                                            {opt.rarity}
-                                        </span>
                                     </div>
-                                    <div>
-                                        <div className="font-black text-xl text-slate-800 leading-tight mb-1">{opt.name}</div>
-                                        <div className="text-xs text-slate-500 font-medium leading-relaxed">{opt.description}</div>
+                                    {/* Text area */}
+                                    <div className="w-full px-5 pb-5 flex flex-col items-center gap-2">
+                                        <div className="text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full" style={{ color: rarityAccent, background: `${rarityAccent}18`, border: `1px solid ${rarityAccent}30` }}>{opt.rarity}</div>
+                                        <div className="font-black text-lg text-white leading-tight text-center">{opt.name}</div>
+                                        <div className="text-xs text-slate-500 font-medium leading-relaxed text-center">{opt.description}</div>
+                                        <div className="mt-2 w-full py-2.5 rounded-xl font-black text-sm text-center transition-colors group-hover:opacity-100 opacity-80"
+                                            style={{ background: `${rarityAccent}cc`, color: '#fff', boxShadow: `0 4px 16px ${rarityAccent}40` }}>
+                                            SELECT
+                                        </div>
                                     </div>
-                                    <div className="mt-auto w-full text-center py-2 bg-slate-100 rounded-xl font-bold text-slate-400 group-hover:bg-yellow-400 group-hover:text-black transition-colors">
-                                        SELECT
-                                    </div>
-                                </button>
-                            ))}
+                                </motion.button>
+                                );
+                            })}
                         </div>
                     </motion.div>
                 </div>
@@ -905,21 +940,24 @@ export const GameUI: React.FC = () => {
                       {/* Left: equip cards + grid */}
                       <div className="flex flex-col p-4 gap-3 overflow-y-auto" style={{ width:'58%', borderRight:'1px solid rgba(180,150,70,0.12)' }}>
                         {/* RPG Equipment Cards */}
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 items-start">
                           {([
-                            { k:'weapon', l:'WEAPON', i:equipment.weapon, icon:<Sword size={18} className="text-slate-600"/> },
-                            { k:'armor',  l:'ARMOR',  i:equipment.armor,  icon:<Shield size={18} className="text-slate-600"/> },
-                            { k:'accessory', l:'RING', i:equipment.accessory, icon:<Gem size={18} className="text-slate-600"/> },
-                            { k:'pet',    l:'PET',    i:equipment.pet,    icon:<Ghost size={18} className="text-slate-600"/> },
+                            { k:'weapon', l:'WEAPON', i:equipment.weapon, icon:<Sword size={22} className="text-slate-600"/> },
+                            { k:'armor',  l:'ARMOR',  i:equipment.armor,  icon:<Shield size={22} className="text-slate-600"/> },
+                            { k:'accessory', l:'RING', i:equipment.accessory, icon:<Gem size={22} className="text-slate-600"/> },
+                            { k:'pet',    l:'PET',    i:equipment.pet,    icon:<Ghost size={22} className="text-slate-600"/> },
                           ] as const).map(s => {
                             const rarityColor = s.i ? getRarityTextColorDark(s.i.rarity) : 'rgba(80,80,90,0.6)';
                             const isWeapon = s.k === 'weapon';
                             return (
-                              <button key={s.k} onClick={() => s.i && unequipItem(s.k as any)} onMouseEnter={() => s.i && setHoveredItem(s.i)} onMouseLeave={() => setHoveredItem(null)}
+                              <button key={s.k}
+                                onClick={() => { if(s.i) { setSelectedItem(s.i); } }}
+                                onMouseEnter={() => s.i && setHoveredItem(s.i)}
+                                onMouseLeave={() => setHoveredItem(null)}
                                 className="flex flex-col items-center rounded-xl overflow-hidden relative transition-all"
                                 style={{
-                                  width: isWeapon ? 88 : 68,
-                                  height: isWeapon ? 110 : 86,
+                                  width: isWeapon ? 96 : 76,
+                                  height: isWeapon ? 120 : 96,
                                   background: s.i ? getRarityBgDark(s.i.rarity) : 'rgba(255,255,255,0.02)',
                                   border: s.i ? `1.5px solid ${rarityColor}55` : '1px solid rgba(255,255,255,0.06)',
                                   boxShadow: s.i ? `0 0 18px ${rarityColor}30, inset 0 0 20px rgba(0,0,0,0.3)` : 'none',
@@ -930,81 +968,97 @@ export const GameUI: React.FC = () => {
                                     {isWeapon ? (
                                       <div className="w-full flex-1"><WeaponThumb item={s.i}/></div>
                                     ) : (
-                                      <div className="flex-1 flex items-center justify-center"><ItemIcon item={s.i} size={28}/></div>
+                                      <div className="flex-1 flex items-center justify-center"><ItemIcon item={s.i} size={34}/></div>
                                     )}
                                     <div className="w-full px-1 py-1 text-center" style={{background:'rgba(0,0,0,0.55)'}}>
-                                      <div className="text-[8px] font-black leading-tight truncate" style={{color: rarityColor}}>{s.i.name}</div>
-                                      {s.i.level > 1 && <div className="text-[7px] text-yellow-400 font-bold">+{s.i.level-1}</div>}
+                                      <div className="text-[9px] font-black leading-tight truncate" style={{color: rarityColor}}>{s.i.name}</div>
+                                      {s.i.level > 1 && <div className="text-[8px] text-yellow-400 font-bold">+{s.i.level-1}</div>}
                                     </div>
                                   </>
                                 ) : (
                                   <div className="flex-1 flex flex-col items-center justify-center gap-1">
                                     {s.icon}
-                                    <span className="text-[7px] text-slate-700 font-bold uppercase">{s.l}</span>
+                                    <span className="text-[8px] text-slate-700 font-bold uppercase">{s.l}</span>
                                   </div>
                                 )}
                               </button>
                             );
                           })}
-                          <div className="flex flex-col justify-between ml-auto">
-                            <button onClick={() => autoEquip()} className="px-2 py-1 text-[8px] font-black text-slate-500 uppercase rounded-lg" style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)' }}>AUTO</button>
-                            <span className="text-[9px] text-slate-700 font-bold text-right">{inventory.length}/{maxInventorySlots}</span>
+                          <div className="flex flex-col justify-between ml-auto gap-2">
+                            <button
+                              onClick={() => autoEquip()}
+                              className="px-4 py-2 text-xs font-black text-white uppercase rounded-xl transition-all active:scale-95"
+                              style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.7),rgba(59,130,246,0.7))', border:'1.5px solid rgba(99,102,241,0.5)', boxShadow:'0 0 16px rgba(99,102,241,0.3)' }}>
+                              ⚡ AUTO
+                            </button>
+                            <span className="text-[10px] text-slate-600 font-bold text-right">{inventory.length}/{maxInventorySlots}</span>
                           </div>
                         </div>
-                        <div className="grid grid-cols-6 gap-1.5">
+                        <div className="grid grid-cols-6 gap-2">
                           {sortedInventory.map(item => {
                             const locked = RARITY_LEVEL_REQ[item.rarity] > level;
+                            const isSelected = selectedItem?.id === item.id;
+                            const isHovered = hoveredItem?.id === item.id;
                             return (
-                              <button key={item.id} onClick={() => !locked && onInventoryItemClick(item)} onMouseEnter={() => setHoveredItem(item)} onMouseLeave={() => setHoveredItem(null)}
-                                className="aspect-square rounded-lg flex items-center justify-center relative transition-transform"
-                                style={{ background: getRarityBgDark(item.rarity), border: hoveredItem?.id===item.id ? '1px solid rgba(240,192,64,0.6)' : '1px solid rgba(255,255,255,0.06)', opacity: locked ? 0.4 : 1, transform: hoveredItem?.id===item.id ? 'scale(1.08)' : undefined }}>
-                                <ItemIcon item={item} size={20}/>
-                                {(item.quantity||1)>1 && <div className="absolute bottom-0 right-0 text-[7px] px-1 text-white font-bold rounded-tl" style={{background:'rgba(0,0,0,0.75)'}}>{item.quantity}</div>}
-                                {locked && <Lock size={9} className="absolute top-0.5 left-0.5 text-red-500"/>}
+                              <button key={item.id}
+                                onClick={() => { if(!locked) { setSelectedItem(isSelected ? null : item); } }}
+                                onMouseEnter={() => setHoveredItem(item)}
+                                onMouseLeave={() => setHoveredItem(null)}
+                                className="aspect-square rounded-xl flex items-center justify-center relative transition-transform"
+                                style={{
+                                  background: getRarityBgDark(item.rarity),
+                                  border: isSelected ? '2px solid rgba(240,192,64,0.9)' : isHovered ? '1px solid rgba(240,192,64,0.5)' : '1px solid rgba(255,255,255,0.07)',
+                                  opacity: locked ? 0.4 : 1,
+                                  transform: isHovered ? 'scale(1.1)' : undefined,
+                                  boxShadow: isSelected ? '0 0 12px rgba(240,192,64,0.4)' : undefined,
+                                }}>
+                                <ItemIcon item={item} size={24}/>
+                                {(item.quantity||1)>1 && <div className="absolute bottom-0 right-0 text-[9px] px-1.5 py-0.5 text-white font-black rounded-tl" style={{background:'rgba(0,0,0,0.8)'}}>{item.quantity}</div>}
+                                {locked && <Lock size={10} className="absolute top-0.5 left-0.5 text-red-500"/>}
                               </button>
                             );
                           })}
                           {[...Array(Math.max(0, maxInventorySlots - inventory.length))].map((_,i) => (
-                            <div key={`e${i}`} className="aspect-square rounded-lg" style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.04)' }}/>
+                            <div key={`e${i}`} className="aspect-square rounded-xl" style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.04)' }}/>
                           ))}
                         </div>
                       </div>
-                      {/* Right: item details */}
+                      {/* Right: item details (shown on click) */}
                       <div className="flex flex-col flex-1 p-5 overflow-y-auto">
-                        {hoveredItem ? (
+                        {selectedItem ? (
                           <div className="flex flex-col gap-3">
                             <div className="flex gap-3 items-start">
-                              <div className="w-16 h-16 rounded-xl flex items-center justify-center shrink-0" style={{ background: getRarityBgDark(hoveredItem.rarity), border:'1px solid rgba(180,150,70,0.25)' }}>
-                                <ItemIcon item={hoveredItem} size={32}/>
+                              <div className="w-20 h-20 rounded-xl flex items-center justify-center shrink-0" style={{ background: getRarityBgDark(selectedItem.rarity), border:`1.5px solid ${getRarityTextColorDark(selectedItem.rarity)}50` }}>
+                                <ItemIcon item={selectedItem} size={40}/>
                               </div>
                               <div>
-                                <div className="font-black text-white text-base leading-tight">{hoveredItem.name}{hoveredItem.level>1 && <span className="text-yellow-400 ml-1">+{hoveredItem.level-1}</span>}</div>
-                                <div className="text-[10px] font-bold uppercase mt-0.5" style={{color: getRarityTextColorDark(hoveredItem.rarity)}}>{hoveredItem.rarity} {hoveredItem.type}</div>
+                                <div className="font-black text-white text-base leading-tight">{selectedItem.name}{selectedItem.level>1 && <span className="text-yellow-400 ml-1">+{selectedItem.level-1}</span>}</div>
+                                <div className="text-[11px] font-bold uppercase mt-0.5" style={{color: getRarityTextColorDark(selectedItem.rarity)}}>{selectedItem.rarity} {selectedItem.type}</div>
                               </div>
                             </div>
                             <div style={{height:1, background:'rgba(180,150,70,0.18)'}}/>
-                            <div className="text-xs text-slate-400 leading-relaxed">{hoveredItem.description}</div>
-                            {hoveredItem.stats && (
-                              <div className="grid grid-cols-2 gap-1">
-                                {Object.entries(hoveredItem.stats).map(([k,v]) => (
-                                  <div key={k} className="flex justify-between text-[10px] px-2 py-1 rounded" style={{background:'rgba(255,255,255,0.03)'}}>
+                            <div className="text-xs text-slate-400 leading-relaxed">{selectedItem.description}</div>
+                            {selectedItem.stats && (
+                              <div className="grid grid-cols-2 gap-1.5">
+                                {Object.entries(selectedItem.stats).map(([k,v]) => (
+                                  <div key={k} className="flex justify-between text-[11px] px-2 py-1.5 rounded-lg" style={{background:'rgba(255,255,255,0.04)'}}>
                                     <span className="text-slate-500 font-bold capitalize">{k}</span>
                                     <span className="text-green-400 font-mono font-bold">{formatStat(k,v as number)}</span>
                                   </div>
                                 ))}
                               </div>
                             )}
-                            <div className="text-xs font-black text-yellow-500 flex items-center gap-1"><Coins size={11}/>Sell: {Math.floor(hoveredItem.price*0.3)} G</div>
+                            <div className="text-sm font-black text-yellow-500 flex items-center gap-1"><Coins size={13}/>Sell: {Math.floor(selectedItem.price*0.3)} G</div>
                             <div className="flex gap-2 mt-1">
-                              {hoveredItem.type!=='POTION' && hoveredItem.type!=='CORE' && hoveredItem.type!=='REVIVE' && (
-                                <button onClick={() => { equipItem(hoveredItem); setHoveredItem(null); }} className="flex-1 py-2 rounded-lg text-xs font-black text-white" style={{ background:'rgba(99,102,241,0.55)', border:'1px solid rgba(99,102,241,0.4)' }}>EQUIP</button>
+                              {selectedItem.type!=='POTION' && selectedItem.type!=='CORE' && selectedItem.type!=='REVIVE' && (
+                                <button onClick={() => { equipItem(selectedItem); setSelectedItem(null); }} className="flex-1 py-2.5 rounded-xl text-sm font-black text-white" style={{ background:'rgba(99,102,241,0.6)', border:'1px solid rgba(99,102,241,0.4)' }}>EQUIP</button>
                               )}
-                              <button onClick={() => { setSellDialogItem(hoveredItem); setSellAmount(1); setHoveredItem(null); }} className="flex-1 py-2 rounded-lg text-xs font-black" style={{ background:'rgba(239,68,68,0.12)', border:'1px solid rgba(239,68,68,0.3)', color:'#ef4444' }}>SELL</button>
+                              <button onClick={() => { setSellDialogItem(selectedItem); setSellAmount(1); setSelectedItem(null); }} className="flex-1 py-2.5 rounded-xl text-sm font-black" style={{ background:'rgba(239,68,68,0.12)', border:'1px solid rgba(239,68,68,0.3)', color:'#ef4444' }}>SELL</button>
                             </div>
                           </div>
                         ) : (
-                          <div className="flex-1 flex items-center justify-center opacity-20">
-                            <div className="text-center"><Package size={36} className="mx-auto mb-2 text-slate-500"/><div className="text-xs text-slate-500 font-bold">Hover item for details</div></div>
+                          <div className="flex-1 flex items-center justify-center opacity-25">
+                            <div className="text-center"><Package size={40} className="mx-auto mb-3 text-slate-500"/><div className="text-sm text-slate-500 font-bold">Click item for details</div></div>
                           </div>
                         )}
                       </div>
@@ -1123,23 +1177,23 @@ export const GameUI: React.FC = () => {
                     <div className="flex flex-col flex-1 p-5 gap-4 overflow-y-auto">
                       <div className="flex gap-2">
                         {(['SUPPLIES','PETS'] as const).map(t => (
-                          <button key={t} onClick={() => openSpecificShop(t)} className="px-4 py-1.5 text-[10px] font-black uppercase rounded-lg"
+                          <button key={t} onClick={() => openSpecificShop(t)} className="px-4 py-1.5 text-xs font-black uppercase rounded-lg"
                             style={{ background: activeShopTab===t ? 'rgba(180,150,70,0.2)' : 'rgba(255,255,255,0.04)', color: activeShopTab===t ? '#f0c040' : '#666', border:`1px solid ${activeShopTab===t ? 'rgba(180,150,70,0.35)' : 'rgba(255,255,255,0.06)'}` }}>{t}</button>
                         ))}
                       </div>
-                      <div className="grid grid-cols-7 gap-2">
+                      <div className="grid grid-cols-6 gap-3">
                         {(activeShopTab==='PETS' ? PETS_POOL : ITEMS_POOL.filter(i=>i.type==='POTION'||i.type==='CORE'||i.type==='REVIVE')).map(item => (
                           <button key={item.id} onClick={() => buyItem(item)} onMouseEnter={() => setHoveredItem(item)} onMouseLeave={() => setHoveredItem(null)}
-                            className="aspect-square rounded-xl flex items-center justify-center relative"
-                            style={{ background: getRarityBgDark(item.rarity), border:`1px solid ${hoveredItem?.id===item.id ? 'rgba(240,192,64,0.5)' : 'rgba(255,255,255,0.06)'}`, opacity: score<item.price ? 0.5 : 1 }}>
-                            <ItemIcon item={item} size={22}/>
-                            <div className="absolute top-0.5 right-0.5 text-[7px] font-bold text-yellow-400">{item.price}g</div>
+                            className="aspect-square rounded-xl flex flex-col items-center justify-center relative gap-1 pb-1"
+                            style={{ background: getRarityBgDark(item.rarity), border:`1px solid ${hoveredItem?.id===item.id ? 'rgba(240,192,64,0.5)' : 'rgba(255,255,255,0.08)'}`, opacity: score<item.price ? 0.5 : 1 }}>
+                            <ItemIcon item={item} size={28}/>
+                            <div className="text-[10px] font-black text-yellow-400">{item.price}g</div>
                           </button>
                         ))}
                       </div>
                       <div className="flex gap-2 mt-auto pt-2" style={{borderTop:'1px solid rgba(255,255,255,0.05)'}}>
-                        <button onClick={() => massSell('COMMON')} className="flex-1 py-2 text-[10px] font-bold text-slate-500 rounded-lg" style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.05)'}}>SELL ALL COMMON</button>
-                        <button onClick={() => massSell('RARE')} className="flex-1 py-2 text-[10px] font-bold text-blue-400 rounded-lg" style={{background:'rgba(59,130,246,0.08)',border:'1px solid rgba(59,130,246,0.2)'}}>SELL ALL RARE</button>
+                        <button onClick={() => massSell('COMMON')} className="flex-1 py-2 text-xs font-bold text-slate-500 rounded-lg" style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.05)'}}>SELL ALL COMMON</button>
+                        <button onClick={() => massSell('RARE')} className="flex-1 py-2 text-xs font-bold text-blue-400 rounded-lg" style={{background:'rgba(59,130,246,0.08)',border:'1px solid rgba(59,130,246,0.2)'}}>SELL ALL RARE</button>
                       </div>
                     </div>
                   )}

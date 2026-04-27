@@ -75,8 +75,8 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
         meshRef.current.userData.enemies = enemies.current;
     }
 
-    // New Wave Logic: Fight for 30s, Wait for 10s, Advance at 40s
-    if (waveTimer > 40) {
+    // Wave ends at 30s
+    if (waveTimer > 30) {
         advanceWave();
     }
     
