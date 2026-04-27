@@ -513,11 +513,11 @@ export const GameUI: React.FC = () => {
 
   let weaponAbilityDesc = "Basic Attack.";
   if (equipment.weapon?.ability === 'FIREBALL') weaponAbilityDesc = "Shoots a slow giant fireball.";
-  else if (equipment.weapon?.ability === 'ARROW_RAIN') weaponAbilityDesc = "Fires waves of arrows.";
+  else if (equipment.weapon?.ability === 'ARROW_RAIN') weaponAbilityDesc = hero === 'ARCHER' ? "3x Atk Speed & Max Multishot." : "Fires waves of arrows.";
   else if (equipment.weapon?.ability === 'AXE_SPIN') weaponAbilityDesc = "Spinning blade barrier.";
   
   let qAbilityDesc = "Locked.";
-  if (activeAbilityQ === 'PIERCING_SHOT') qAbilityDesc = "Massive piercing arrow.";
+  if (activeAbilityQ === 'PIERCING_SHOT') qAbilityDesc = hero === 'ARCHER' ? "3x Atk Speed & Max Multishot." : "Massive piercing arrow.";
   else if (activeAbilityQ === 'GRAVITY_SPELL') qAbilityDesc = "Summons blackhole.";
   else if (activeAbilityQ === 'RAGE') qAbilityDesc = "Doubles Attack Speed.";
 

@@ -142,7 +142,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                 setBossData({ active: true, name: bossName, hp: 1, maxHp: 1 });
 
                 enemy.type = 2;
-                enemy.health = (2000 + (level * 250) + (wave * 100)) * hpMult * globalHpReduction * 0.8 * 0.5;
+                enemy.health = (2000 + (level * 250) + (wave * 100)) * hpMult * globalHpReduction * 0.8 * 0.5 * 0.8;
                 enemy.speed = (2.5 + (level * 0.1)) * speedMult;
                 enemy.radius = 2.5;
                 enemy.scale = 3.0;
@@ -268,7 +268,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                     if (bullet.active && bullet.type === 'BLACKHOLE') {
                         const max = bullet.maxPullCount || 8;
                         const current = bullet.currentPullCount || 0;
-                        if (current < max && e.position.distanceTo(bullet.position) < 15.0) {
+                        if (current < max && e.position.distanceTo(bullet.position) < 7.5) {
                             pushDir.subVectors(bullet.position, e.position).normalize();
                             e.position.add(pushDir.multiplyScalar(currentSpeed * 2.0 * delta));
                             moved = true;

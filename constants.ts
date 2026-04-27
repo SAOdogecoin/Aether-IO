@@ -105,7 +105,7 @@ export const SKILLS_INFO = {
     special: { name: 'Class Special (E)', description: 'Unlocks your unique Class Ability. Costs 5 SP.', type: 'ACTIVE' },
 
     // Archer Only
-    piercing: { name: 'Piercing Arrow', description: 'Active (Q): Giant piercing arrow.', classType: 'ARCHER', type: 'ACTIVE' },
+    piercing: { name: 'Wind Speed', description: 'Active (Q): 3x Atk Speed and Max Multishot.', classType: 'ARCHER', type: 'ACTIVE' },
     burning: { name: 'Burning Arrow', description: 'Passive: Periodically fires explosive fire arrows.', classType: 'ARCHER', type: 'PASSIVE' },
     freezing: { name: 'Freezing Arrow', description: 'Passive: Periodically fires explosive ice arrows.', classType: 'ARCHER', type: 'PASSIVE' },
     

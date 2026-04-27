@@ -250,11 +250,9 @@ export const calculateTotalCP = (stats: PlayerStats): number => {
     return Math.floor(cp);
 };
 
-const calculateStats = (base: PlayerStats, equipment: GameState['equipment'], rageMode: boolean = false, sprintActive: boolean = false) => {
+const calculateStats = (base: PlayerStats, equipment: GameState['equipment'], rageMode: boolean = false, sprintActive: boolean = false, heroClass: HeroClass = 'ARCHER') => {
   const final = { ...base };
   const sets: Record<string, number> = {};
-
-  if (!equipment) return final;
 
   if (!equipment) return final;
 
@@ -307,7 +305,12 @@ const calculateStats = (base: PlayerStats, equipment: GameState['equipment'], ra
   }
   
   if (rageMode) {
-      final.fireRate *= 2.0;
+      if (heroClass === 'ARCHER') {
+          final.fireRate *= 3.0;
+          final.multishot = 7;
+      } else {
+          final.fireRate *= 2.0;
+      }
   }
   
   if (sprintActive) {
@@ -630,7 +633,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         health: runBaseStats.maxHealth,
         mana: runBaseStats.maxMana,
         baseStats: runBaseStats,
-        stats: calculateStats(runBaseStats, finalEquipment),
+        stats: calculateStats(runBaseStats, finalEquipment, false, false, state.hero),
         activeAbilityQ: newActiveQ,
         activeAbilityR: state.activeAbilityR,
         playerPosition: new Vector3(0, 0, 0),
@@ -700,7 +703,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         level: level + 1,
         skillPoints: get().skillPoints + 1,
         baseStats: newBase,
-        stats: calculateStats(newBase, get().equipment, get().rageMode, get().sprintTimer > 0),
+        stats: calculateStats(newBase, get().equipment, get().rageMode, get().sprintTimer > 0, get().hero),
         health: get().health, 
         mana: get().mana, 
         levelUpVisualTimer: 1.0 
@@ -1029,7 +1032,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   }),
 
   activateRage: () => set((state) => {
-      const newStats = calculateStats(state.baseStats, state.equipment, true, state.sprintTimer > 0);
+      const newStats = calculateStats(state.baseStats, state.equipment, true, state.sprintTimer > 0, state.hero);
       return { rageMode: true, rageTimer: 4.0, stats: newStats };
   }),
 
@@ -1043,7 +1046,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   activateSprint: () => {
       const state = get();
-      const newStats = calculateStats(state.baseStats, state.equipment, state.rageMode, true);
+      const newStats = calculateStats(state.baseStats, state.equipment, state.rageMode, true, state.hero);
       set({ sprintTimer: 4.0, stats: newStats, invincibilityTimer: Math.max(state.invincibilityTimer, 4.0), isInvincible: true });
   },
 
@@ -1162,7 +1165,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       if (state.sprintTimer > 0 && sprintTimer <= 0) recalc = true;
 
       if (recalc) {
-          stats = calculateStats(state.baseStats, state.equipment, rageMode, sprintTimer > 0);
+          stats = calculateStats(state.baseStats, state.equipment, rageMode, sprintTimer > 0, state.hero);
       }
       
       const newBarrierCooldown = newShieldTimer;
@@ -1327,7 +1330,7 @@ export const useGameStore = create<GameState>((set, get) => ({
               accessory: state.equipment.accessory ? upgradeLogic(state.equipment.accessory) : null,
               pet: state.equipment.pet ? upgradeLogic(state.equipment.pet) : null,
           };
-          const newStats = calculateStats(state.baseStats, updatedEquipment, state.rageMode, state.sprintTimer > 0);
+          const newStats = calculateStats(state.baseStats, updatedEquipment, state.rageMode, state.sprintTimer > 0, state.hero);
           set({ inventory: updatedInventory, equipment: updatedEquipment, stats: newStats, actionResult: { type: 'UPGRADE', success: true, message: "Upgrade Successful!", item: upgradedItem } });
           return { success: true, msg: "Upgrade Successful!", newItem: upgradedItem };
       } else { 
@@ -1462,7 +1465,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         baseStats: newStats,
         skillLevels: newLevels,
         passiveSkillState: newPassiveState,
-        stats: calculateStats(newStats, state.equipment, state.rageMode, state.sprintTimer > 0)
+        stats: calculateStats(newStats, state.equipment, state.rageMode, state.sprintTimer > 0, state.hero)
     });
   },
 
@@ -1510,7 +1513,7 @@ export const useGameStore = create<GameState>((set, get) => ({
          if (item.classType === 'BARBARIAN') newActiveQ = 'RAGE';
     }
 
-    const newStats = calculateStats(state.baseStats, newEquipment, state.rageMode, state.sprintTimer > 0);
+    const newStats = calculateStats(state.baseStats, newEquipment, state.rageMode, state.sprintTimer > 0, state.hero);
     
     set({
         inventory,
@@ -1535,7 +1538,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       const newEquipment = { ...state.equipment, [slot]: null };
       const inventory = [...state.inventory, currentEquip];
       
-      const newStats = calculateStats(state.baseStats, newEquipment, state.rageMode, state.sprintTimer > 0);
+      const newStats = calculateStats(state.baseStats, newEquipment, state.rageMode, state.sprintTimer > 0, state.hero);
       
       set({
           inventory,
@@ -1599,7 +1602,7 @@ export const useGameStore = create<GameState>((set, get) => ({
              if (equipment.weapon.classType === 'BARBARIAN') newActiveQ = 'RAGE';
           }
           
-          const newStats = calculateStats(state.baseStats, equipment, state.rageMode, state.sprintTimer > 0);
+          const newStats = calculateStats(state.baseStats, equipment, state.rageMode, state.sprintTimer > 0, state.hero);
           set({
               inventory,
               equipment,

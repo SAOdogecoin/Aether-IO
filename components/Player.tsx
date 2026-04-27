@@ -77,7 +77,7 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
           let aimDir = new Vector3().subVectors(targetPosRef.current, pos).normalize();
           
           if (type === 'BLACKHOLE') {
-              bullet.position.copy(pos).add(aimDir.clone().multiplyScalar(15.0)).add(new Vector3(0, 1.5, 0));
+              bullet.position.copy(pos).add(aimDir.clone().multiplyScalar(7.5)).add(new Vector3(0, 1.5, 0));
               bullet.velocity.set(0, 0, 0); 
           } else {
               bullet.position.copy(pos).add(new Vector3(0, 1.5, 0));
@@ -106,14 +106,18 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
           if (ability === 'RAGE') {
               activateRage();
           } else if (ability === 'PIERCING_SHOT') {
-              spawnBullet('PIERCING_ARROW', 50, 1.75, { pierce: 99, knockback: 4.0, lifetime: 3.0 });
+              if (hero === 'ARCHER') activateRage();
+              else spawnBullet('PIERCING_ARROW', 50, 1.75, { pierce: 99, knockback: 4.0, lifetime: 3.0 });
           } else if (ability === 'GRAVITY_SPELL') {
               const limit = 8 + (skillLevels.gravity * 1);
               spawnBullet('BLACKHOLE', 0, 5.0, { pierce: 99, lifetime: 2.6, trailTimer: 0.1, maxPullCount: limit }); 
           } else if (ability === 'ARROW_RAIN') {
-              arrowRainState.current.active = true;
-              arrowRainState.current.wavesLeft = 1;
-              arrowRainState.current.timer = 0; 
+              if (hero === 'ARCHER') activateRage();
+              else {
+                  arrowRainState.current.active = true;
+                  arrowRainState.current.wavesLeft = 1;
+                  arrowRainState.current.timer = 0;
+              }
           } else if (ability === 'FIREBALL') {
               spawnBullet('FIREBALL', 10, 2.0 * 0.63, { 
                   pierce: 100, 
@@ -328,7 +332,7 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
             if (b.active) {
                 const horizontalDist = Math.hypot(b.position.x - pos.x, b.position.z - pos.z);
                 const verticalGap = Math.abs(b.position.y - pos.y);
-                if (horizontalDist < PLAYER_RADIUS + 0.5 && verticalGap < 1.2) {
+                if (horizontalDist < PLAYER_RADIUS + 0.5 && verticalGap < 2.0) {
                     const dmg = b.damage || 10;
                     takeDamage(dmg);
                     b.active = false;
