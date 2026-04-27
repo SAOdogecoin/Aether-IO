@@ -1,14 +1,50 @@
 
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useMemo, useRef, Suspense } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { useGLTF, PresentationControls } from '@react-three/drei';
 import { useGameStore, calculateItemCP, calculateTotalCP, RARITY_LEVEL_REQ } from '../store';
 import { GameStatus, Upgrade, Item, Rarity, GameNotification, HeroClass, SkillLevels, ActionResult, PlayerStats } from '../types';
 import { UPGRADES_POOL, ITEMS_POOL, HERO_STATS, PETS_POOL, SKILLS_INFO, ARENA_SIZE, SHOP_POSITIONS, RECYCLE_YIELDS, CRAFTING_COSTS, MATERIAL_COMBINE_COST } from '../constants';
-import { 
-  Heart, Zap, Sparkles, RotateCcw, 
+import { WEAPON_PATHS } from '../assetConfig';
+import {
+  Heart, Zap, Sparkles, RotateCcw,
   Backpack, Shield, Sword, Gem, X, User, Flame, Wind, ShoppingBag, Coins, Hammer, MoveRight, Activity, Magnet, Ghost, Dices, Timer, Trash2, CheckCircle2, ShieldCheck, Wand, FlaskConical, CircleDollarSign, Package,
   Crosshair, Axe, Wand2, Hexagon, Layers, BookOpen, Star, ArrowUpCircle, Trophy, RefreshCcw, Anvil, ArrowRight, Sun, Tornado, Skull, Check, AlertTriangle, Book, Search, Lock, ArrowBigRight, Menu, Play, BarChart3, ChevronRight, AlertCircle, Plus, Minus, Recycle, PenTool
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+// Weapon name → GLTF model key
+const ITEM_WEAPON_MODEL: Partial<Record<string, keyof typeof WEAPON_PATHS>> = {
+  'Shortbow': 'bow', 'Elven Bow': 'bow', 'Composite Bow': 'crossbow', 'Windforce': 'bow', 'Apollo Bow': 'bow',
+  'Novice Staff': 'staff', 'Adept Staff': 'staff', 'Inferno Rod': 'wand', 'Archon Staff': 'staff', 'Staff of Aether': 'staff',
+  'Hand Axe': 'axe_1h', 'Viking Axe': 'axe_2h', 'Double Axe': 'axe_2h', 'World Breaker': 'axe_2h', 'Titan Killer': 'axe_2h',
+};
+
+const WeaponModel: React.FC<{ modelKey: keyof typeof WEAPON_PATHS }> = ({ modelKey }) => {
+  const { scene } = useGLTF(WEAPON_PATHS[modelKey]);
+  const clone = useMemo(() => scene.clone(), [scene]);
+  return (
+    <>
+      <ambientLight intensity={3} />
+      <directionalLight position={[3, 5, 3]} intensity={3} color="#fff8e8" />
+      <primitive object={clone} />
+    </>
+  );
+};
+
+const WeaponThumb: React.FC<{ item: Item }> = ({ item }) => {
+  const mk = ITEM_WEAPON_MODEL[item.name];
+  if (!mk) return null;
+  return (
+    <Canvas camera={{ position: [0, 0, 2.4], fov: 42 }} style={{ width: '100%', height: '100%' }}>
+      <Suspense fallback={null}>
+        <PresentationControls global snap speed={2} polar={[-0.3, 0.3]} azimuth={[-Math.PI / 4, Math.PI / 4]}>
+          <WeaponModel modelKey={mk} />
+        </PresentationControls>
+      </Suspense>
+    </Canvas>
+  );
+};
 
 // --- HELPER COMPONENTS ---
 
@@ -154,68 +190,72 @@ const UniversalSkillSlot: React.FC<{
     const canAfford = currentMana >= actualCost;
     const accent = heroClass ? (CLASS_COLOR[heroClass] ?? '#6366f1') : '#6366f1';
 
-    const isRecharging = cooldown > 0;
     const isChargingType = maxCharges && maxCharges > 0;
-    const showCooldownOverlay = isRecharging && (!isChargingType || (charges !== undefined && charges < maxCharges));
+    const showCooldownOverlay = cooldown > 0 && (!isChargingType || (charges !== undefined && charges < maxCharges));
     const percent = Math.min(100, Math.max(0, (cooldown / maxCooldown) * 100));
     const isDimmed = !active || level === 0;
 
+    // Potions reuse `level` as qty
+    const isPotion = label === '1' || label === '2';
+    const qty = isPotion ? level : 0;
+
     return (
-        <div className="relative group flex flex-col items-center">
+        <div className="relative group flex flex-col items-center gap-0.5">
             <div
-                className={`w-12 h-12 md:w-13 md:h-13 rounded-xl flex items-center justify-center relative overflow-hidden transition-all
-                    ${isDimmed ? 'opacity-40' : ''}
+                className={`w-14 h-14 rounded-xl flex items-center justify-center relative overflow-hidden transition-all
+                    ${isDimmed ? 'opacity-35' : ''}
                     ${!canAfford && active && (!isChargingType || charges! > 0) ? 'grayscale' : ''}
                 `}
                 style={{
-                    background: isDimmed ? 'rgba(10,10,10,0.85)' : 'rgba(14,14,18,0.92)',
-                    border: isDimmed ? '1px solid rgba(60,60,70,0.5)' : `1px solid ${accent}55`,
-                    boxShadow: !isDimmed ? `0 0 10px ${accent}22, inset 0 0 8px rgba(0,0,0,0.6)` : 'none',
+                    background: isDimmed ? 'rgba(18,18,24,0.9)' : 'rgba(22,22,30,0.95)',
+                    border: isDimmed ? '1px solid rgba(60,60,75,0.45)' : `1.5px solid ${accent}60`,
+                    boxShadow: !isDimmed ? `0 0 14px ${accent}25, inset 0 0 10px rgba(0,0,0,0.5)` : 'none',
                 }}
             >
-                <div className="scale-90 z-0">{icon}</div>
+                <div className="z-0">{icon}</div>
 
                 {showCooldownOverlay && (
-                    <div
-                        className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none"
-                        style={{ background: `conic-gradient(rgba(0,0,0,0.75) ${percent}%, transparent ${percent}% 100%)` }}
-                    >
+                    <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none"
+                        style={{ background: `conic-gradient(rgba(0,0,0,0.82) ${percent}%, transparent ${percent}% 100%)` }}>
                         {!isChargingType && (
-                            <span className="text-white font-black text-xs drop-shadow z-20">{cooldown.toFixed(1)}</span>
+                            <span className="text-white font-black text-sm drop-shadow-lg z-20 leading-none"
+                                style={{ textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>
+                                {cooldown.toFixed(1)}
+                            </span>
                         )}
                     </div>
                 )}
 
                 {!active && (
                     <div className="absolute inset-0 flex items-center justify-center z-20">
-                        <Lock size={14} className="text-gray-600" />
+                        <Lock size={16} className="text-gray-700" />
                     </div>
                 )}
 
                 {!canAfford && active && (!isChargingType || charges! > 0) && manaCost > 0 && (
-                    <div className="absolute inset-0 bg-blue-900/40 flex items-center justify-center z-10">
-                        <span className="text-blue-300 text-[9px] font-black">MP</span>
+                    <div className="absolute inset-0 bg-blue-950/50 flex items-center justify-center z-10">
+                        <span className="text-blue-300 text-[10px] font-black">MP</span>
                     </div>
                 )}
 
-                {active && level > 0 && (
-                    <div className="absolute bottom-0 right-0 text-[7px] px-1 py-0.5 font-bold z-20"
-                         style={{ background: accent + 'cc', color: '#fff', borderTopLeftRadius: 4 }}>
-                        {level}
+                {isPotion && qty > 0 && (
+                    <div className="absolute bottom-0 right-0 z-20 px-1 py-0.5 font-black text-white text-sm leading-none"
+                        style={{ background: 'rgba(0,0,0,0.75)', borderTopLeftRadius: 6 }}>
+                        {qty}
                     </div>
                 )}
 
                 {isChargingType && active && (
-                    <div className="absolute top-1 left-1 flex gap-0.5 z-20">
+                    <div className="absolute bottom-1 left-0 right-0 flex justify-center gap-1 z-20">
                         {[...Array(maxCharges)].map((_, i) => (
-                            <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < (charges || 0) ? 'bg-green-400' : 'bg-gray-700'}`} />
+                            <div key={i} className={`w-2 h-2 rounded-full ${i < (charges || 0) ? 'bg-green-400 shadow-sm' : 'bg-gray-700'}`} />
                         ))}
                     </div>
                 )}
             </div>
 
             {label && (
-                <div className="text-[8px] font-bold text-gray-500 mt-0.5 uppercase tracking-wider">{label}</div>
+                <div className="text-[9px] font-black text-white/40 uppercase tracking-wider leading-none">{label}</div>
             )}
 
             <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-40 bg-gray-950 border border-gray-700 text-xs p-2.5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center shadow-xl">
@@ -634,31 +674,28 @@ export const GameUI: React.FC = () => {
              </div>
           </div>
 
-          {/* Left Sidebar Buttons */}
-          <div className="absolute left-6 top-1/2 -translate-y-1/2 flex flex-col gap-3 pointer-events-auto z-30">
-              {([
-                { tab: 'CHARACTER' as const, icon: <User size={20} />, label: 'HERO',   action: () => { setPanelTab('CHARACTER'); if (!panelOpen) toggleCharacterSheet(); else if (!isCharacterSheetOpen) { closeAllUI(); setTimeout(toggleCharacterSheet, 10); } } },
-                { tab: 'INVENTORY' as const, icon: <Backpack size={20} />, label: 'BAG',    action: () => { setPanelTab('INVENTORY'); if (!panelOpen) toggleInventory(); else if (!isInventoryOpen) { closeAllUI(); setTimeout(toggleInventory, 10); } } },
-                { tab: 'CRAFTING'  as const, icon: <Hammer size={20} />,  label: 'FORGE',  action: () => { setPanelTab('CRAFTING');  openSpecificShop('BLACKSMITH'); } },
-                { tab: 'SKILLS'    as const, icon: <BookOpen size={20} />, label: 'SKILLS', action: () => { setPanelTab('SKILLS');    openSpecificShop('SKILLS'); } },
-                { tab: 'SHOP'      as const, icon: <ShoppingBag size={20} />, label: 'SHOP', action: () => { setPanelTab('SHOP');   openSpecificShop('SUPPLIES'); } },
-              ]).map(({ tab, icon, label, action }) => {
+          {/* Single menu toggle button */}
+          <div className="absolute left-5 top-1/2 -translate-y-1/2 pointer-events-auto z-30">
+              {(() => {
                 const accent = CLASS_COLOR[hero] ?? '#6366f1';
-                const isActive = panelOpen && panelTab === tab;
                 return (
-                  <button key={tab} onClick={action}
+                  <button
+                    onClick={() => {
+                      if (panelOpen) { closeAllUI(); }
+                      else { setPanelTab('INVENTORY'); toggleInventory(); }
+                    }}
                     className="w-12 h-12 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all"
                     style={{
-                      background: isActive ? `${accent}22` : 'rgba(10,10,14,0.85)',
-                      border: isActive ? `1px solid ${accent}66` : '1px solid rgba(255,255,255,0.08)',
-                      boxShadow: isActive ? `0 0 12px ${accent}33` : 'none',
-                      color: isActive ? accent : 'rgba(120,120,130,0.8)',
+                      background: panelOpen ? `${accent}28` : 'rgba(18,18,26,0.92)',
+                      border: panelOpen ? `1.5px solid ${accent}70` : '1px solid rgba(255,255,255,0.1)',
+                      boxShadow: panelOpen ? `0 0 16px ${accent}40` : '0 2px 12px rgba(0,0,0,0.6)',
+                      color: panelOpen ? accent : 'rgba(160,160,175,0.9)',
                     }}>
-                    {icon}
-                    <span className="text-[7px] font-black uppercase tracking-wider">{label}</span>
+                    {panelOpen ? <X size={20} /> : <Menu size={20} />}
+                    <span className="text-[7px] font-black uppercase tracking-wider">{panelOpen ? 'CLOSE' : 'MENU'}</span>
                   </button>
                 );
-              })}
+              })()}
           </div>
 
           {/* BOTTOM HOTBAR */}
@@ -793,14 +830,13 @@ export const GameUI: React.FC = () => {
             {/* COMBINED DARK PANEL */}
             {panelOpen && (
               <motion.div key="combined-panel" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.97 }} transition={{ duration: 0.15 }}
-                className="absolute inset-0 z-40 flex items-center justify-center pointer-events-auto"
-                style={{ background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)' }}
+                className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none"
               >
-                <div className="relative flex flex-col overflow-hidden rounded-2xl"
-                  style={{ width: 'min(960px,95vw)', height: 'min(680px,88vh)', background: 'linear-gradient(160deg,#0f0f18 0%,#0a0a10 100%)', border: '1px solid rgba(180,150,70,0.3)', boxShadow: '0 0 80px rgba(0,0,0,0.9)' }}>
+                <div className="relative flex flex-col overflow-hidden rounded-2xl pointer-events-auto"
+                  style={{ width: 'min(960px,95vw)', height: 'min(680px,88vh)', background: 'linear-gradient(160deg,#1c1c28 0%,#161620 100%)', border: '1px solid rgba(180,150,70,0.28)', boxShadow: '0 8px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)' }}>
 
                   {/* Tab bar */}
-                  <div className="flex items-center shrink-0" style={{ borderBottom: '1px solid rgba(180,150,70,0.18)', background: 'rgba(0,0,0,0.35)' }}>
+                  <div className="flex items-center shrink-0" style={{ borderBottom: '1px solid rgba(180,150,70,0.16)', background: 'rgba(255,255,255,0.03)' }}>
                     {(['INVENTORY','CRAFTING','SKILLS','SHOP','CHARACTER'] as const).map(tab => (
                       <button key={tab} onClick={() => {
                         setPanelTab(tab);
@@ -826,19 +862,54 @@ export const GameUI: React.FC = () => {
                   {/* ── INVENTORY TAB ── */}
                   {panelTab==='INVENTORY' && (
                     <div className="flex flex-1 overflow-hidden">
-                      {/* Left: equip row + grid */}
+                      {/* Left: equip cards + grid */}
                       <div className="flex flex-col p-4 gap-3 overflow-y-auto" style={{ width:'58%', borderRight:'1px solid rgba(180,150,70,0.12)' }}>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {([{k:'weapon',l:'WPN',i:equipment.weapon},{k:'armor',l:'ARM',i:equipment.armor},{k:'accessory',l:'ACC',i:equipment.accessory},{k:'pet',l:'PET',i:equipment.pet}] as const).map(s => (
-                            <button key={s.k} onClick={() => unequipItem(s.k as any)} onMouseEnter={() => s.i && setHoveredItem(s.i)} onMouseLeave={() => setHoveredItem(null)}
-                              className="w-14 h-14 rounded-xl flex items-center justify-center relative"
-                              style={{ background: s.i ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.02)', border: s.i ? '1px solid rgba(180,150,70,0.4)' : '1px solid rgba(255,255,255,0.07)' }}>
-                              {s.i ? <ItemIcon item={s.i} size={24}/> : <span className="text-[7px] text-slate-700 font-bold">{s.l}</span>}
-                              {s.i && s.i.level > 1 && <div className="absolute top-0 right-0 text-[7px] px-1 font-bold text-yellow-400 rounded-bl" style={{background:'rgba(0,0,0,0.7)'}}>+{s.i.level-1}</div>}
-                            </button>
-                          ))}
-                          <button onClick={() => autoEquip()} className="px-2 py-1 text-[8px] font-black text-slate-500 uppercase rounded-lg" style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)' }}>AUTO</button>
-                          <span className="ml-auto text-[9px] text-slate-700 font-bold">{inventory.length}/{maxInventorySlots}</span>
+                        {/* RPG Equipment Cards */}
+                        <div className="flex gap-2">
+                          {([
+                            { k:'weapon', l:'WEAPON', i:equipment.weapon, icon:<Sword size={18} className="text-slate-600"/> },
+                            { k:'armor',  l:'ARMOR',  i:equipment.armor,  icon:<Shield size={18} className="text-slate-600"/> },
+                            { k:'accessory', l:'RING', i:equipment.accessory, icon:<Gem size={18} className="text-slate-600"/> },
+                            { k:'pet',    l:'PET',    i:equipment.pet,    icon:<Ghost size={18} className="text-slate-600"/> },
+                          ] as const).map(s => {
+                            const rarityColor = s.i ? getRarityTextColorDark(s.i.rarity) : 'rgba(80,80,90,0.6)';
+                            const isWeapon = s.k === 'weapon';
+                            return (
+                              <button key={s.k} onClick={() => s.i && unequipItem(s.k as any)} onMouseEnter={() => s.i && setHoveredItem(s.i)} onMouseLeave={() => setHoveredItem(null)}
+                                className="flex flex-col items-center rounded-xl overflow-hidden relative transition-all"
+                                style={{
+                                  width: isWeapon ? 88 : 68,
+                                  height: isWeapon ? 110 : 86,
+                                  background: s.i ? getRarityBgDark(s.i.rarity) : 'rgba(255,255,255,0.02)',
+                                  border: s.i ? `1.5px solid ${rarityColor}55` : '1px solid rgba(255,255,255,0.06)',
+                                  boxShadow: s.i ? `0 0 18px ${rarityColor}30, inset 0 0 20px rgba(0,0,0,0.3)` : 'none',
+                                  flexShrink: 0,
+                                }}>
+                                {s.i ? (
+                                  <>
+                                    {isWeapon ? (
+                                      <div className="w-full flex-1"><WeaponThumb item={s.i}/></div>
+                                    ) : (
+                                      <div className="flex-1 flex items-center justify-center"><ItemIcon item={s.i} size={28}/></div>
+                                    )}
+                                    <div className="w-full px-1 py-1 text-center" style={{background:'rgba(0,0,0,0.55)'}}>
+                                      <div className="text-[8px] font-black leading-tight truncate" style={{color: rarityColor}}>{s.i.name}</div>
+                                      {s.i.level > 1 && <div className="text-[7px] text-yellow-400 font-bold">+{s.i.level-1}</div>}
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div className="flex-1 flex flex-col items-center justify-center gap-1">
+                                    {s.icon}
+                                    <span className="text-[7px] text-slate-700 font-bold uppercase">{s.l}</span>
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          })}
+                          <div className="flex flex-col justify-between ml-auto">
+                            <button onClick={() => autoEquip()} className="px-2 py-1 text-[8px] font-black text-slate-500 uppercase rounded-lg" style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)' }}>AUTO</button>
+                            <span className="text-[9px] text-slate-700 font-bold text-right">{inventory.length}/{maxInventorySlots}</span>
+                          </div>
                         </div>
                         <div className="grid grid-cols-6 gap-1.5">
                           {sortedInventory.map(item => {
