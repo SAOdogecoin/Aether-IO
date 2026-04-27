@@ -63,6 +63,7 @@ function HeroModel({
   useEffect(() => {
     scene.traverse((child: any) => {
       if (child.isMesh && child.material) {
+        child.material = child.material.clone();
         child.material.map = texture;
         child.material.needsUpdate = true;
         child.castShadow = true;

@@ -6,6 +6,7 @@ import { useFrame } from '@react-three/fiber';
 import { ENEMY_PATHS, ENEMY_TEXTURE, SKELETON_ANIM_RIGS, ASSET_FLAGS } from '../assetConfig';
 import { EnemyData } from '../types';
 import { MinionWeapons, WarriorWeapons, RogueWeapons, MageWeapons } from './SkeletonWeapons';
+import { useGameStore } from '../store';
 
 const EnemyHealthBar: React.FC<{ slot: EnemyData }> = ({ slot }) => {
   if (!slot.active || slot.health <= 0) return null;
@@ -180,7 +181,10 @@ export const NearbyEnemies: React.FC<NearbyEnemiesProps> = ({
 
   useFrame(() => {
     const pp = playerPositionRef.current;
-    const active = enemiesDataRef.current.filter(e => e.active);
+    const bossActive = useGameStore.getState().bossData.active;
+    const active = enemiesDataRef.current.filter(e =>
+      e.active && (!bossActive || e.type === 2)
+    );
     active.sort((a, b) =>
       ((a.position.x - pp.x) ** 2 + (a.position.z - pp.z) ** 2) -
       ((b.position.x - pp.x) ** 2 + (b.position.z - pp.z) ** 2)
