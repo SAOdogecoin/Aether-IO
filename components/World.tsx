@@ -88,7 +88,7 @@ export const World: React.FC = () => {
   return (
     <group>
       {/* Distance fog — dark forest green, aggressive past the tree boundary */}
-      <fog attach="fog" args={['#0a1905', 48, 82]} />
+      {/* (Removed: replaced by MOBA-style fog overlay in GameUI) */}
 
       {/* RPG Lighting - Day Mode */}
       <ambientLight intensity={1.0} color="#ffffff" />

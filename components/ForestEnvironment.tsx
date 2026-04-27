@@ -56,6 +56,7 @@ function GltfBatch({
     <instancedMesh
       ref={ref}
       args={[geo, mat, transforms.length]}
+      frustumCulled={false}
       castShadow={castShadow}
       receiveShadow={receiveShadow}
     />

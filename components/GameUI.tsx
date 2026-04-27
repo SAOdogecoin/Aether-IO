@@ -108,6 +108,12 @@ const WarningNotification: React.FC<{ note: GameNotification; onRemove: (id: str
     );
 });
 
+const CLASS_COLOR: Record<string, string> = {
+    ARCHER:    '#22c55e',
+    WIZARD:    '#3b82f6',
+    BARBARIAN: '#ef4444',
+};
+
 const UniversalSkillSlot: React.FC<{
     icon: React.ReactNode;
     level: number;
@@ -123,90 +129,79 @@ const UniversalSkillSlot: React.FC<{
     heroClass?: string;
     isPassive?: boolean;
 }> = ({ icon, level, cooldown = 0, maxCooldown = 1, label, desc, active, manaCost = 0, currentMana = 999, charges, maxCharges, heroClass, isPassive }) => {
-    
+
     const actualCost = heroClass === 'WIZARD' ? Math.ceil(manaCost * 1.3) : manaCost;
     const canAfford = currentMana >= actualCost;
-    
+    const accent = heroClass ? (CLASS_COLOR[heroClass] ?? '#6366f1') : '#6366f1';
+
     const isRecharging = cooldown > 0;
     const isChargingType = maxCharges && maxCharges > 0;
-    // Show cooldown overlay if we are recharging AND (it's not a charge skill OR we have less than max charges)
     const showCooldownOverlay = isRecharging && (!isChargingType || (charges !== undefined && charges < maxCharges));
-    
-    // Calculate percentage for conic gradient (0 to 100%)
     const percent = Math.min(100, Math.max(0, (cooldown / maxCooldown) * 100));
+    const isDimmed = !active || level === 0;
 
     return (
         <div className="relative group flex flex-col items-center">
-            {/* Slot Container - overflow-hidden is key for the squircle clip */}
-            <div className={`w-14 h-14 md:w-16 md:h-16 rounded-3xl flex items-center justify-center relative overflow-hidden transition-all shadow-md
-                ${active ? 'bg-white border-b-4 border-slate-200' : 'bg-slate-200 opacity-60'}
-                ${!canAfford && active && (!isChargingType || charges! > 0) ? 'grayscale' : ''}
-            `}>
-                {/* Icon */}
-                <div className="scale-75 md:scale-100 z-0">{icon}</div>
-                
-                {/* Cooldown Overlay - Conic Gradient to perfectly fill squircle */}
+            <div
+                className={`w-12 h-12 md:w-13 md:h-13 rounded-xl flex items-center justify-center relative overflow-hidden transition-all
+                    ${isDimmed ? 'opacity-40' : ''}
+                    ${!canAfford && active && (!isChargingType || charges! > 0) ? 'grayscale' : ''}
+                `}
+                style={{
+                    background: isDimmed ? 'rgba(10,10,10,0.85)' : 'rgba(14,14,18,0.92)',
+                    border: isDimmed ? '1px solid rgba(60,60,70,0.5)' : `1px solid ${accent}55`,
+                    boxShadow: !isDimmed ? `0 0 10px ${accent}22, inset 0 0 8px rgba(0,0,0,0.6)` : 'none',
+                }}
+            >
+                <div className="scale-90 z-0">{icon}</div>
+
                 {showCooldownOverlay && (
-                    <div 
+                    <div
                         className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none"
-                        style={{
-                            background: `conic-gradient(rgba(0,0,0,0.7) ${percent}%, transparent ${percent}% 100%)`
-                        }}
+                        style={{ background: `conic-gradient(rgba(0,0,0,0.75) ${percent}%, transparent ${percent}% 100%)` }}
                     >
                         {!isChargingType && (
-                            <div className="text-white font-black text-sm drop-shadow-md z-20">
-                                {cooldown.toFixed(1)}
-                            </div>
+                            <span className="text-white font-black text-xs drop-shadow z-20">{cooldown.toFixed(1)}</span>
                         )}
                     </div>
                 )}
 
                 {!active && (
-                    <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center z-20">
-                        <Lock size={16} className="text-white opacity-80" />
-                    </div>
-                )}
-                
-                {/* Mana Warning */}
-                {!canAfford && active && (!isChargingType || charges! > 0) && manaCost > 0 && (
-                    <div className="absolute inset-0 bg-blue-500/30 flex items-center justify-center z-10">
-                        <span className="text-white text-[10px] font-black drop-shadow-md">MANA</span>
-                    </div>
-                )}
-                
-                {/* Level Badge */}
-                {active && (
-                    <div className="absolute bottom-0 right-0 bg-slate-800 text-[8px] px-1.5 py-0.5 text-white font-bold rounded-tl-lg z-20">
-                        Lv.{level}
+                    <div className="absolute inset-0 flex items-center justify-center z-20">
+                        <Lock size={14} className="text-gray-600" />
                     </div>
                 )}
 
-                {/* Charges */}
+                {!canAfford && active && (!isChargingType || charges! > 0) && manaCost > 0 && (
+                    <div className="absolute inset-0 bg-blue-900/40 flex items-center justify-center z-10">
+                        <span className="text-blue-300 text-[9px] font-black">MP</span>
+                    </div>
+                )}
+
+                {active && level > 0 && (
+                    <div className="absolute bottom-0 right-0 text-[7px] px-1 py-0.5 font-bold z-20"
+                         style={{ background: accent + 'cc', color: '#fff', borderTopLeftRadius: 4 }}>
+                        {level}
+                    </div>
+                )}
+
                 {isChargingType && active && (
                     <div className="absolute top-1 left-1 flex gap-0.5 z-20">
                         {[...Array(maxCharges)].map((_, i) => (
-                             <div 
-                                key={i} 
-                                className={`w-2 h-2 rounded-full border border-white ${i < (charges || 0) ? 'bg-green-400' : 'bg-slate-300'}`} 
-                             />
+                            <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < (charges || 0) ? 'bg-green-400' : 'bg-gray-700'}`} />
                         ))}
                     </div>
                 )}
             </div>
-            
-            {/* Keybind Label */}
+
             {label && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-[9px] font-black bg-slate-800 text-white px-2 py-0.5 rounded-full border-2 border-white shadow-sm z-30 whitespace-nowrap">
-                    {label}
-                </div>
+                <div className="text-[8px] font-bold text-gray-500 mt-0.5 uppercase tracking-wider">{label}</div>
             )}
-            
-            {/* Tooltip */}
-            <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-48 bg-white text-slate-800 text-xs p-3 rounded-2xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center border border-slate-100">
-                <div className="font-bold text-orange-500 mb-1">{desc}</div>
-                {manaCost > 0 && active && <div className="text-blue-500 font-mono font-bold text-[10px]">Cost: {actualCost} MP</div>}
-                {!active && <div className="text-slate-400 font-bold text-[10px]">Locked</div>}
-                <div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-white rotate-45 border-b border-r border-slate-100"></div>
+
+            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-40 bg-gray-950 border border-gray-700 text-xs p-2.5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center shadow-xl">
+                <div className="font-bold text-white mb-0.5">{desc}</div>
+                {manaCost > 0 && active && <div className="text-blue-400 text-[10px]">MP: {actualCost}</div>}
+                {!active && <div className="text-gray-600 text-[10px]">Locked</div>}
             </div>
         </div>
     );
@@ -436,64 +431,101 @@ export const GameUI: React.FC = () => {
 
       {/* LOBBY / HERO SELECT */}
       {status === GameStatus.MENU && (
-          <div className="absolute inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-xl pointer-events-auto z-50">
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }} 
-                animate={{ opacity: 1, y: 0 }} 
+          <div className="absolute inset-0 flex items-center justify-center bg-black/80 backdrop-blur-xl pointer-events-auto z-50">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
                 className="w-full max-w-5xl px-8 flex flex-col items-center gap-8"
               >
                   <div className="text-center">
-                      <h1 className="text-6xl font-black text-white tracking-tighter drop-shadow-lg mb-2">AETHER SURVIVOR</h1>
-                      <div className="text-slate-300 font-bold tracking-widest text-sm uppercase">Choose Your Hero</div>
+                      <h1 className="text-6xl font-black text-white tracking-tighter drop-shadow-lg mb-2"
+                          style={{ textShadow: '0 0 40px rgba(99,102,241,0.6)' }}>
+                          AETHER SURVIVOR
+                      </h1>
+                      <div className="text-slate-400 font-bold tracking-widest text-sm uppercase">Choose Your Hero</div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-                      {(['ARCHER', 'WIZARD', 'BARBARIAN'] as HeroClass[]).map(h => (
-                          <div 
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full">
+                      {([
+                          { h: 'ARCHER'    as HeroClass, color: '#22c55e', glow: 'rgba(34,197,94,0.25)',  border: 'rgba(34,197,94,0.5)'  },
+                          { h: 'WIZARD'    as HeroClass, color: '#3b82f6', glow: 'rgba(59,130,246,0.25)', border: 'rgba(59,130,246,0.5)' },
+                          { h: 'BARBARIAN' as HeroClass, color: '#ef4444', glow: 'rgba(239,68,68,0.25)',  border: 'rgba(239,68,68,0.5)'  },
+                      ]).map(({ h, color, glow, border }) => (
+                          <div
                             key={h}
                             onClick={() => { selectHero(h); startGame(); }}
-                            className="bg-white hover:bg-blue-50 border-4 border-white hover:border-blue-400 rounded-[2rem] p-8 flex flex-col items-center gap-6 transition-all hover:scale-105 hover:shadow-2xl cursor-pointer group shadow-xl h-96 justify-center relative overflow-hidden"
+                            className="relative flex flex-col items-center gap-5 cursor-pointer group transition-transform hover:scale-105 h-88"
+                            style={{
+                              background: 'rgba(10,10,14,0.92)',
+                              border: `1px solid ${border}`,
+                              borderRadius: '1.5rem',
+                              padding: '2rem 1.5rem',
+                              boxShadow: `0 0 0 0 ${glow}`,
+                              transition: 'box-shadow 0.25s, transform 0.2s',
+                            }}
+                            onMouseEnter={e => (e.currentTarget.style.boxShadow = `0 0 32px 4px ${glow}, inset 0 0 40px ${glow}`)}
+                            onMouseLeave={e => (e.currentTarget.style.boxShadow = `0 0 0 0 ${glow}`)}
                           >
-                              <div className={`absolute inset-0 opacity-0 group-hover:opacity-1 bg-gradient-to-br from-blue-500 to-transparent transition-opacity`} />
-                              
-                              <div className={`w-28 h-28 rounded-full flex items-center justify-center shadow-inner mb-2 group-hover:scale-110 transition-transform
-                                  ${h === 'ARCHER' ? 'bg-green-100 text-green-500' : h === 'WIZARD' ? 'bg-blue-100 text-blue-500' : 'bg-red-100 text-red-500'}
-                              `}>
-                                  {h === 'ARCHER' && <Crosshair size={48} />}
-                                  {h === 'WIZARD' && <Wand2 size={48} />}
-                                  {h === 'BARBARIAN' && <Axe size={48} />}
-                              </div>
-                              
-                              <div className="text-center z-10">
-                                  <h2 className="text-2xl font-black text-slate-800 mb-2">{h}</h2>
-                                  <p className="text-sm text-slate-500 font-medium leading-relaxed px-4">{HERO_STATS[h].description}</p>
+                              <div
+                                className="w-24 h-24 rounded-2xl flex items-center justify-center mb-1 group-hover:scale-110 transition-transform"
+                                style={{ background: `${color}18`, border: `1.5px solid ${color}55` }}
+                              >
+                                  {h === 'ARCHER'    && <Crosshair size={44} style={{ color }} />}
+                                  {h === 'WIZARD'    && <Wand2     size={44} style={{ color }} />}
+                                  {h === 'BARBARIAN' && <Axe       size={44} style={{ color }} />}
                               </div>
 
-                              <button className="mt-auto px-8 py-3 bg-slate-900 text-white rounded-xl font-bold text-sm group-hover:bg-blue-600 transition-colors shadow-lg flex items-center gap-2">
-                                  PLAY <ArrowRight size={16} />
-                              </button>
+                              <div className="text-center z-10 flex-1">
+                                  <h2 className="text-2xl font-black text-white mb-2 tracking-wider" style={{ textShadow: `0 0 16px ${color}88` }}>{h}</h2>
+                                  <p className="text-sm text-slate-400 font-medium leading-relaxed px-2">{HERO_STATS[h].description}</p>
+                              </div>
+
+                              <div
+                                className="mt-2 w-full py-3 rounded-xl font-black text-sm text-center flex items-center justify-center gap-2 transition-opacity"
+                                style={{ background: color, color: '#fff', boxShadow: `0 4px 16px ${color}55` }}
+                              >
+                                  PLAY AS {h} <ArrowRight size={15} />
+                              </div>
+
+                              {/* Corner accent */}
+                              <div className="absolute top-3 right-3 w-2 h-2 rounded-full" style={{ background: color, boxShadow: `0 0 8px ${color}` }} />
                           </div>
                       ))}
                   </div>
 
-                  <div className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl flex gap-8 text-white shadow-xl">
-                      <div className="flex items-center gap-3 px-4 border-r border-white/20">
+                  <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-2xl flex gap-8 text-white shadow-xl">
+                      <div className="flex items-center gap-3 px-4 border-r border-white/10">
                           <Trophy size={24} className="text-yellow-400" />
                           <div>
-                              <div className="text-[10px] font-bold opacity-60 uppercase tracking-wider">Total Runs</div>
+                              <div className="text-[10px] font-bold opacity-50 uppercase tracking-wider">Total Runs</div>
                               <div className="text-xl font-black font-mono">{gameStats.totalRuns}</div>
                           </div>
                       </div>
                       <div className="flex items-center gap-3 px-4">
                           <BarChart3 size={24} className="text-blue-400" />
                           <div>
-                              <div className="text-[10px] font-bold opacity-60 uppercase tracking-wider">Highest CP</div>
+                              <div className="text-[10px] font-bold opacity-50 uppercase tracking-wider">Highest CP</div>
                               <div className="text-xl font-black font-mono">{gameStats.highestCP.toLocaleString()}</div>
                           </div>
                       </div>
                   </div>
               </motion.div>
           </div>
+      )}
+
+      {/* MOBA-style fog of war — vision circle around player */}
+      {(status === GameStatus.PLAYING || status === GameStatus.PAUSED || status === GameStatus.INVENTORY || status === GameStatus.SHOP || status === GameStatus.LEVEL_UP) && (
+        <div
+          className="absolute inset-0 pointer-events-none z-10"
+          style={{
+            background: `radial-gradient(circle 34vmin at 50% 56%,
+              transparent 0%,
+              rgba(0,0,0,0.08) 45%,
+              rgba(0,0,0,0.55) 68%,
+              rgba(0,0,0,0.92) 85%,
+              rgba(0,0,0,0.98) 100%)`
+          }}
+        />
       )}
 
       {/* GAME UI */}
@@ -603,7 +635,7 @@ export const GameUI: React.FC = () => {
 
           {/* BOTTOM HOTBAR */}
           <div className="flex flex-col gap-2 w-full max-w-4xl mx-auto pb-4 items-center z-20 pointer-events-auto">
-             <div className="flex justify-center items-end gap-2 md:gap-4 bg-white/80 p-3 rounded-3xl shadow-2xl backdrop-blur-md border border-white">
+             <div className="flex justify-center items-end gap-2 md:gap-4">
                 
                 <UniversalSkillSlot 
                     icon={abilityToCheckR === 'FIREBALL' ? <Flame size={28} className="text-orange-500"/> :
@@ -627,7 +659,7 @@ export const GameUI: React.FC = () => {
                     manaCost={getManaCost('e')} currentMana={mana} heroClass={hero}
                 />
 
-                <div className="w-px h-12 bg-slate-200 mx-1"></div>
+                <div className="w-px h-12 bg-white/20 mx-1"></div>
 
                 <UniversalSkillSlot 
                     icon={<Wind size={28} className="text-green-500" />}
@@ -671,7 +703,7 @@ export const GameUI: React.FC = () => {
                 <UniversalSkillSlot icon={<Heart size={24} className="text-green-500"/>} level={skillLevels.regen} desc="Regen" active={skillLevels.regen > 0} manaCost={0} currentMana={mana} isPassive />
                 <UniversalSkillSlot icon={<Magnet size={24} className="text-purple-500"/>} level={skillLevels.magnet} desc="Magnet" active={skillLevels.magnet > 0} manaCost={0} currentMana={mana} isPassive />
 
-                <div className="w-px h-12 bg-slate-200 mx-1"></div>
+                <div className="w-px h-12 bg-white/20 mx-1"></div>
 
                 <div className="flex gap-2">
                     <UniversalSkillSlot icon={<Heart size={20} className="text-red-500" />} level={hpPotion?.quantity || 0} cooldown={hpPotionCooldown} maxCooldown={10} desc="HP Potion" active={true} label="1" />

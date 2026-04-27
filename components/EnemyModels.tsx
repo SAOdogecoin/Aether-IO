@@ -141,7 +141,7 @@ function AnimatedEnemy({ slot, ppRef }: { slot: EnemyData; ppRef: PRef }) {
 }
 
 // ── NearbyEnemies ─────────────────────────────────────────────
-const MAX_VISIBLE = 8;
+const MAX_VISIBLE = 16;
 
 interface NearbyEnemiesProps {
   enemiesDataRef: React.MutableRefObject<EnemyData[]>;
