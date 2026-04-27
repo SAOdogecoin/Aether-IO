@@ -167,23 +167,24 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
     moveDir.normalize();
     isMovingRef.current = moveDir.lengthSq() > 0;
 
+    // Q = weapon ability, R = active skill (swapped from original)
     if (keys['KeyQ']) {
-        if (skills.q > 0) notifyCooldown("Skill Q");
-        else if (activeAbilityQ) handleAbility(activeAbilityQ, true);
-    }
-
-    if (keys['KeyR']) {
         if (skills.r > 0) notifyCooldown("Weapon Skill");
         else {
             const ability = equipment.weapon?.ability;
             if (ability) handleAbility(ability, false);
         }
     }
-    
+
+    if (keys['KeyR']) {
+        if (skills.q > 0) notifyCooldown("Skill R");
+        else if (activeAbilityQ) handleAbility(activeAbilityQ, true);
+    }
+
     if (keys['KeyE']) {
         handleSkillE();
     }
-    
+
     if (arrowRainState.current.active) {
         arrowRainState.current.timer -= delta;
         if (arrowRainState.current.timer <= 0) {
