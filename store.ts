@@ -193,10 +193,10 @@ const INITIAL_GAME_STATS: GameStatistics = {
 
 export const RARITY_LEVEL_REQ: Record<Rarity, number> = {
     'COMMON': 1,
-    'RARE': 10,
-    'EPIC': 20,
-    'LEGENDARY': 30,
-    'MYTHIC': 40
+    'RARE': 7,
+    'EPIC': 14,
+    'LEGENDARY': 21,
+    'MYTHIC': 28
 };
 
 export const calculateItemCP = (item: Item): number => {
@@ -990,8 +990,7 @@ export const useGameStore = create<GameState>((set, get) => ({
               const currentEquip = equipment[slot];
               const newCP = calculateItemCP(item);
               const oldCP = currentEquip ? calculateItemCP(currentEquip) : 0;
-              let reqLevel = 1;
-              if (item.rarity === 'RARE') reqLevel = 10; if (item.rarity === 'EPIC') reqLevel = 20; if (item.rarity === 'LEGENDARY') reqLevel = 30; if (item.rarity === 'MYTHIC') reqLevel = 40;
+              const reqLevel = RARITY_LEVEL_REQ[item.rarity];
               const classMatch = !item.classType || item.classType === state.hero;
               if (newCP > oldCP && level >= reqLevel && classMatch) { action = { label: 'EQUIP', onClick: () => get().equipItem(item) }; }
           }

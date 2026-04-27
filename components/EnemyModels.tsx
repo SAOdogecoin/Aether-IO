@@ -1,11 +1,26 @@
 import React, { useRef, useEffect, useMemo } from 'react';
-import { useGLTF, useAnimations, useTexture } from '@react-three/drei';
+import { useGLTF, useAnimations, useTexture, Html } from '@react-three/drei';
 import { Group, BufferGeometry, Mesh } from 'three';
 import { clone as skeletonClone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { useFrame } from '@react-three/fiber';
 import { ENEMY_PATHS, ENEMY_TEXTURE, SKELETON_ANIM_RIGS, ASSET_FLAGS } from '../assetConfig';
 import { EnemyData } from '../types';
 import { MinionWeapons, WarriorWeapons, RogueWeapons, MageWeapons } from './SkeletonWeapons';
+
+const EnemyHealthBar: React.FC<{ slot: EnemyData }> = ({ slot }) => {
+  if (!slot.active || slot.health <= 0) return null;
+  const pct = Math.max(0, Math.min(1, slot.health / slot.maxHealth));
+  if (pct >= 1) return null;
+  const isBoss = slot.type === 2;
+  const barColor = pct > 0.5 ? '#4ade80' : pct > 0.25 ? '#facc15' : '#ef4444';
+  return (
+    <Html position={[0, isBoss ? 4.5 : 3.0, 0]} center zIndexRange={[10, 0]} style={{ pointerEvents: 'none' }}>
+      <div style={{ width: isBoss ? 80 : 52, height: 5, background: 'rgba(0,0,0,0.7)', borderRadius: 2, border: '1px solid rgba(0,0,0,0.8)', overflow: 'hidden' }}>
+        <div style={{ width: `${pct * 100}%`, height: '100%', background: barColor, borderRadius: 2, transition: 'width 0.1s' }} />
+      </div>
+    </Html>
+  );
+};
 
 // Preload unique skeleton variants + skeleton-specific animation rigs
 [...new Set(Object.values(ENEMY_PATHS))].forEach(p => useGLTF.preload(p));
@@ -127,6 +142,7 @@ function SkeletonMesh({ slot, skelType, ppRef }: { slot: EnemyData; skelType: nu
       {ASSET_FLAGS.useWeapons && skelType === 1 && <WarriorWeapons clone={clone} />}
       {ASSET_FLAGS.useWeapons && skelType === 3 && <RogueWeapons   clone={clone} />}
       {ASSET_FLAGS.useWeapons && skelType === 5 && <MageWeapons    clone={clone} />}
+      <EnemyHealthBar slot={slot} />
     </group>
   );
 }
