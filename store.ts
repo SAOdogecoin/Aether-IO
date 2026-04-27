@@ -861,7 +861,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       if (skill === 'dash') {
           base = 5;
           level = state.skillLevels.dash;
-          return base + (level * 2);
+          return Math.max(1, Math.ceil((base + (level * 2)) * 0.5));
       }
 
       level = state.skillLevels[skill as keyof SkillLevels] || 0;
