@@ -114,6 +114,26 @@ const CLASS_COLOR: Record<string, string> = {
     BARBARIAN: '#ef4444',
 };
 
+const getRarityBgDark = (rarity?: Rarity): string => {
+    switch(rarity) {
+        case 'MYTHIC':    return 'rgba(220,38,38,0.18)';
+        case 'LEGENDARY': return 'rgba(202,138,4,0.18)';
+        case 'EPIC':      return 'rgba(147,51,234,0.18)';
+        case 'RARE':      return 'rgba(59,130,246,0.18)';
+        default:          return 'rgba(255,255,255,0.04)';
+    }
+};
+
+const getRarityTextColorDark = (rarity?: Rarity): string => {
+    switch(rarity) {
+        case 'MYTHIC':    return '#f87171';
+        case 'LEGENDARY': return '#fbbf24';
+        case 'EPIC':      return '#c084fc';
+        case 'RARE':      return '#60a5fa';
+        default:          return '#94a3b8';
+    }
+};
+
 const UniversalSkillSlot: React.FC<{
     icon: React.ReactNode;
     level: number;
@@ -301,6 +321,18 @@ export const GameUI: React.FC = () => {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [blacksmithTab, setBlacksmithTab] = useState<'UPGRADE' | 'RECYCLE' | 'CRAFT'>('UPGRADE');
   const [selectedUpgradeItem, setSelectedUpgradeItem] = useState<Item | null>(null);
+  const [panelTab, setPanelTab] = useState<'INVENTORY' | 'CRAFTING' | 'SKILLS' | 'SHOP' | 'CHARACTER'>('INVENTORY');
+
+  const panelOpen = isInventoryOpen || isShopOpen || isCharacterSheetOpen;
+
+  useEffect(() => {
+    if (isShopOpen) {
+      if (activeShopTab === 'BLACKSMITH') { setPanelTab('CRAFTING'); setBlacksmithTab('UPGRADE'); }
+      else if (activeShopTab === 'SKILLS') setPanelTab('SKILLS');
+      else setPanelTab('SHOP');
+    } else if (isInventoryOpen) setPanelTab('INVENTORY');
+    else if (isCharacterSheetOpen) setPanelTab('CHARACTER');
+  }, [isShopOpen, isInventoryOpen, isCharacterSheetOpen, activeShopTab]);
   
   // Sell Dialog State
   const [sellDialogItem, setSellDialogItem] = useState<Item | null>(null);
@@ -513,21 +545,6 @@ export const GameUI: React.FC = () => {
           </div>
       )}
 
-      {/* MOBA-style fog of war — vision circle around player */}
-      {(status === GameStatus.PLAYING || status === GameStatus.PAUSED || status === GameStatus.INVENTORY || status === GameStatus.SHOP || status === GameStatus.LEVEL_UP) && (
-        <div
-          className="absolute inset-0 pointer-events-none z-10"
-          style={{
-            background: `radial-gradient(circle 34vmin at 50% 56%,
-              transparent 0%,
-              rgba(0,0,0,0.08) 45%,
-              rgba(0,0,0,0.55) 68%,
-              rgba(0,0,0,0.92) 85%,
-              rgba(0,0,0,0.98) 100%)`
-          }}
-        />
-      )}
-
       {/* GAME UI */}
       {(status === GameStatus.PLAYING || status === GameStatus.PAUSED || status === GameStatus.INVENTORY || status === GameStatus.SHOP || status === GameStatus.LEVEL_UP) && (
         <div className="absolute inset-0 flex flex-col justify-between p-4 md:p-6 pointer-events-none">
@@ -618,19 +635,30 @@ export const GameUI: React.FC = () => {
           </div>
 
           {/* Left Sidebar Buttons */}
-          <div className="absolute left-6 top-1/2 -translate-y-1/2 flex flex-col gap-4 pointer-events-auto z-30">
-              <button onClick={toggleCharacterSheet} className="w-16 h-16 bg-white hover:bg-slate-50 rounded-2xl shadow-xl flex flex-col items-center justify-center gap-1 group transition-transform hover:scale-105 border-b-4 border-slate-200 active:border-b-0 active:translate-y-1">
-                  <User size={24} className="text-slate-400 group-hover:text-blue-500" />
-                  <span className="text-[9px] font-black text-slate-400 group-hover:text-blue-500">HERO</span>
-              </button>
-              <button onClick={toggleInventory} className="w-16 h-16 bg-white hover:bg-slate-50 rounded-2xl shadow-xl flex flex-col items-center justify-center gap-1 group transition-transform hover:scale-105 border-b-4 border-slate-200 active:border-b-0 active:translate-y-1">
-                  <Backpack size={24} className="text-slate-400 group-hover:text-orange-500" />
-                  <span className="text-[9px] font-black text-slate-400 group-hover:text-orange-500">BAG</span>
-              </button>
-              <button onClick={() => openSpecificShop('SKILLS')} className="w-16 h-16 bg-white hover:bg-slate-50 rounded-2xl shadow-xl flex flex-col items-center justify-center gap-1 group transition-transform hover:scale-105 border-b-4 border-slate-200 active:border-b-0 active:translate-y-1">
-                  <BookOpen size={24} className="text-slate-400 group-hover:text-pink-500" />
-                  <span className="text-[9px] font-black text-slate-400 group-hover:text-pink-500">SKILLS</span>
-              </button>
+          <div className="absolute left-6 top-1/2 -translate-y-1/2 flex flex-col gap-3 pointer-events-auto z-30">
+              {([
+                { tab: 'CHARACTER' as const, icon: <User size={20} />, label: 'HERO',   action: () => { setPanelTab('CHARACTER'); if (!panelOpen) toggleCharacterSheet(); else if (!isCharacterSheetOpen) { closeAllUI(); setTimeout(toggleCharacterSheet, 10); } } },
+                { tab: 'INVENTORY' as const, icon: <Backpack size={20} />, label: 'BAG',    action: () => { setPanelTab('INVENTORY'); if (!panelOpen) toggleInventory(); else if (!isInventoryOpen) { closeAllUI(); setTimeout(toggleInventory, 10); } } },
+                { tab: 'CRAFTING'  as const, icon: <Hammer size={20} />,  label: 'FORGE',  action: () => { setPanelTab('CRAFTING');  openSpecificShop('BLACKSMITH'); } },
+                { tab: 'SKILLS'    as const, icon: <BookOpen size={20} />, label: 'SKILLS', action: () => { setPanelTab('SKILLS');    openSpecificShop('SKILLS'); } },
+                { tab: 'SHOP'      as const, icon: <ShoppingBag size={20} />, label: 'SHOP', action: () => { setPanelTab('SHOP');   openSpecificShop('SUPPLIES'); } },
+              ]).map(({ tab, icon, label, action }) => {
+                const accent = CLASS_COLOR[hero] ?? '#6366f1';
+                const isActive = panelOpen && panelTab === tab;
+                return (
+                  <button key={tab} onClick={action}
+                    className="w-12 h-12 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all"
+                    style={{
+                      background: isActive ? `${accent}22` : 'rgba(10,10,14,0.85)',
+                      border: isActive ? `1px solid ${accent}66` : '1px solid rgba(255,255,255,0.08)',
+                      boxShadow: isActive ? `0 0 12px ${accent}33` : 'none',
+                      color: isActive ? accent : 'rgba(120,120,130,0.8)',
+                    }}>
+                    {icon}
+                    <span className="text-[7px] font-black uppercase tracking-wider">{label}</span>
+                  </button>
+                );
+              })}
           </div>
 
           {/* BOTTOM HOTBAR */}
