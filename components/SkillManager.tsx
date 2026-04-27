@@ -422,7 +422,7 @@ export const SkillManager: React.FC<SkillManagerProps> = ({ enemyBulletsDataRef,
             if (hasEnemyInRange && activeEnemies.length > 0) {
                 if (useMana(getManaCost('thunder'))) {
                     thunderTimer.current = 0;
-                    const hitCount = Math.max(5, skillLevels.thunder);
+                    const hitCount = 4 + skillLevels.thunder;
                     const hits: Vector3[] = [];
 
                     for(let i=0; i<hitCount; i++) {

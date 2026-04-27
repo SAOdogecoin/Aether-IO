@@ -49,18 +49,24 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.code === 'Space') e.preventDefault(); 
+        if (e.code === 'Space') e.preventDefault();
         setKeys((k) => ({ ...k, [e.code]: true }));
         if (e.code === 'KeyI') toggleInventory();
     };
     const handleKeyUp = (e: KeyboardEvent) => setKeys((k) => ({ ...k, [e.code]: false }));
+    const handleRevive = () => {
+        reviveVisualTimer.current = 0.5;
+        window.dispatchEvent(new CustomEvent('barrier-trigger'));
+    };
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('revive', handleRevive as EventListener);
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('revive', handleRevive as EventListener);
     };
   }, [toggleInventory]);
 
@@ -130,6 +136,7 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
           }
       } else {
           addNotification('Insufficient Mana', '#60a5fa', 'WARNING');
+          window.dispatchEvent(new CustomEvent('skill-error', { detail: { position: pos.clone().add(new Vector3(0, 1, 0)), text: 'INSUFFICIENT MANA' } }));
       }
   };
 
@@ -139,8 +146,8 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
           notifyCooldown("Skill E");
           return;
       }
-      
-      const manaCost = getManaCost('e'); 
+
+      const manaCost = getManaCost('e');
       if (useMana(manaCost)) {
           triggerSkillCooldown('e');
           if (hero === 'BARBARIAN') {
@@ -150,6 +157,9 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
           } else if (hero === 'ARCHER') {
               activateSprint();
           }
+      } else {
+          addNotification('Insufficient Mana', '#60a5fa', 'WARNING');
+          window.dispatchEvent(new CustomEvent('skill-error', { detail: { position: pos.clone().add(new Vector3(0, 1, 0)), text: 'INSUFFICIENT MANA' } }));
       }
   };
 
@@ -449,15 +459,39 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
           />
         ) : (
           <group position={[0, 0, 0]}>
-            <mesh castShadow receiveShadow position={[0, 0.5, 0]}>
+            {hero === 'ARCHER' && (
+              <mesh castShadow receiveShadow position={[0, 0.5, 0]}>
                 <capsuleGeometry args={[0.4, 1, 4, 8]} />
                 <meshStandardMaterial
-                    color={rageMode ? 'red' : (levelUpVisualTimer > 0 ? '#facc15' : COLORS.player)}
-                    emissive={rageMode ? '#991b1b' : (levelUpVisualTimer > 0 ? '#facc15' : 'black')}
-                    emissiveIntensity={rageMode ? 1 : levelUpVisualTimer}
-                    roughness={0.4} metalness={0.6}
+                  color={rageMode ? '#7f2d2d' : (levelUpVisualTimer > 0 ? '#facc15' : '#22c55e')}
+                  emissive={rageMode ? '#b91c1c' : (levelUpVisualTimer > 0 ? '#facc15' : 'black')}
+                  emissiveIntensity={rageMode ? 1 : levelUpVisualTimer}
+                  roughness={0.4} metalness={0.6}
                 />
-            </mesh>
+              </mesh>
+            )}
+            {hero === 'BARBARIAN' && (
+              <mesh castShadow receiveShadow position={[0, 0.5, 0]}>
+                <capsuleGeometry args={[0.4, 1, 4, 8]} />
+                <meshStandardMaterial
+                  color={rageMode ? '#991b1b' : (levelUpVisualTimer > 0 ? '#facc15' : '#ef4444')}
+                  emissive={rageMode ? '#7f1d1d' : (levelUpVisualTimer > 0 ? '#facc15' : '#7f1d1d')}
+                  emissiveIntensity={rageMode ? 1 : (levelUpVisualTimer > 0 ? 1 : 0.3)}
+                  roughness={0.4} metalness={0.6}
+                />
+              </mesh>
+            )}
+            {hero === 'WIZARD' && (
+              <mesh castShadow receiveShadow position={[0, 0.5, 0]}>
+                <capsuleGeometry args={[0.4, 1, 4, 8]} />
+                <meshStandardMaterial
+                  color={rageMode ? '#1e3a8a' : (levelUpVisualTimer > 0 ? '#facc15' : '#3b82f6')}
+                  emissive={rageMode ? '#1e1b4b' : (levelUpVisualTimer > 0 ? '#facc15' : 'black')}
+                  emissiveIntensity={rageMode ? 1 : levelUpVisualTimer}
+                  roughness={0.4} metalness={0.6}
+                />
+              </mesh>
+            )}
             <mesh castShadow position={[0, 1.4, 0]}>
                 <boxGeometry args={[0.5, 0.5, 0.5]} />
                 <meshStandardMaterial color="#cbd5e1" metalness={0.8} roughness={0.2} />
@@ -468,7 +502,7 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
             </mesh>
             <mesh position={[0, 0.6, -0.4]} rotation={[0.2, 0, 0]}>
                 <boxGeometry args={[0.6, 1.2, 0.1]} />
-                <meshStandardMaterial color="#1e40af" />
+                <meshStandardMaterial color={hero === 'BARBARIAN' ? '#dc2626' : (hero === 'ARCHER' ? '#16a34a' : '#1e40af')} />
             </mesh>
           </group>
         )}

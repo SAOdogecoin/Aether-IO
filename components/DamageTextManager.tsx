@@ -80,11 +80,27 @@ export const DamageTextManager: React.FC = () => {
       }
     };
 
+    const handleSkillError = (e: CustomEvent) => {
+      const { position, text: label } = e.detail;
+      const text = textsRef.current.find(t => !t.active);
+      if (text) {
+        text.active = true;
+        text.position.copy(position).add(new Vector3(0, 2, 0));
+        text.velocity.set(0, 1, 0);
+        text.life = 0.8;
+        text.text = label;
+        text.color = '#ef4444';
+        text.scale = 1.2;
+      }
+    };
+
     window.addEventListener('damage', handleDamage as EventListener);
     window.addEventListener('loot-text', handleLootText as EventListener);
+    window.addEventListener('skill-error', handleSkillError as EventListener);
     return () => {
       window.removeEventListener('damage', handleDamage as EventListener);
       window.removeEventListener('loot-text', handleLootText as EventListener);
+      window.removeEventListener('skill-error', handleSkillError as EventListener);
     };
   }, []);
 

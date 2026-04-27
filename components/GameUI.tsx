@@ -538,30 +538,6 @@ export const GameUI: React.FC = () => {
   return (
     <div className="absolute inset-0 pointer-events-none z-10 font-sans text-slate-800 select-none">
 
-      {/* FLOATING ITEM TOOLTIP on hover */}
-      {hoveredItem && (
-        <div className="fixed z-[200] pointer-events-none"
-          style={{ left: mousePos.x + 14, top: mousePos.y - 10, maxWidth: 210 }}>
-          <div className="rounded-md p-3 shadow-2xl flex flex-col gap-1"
-            style={{ background: 'rgba(8,8,16,0.98)', border: `1.5px solid ${getRarityTextColorDark(hoveredItem.rarity)}55`, boxShadow: `0 4px 24px rgba(0,0,0,0.9), 0 0 14px ${getRarityTextColorDark(hoveredItem.rarity)}25` }}>
-            <div className="font-black text-white text-sm leading-tight rpg-text">{hoveredItem.name}{hoveredItem.level>1 && <span className="text-yellow-400 ml-1 text-xs">+{hoveredItem.level-1}</span>}</div>
-            <div className="text-[10px] font-bold uppercase" style={{color: getRarityTextColorDark(hoveredItem.rarity)}}>{hoveredItem.rarity} {hoveredItem.type}</div>
-            {getLevelReqDesc(hoveredItem.rarity) && <div className="text-[9px] font-bold text-red-400/80">{getLevelReqDesc(hoveredItem.rarity)}</div>}
-            {hoveredItem.description && <div className="text-[10px] text-slate-400 leading-snug mt-0.5">{hoveredItem.description}</div>}
-            {hoveredItem.stats && Object.keys(hoveredItem.stats).length > 0 && (
-              <div className="mt-1 flex flex-col gap-0.5">
-                {Object.entries(hoveredItem.stats).slice(0, 4).map(([k,v]) => (
-                  <div key={k} className="flex justify-between text-[10px]">
-                    <span className="text-slate-500 capitalize">{k}</span>
-                    <span className="text-green-400 font-mono font-bold">{formatStat(k,v as number)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="text-[10px] font-black text-yellow-500 flex items-center gap-1 mt-0.5"><Coins size={9}/>{Math.floor(hoveredItem.price*0.3)}g</div>
-          </div>
-        </div>
-      )}
 
       {/* WARNING NOTIFICATIONS - TOP CENTER */}
       <div className="absolute top-24 left-1/2 -translate-x-1/2 flex flex-col gap-2 items-center pointer-events-none z-[100] w-full">
@@ -662,47 +638,8 @@ export const GameUI: React.FC = () => {
           {/* Top Bar */}
           <div className="flex justify-between items-start pointer-events-auto w-full z-20">
 
-             {/* Player Status — hidden during reward popup and panel */}
-             {status !== GameStatus.LEVEL_UP && !panelOpen && (
-             <div className="flex flex-col gap-1 w-64">
-                 <div className="p-2 rounded-md flex items-center gap-2"
-                   style={{
-                     background: 'linear-gradient(135deg, rgba(18,18,28,0.97) 0%, rgba(12,12,20,0.97) 100%)',
-                     border: '1px solid rgba(180,150,70,0.22)',
-                     boxShadow: '0 4px 16px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -1px 0 rgba(0,0,0,0.4)'
-                   }}>
-                    <div className="w-10 h-10 rounded-md flex items-center justify-center shrink-0" style={{ background: `${CLASS_COLOR[hero]??'#6366f1'}18`, border:`1.5px solid ${CLASS_COLOR[hero]??'#6366f1'}50` }}>
-                        {hero === 'ARCHER'    && <Crosshair size={20} style={{color:CLASS_COLOR[hero]}}/>}
-                        {hero === 'WIZARD'    && <Wand2     size={20} style={{color:CLASS_COLOR[hero]}}/>}
-                        {hero === 'BARBARIAN' && <Axe       size={20} style={{color:CLASS_COLOR[hero]}}/>}
-                    </div>
-                    <div className="flex-1">
-                        <div className="flex justify-between items-baseline mb-1.5 px-0.5">
-                            <span className="font-black text-white text-sm tracking-tight rpg-text">{hero} <span className="text-white/40 text-xs">LV{level}</span></span>
-                            <span className="font-bold text-xs" style={{color: CLASS_COLOR[hero]??'#f97316'}}>CP {currentCP}</span>
-                        </div>
-                        {/* HP bar — taller */}
-                        <div className="h-3.5 rounded-sm overflow-hidden mb-1.5 relative" style={{background:'rgba(0,0,0,0.5)', border:'1px solid rgba(0,0,0,0.6)', boxShadow:'inset 0 1px 3px rgba(0,0,0,0.8)'}}>
-                            <motion.div className="h-full" initial={false} animate={{ width: `${hpPercent}%` }}
-                              style={{ background: `linear-gradient(90deg, #b91c1c, #ef4444)` }}/>
-                            <span className="absolute inset-0 flex items-center justify-center text-[9px] font-black text-white/80" style={{textShadow:'0 1px 2px rgba(0,0,0,0.9)'}}>{Math.ceil(health)}/{stats.maxHealth}</span>
-                        </div>
-                        {/* MP bar — taller */}
-                        <div className="h-3.5 rounded-sm overflow-hidden relative" style={{background:'rgba(0,0,0,0.5)', border:'1px solid rgba(0,0,0,0.6)', boxShadow:'inset 0 1px 3px rgba(0,0,0,0.8)'}}>
-                            <motion.div className="h-full" initial={false} animate={{ width: `${manaPercent}%` }}
-                              style={{ background: `linear-gradient(90deg, #1d4ed8, #3b82f6)` }}/>
-                            <span className="absolute inset-0 flex items-center justify-center text-[9px] font-black text-white/80" style={{textShadow:'0 1px 2px rgba(0,0,0,0.9)'}}>{Math.ceil(mana)}/{stats.maxMana}</span>
-                        </div>
-                    </div>
-                 </div>
-                 {/* XP Bar */}
-                 <div className="h-1.5 rounded-sm overflow-hidden mx-2" style={{background:'rgba(0,0,0,0.5)', border:'1px solid rgba(0,0,0,0.4)'}}>
-                    <motion.div className="h-full" initial={false} animate={{ width: `${xpPercent}%` }} style={{ background: 'linear-gradient(90deg,#a16207,#facc15)' }}/>
-                 </div>
-             </div>
-             )}
-             {/* Spacer when player card hidden */}
-             {(status === GameStatus.LEVEL_UP || panelOpen) && <div className="w-64 shrink-0"/>}
+             {/* Spacer for layout */}
+             <div className="w-64 shrink-0"/>
 
              {/* Center: Wave + Boss */}
              <div className="flex flex-col items-center flex-1 mx-4 relative">

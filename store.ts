@@ -1198,6 +1198,7 @@ export const useGameStore = create<GameState>((set, get) => ({
               get().triggerInvincibility(5.0);
               // Restore one shield charge for the barrier activation
               const newCharges = Math.min(state.maxShieldCharges, state.shieldCharges + 1);
+              window.dispatchEvent(new CustomEvent('revive', { detail: { position: state.playerPosition } }));
               set({
                   health: reviveHealth,
                   reviveAnimTimer: 2.0,
