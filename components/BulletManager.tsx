@@ -21,7 +21,7 @@ const tempColor = new Color();
 
 export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.MutableRefObject<SpatialHashGrid> }> = ({ playerPos, targetPosRef, bulletsDataRef, projectileType = 'MAGIC', enemiesDataRef, spatialGrid }) => {
   const meshRef = useRef<InstancedMesh>(null);
-  const { stats, status, equipment, obstacles } = useGameStore();
+  const { stats, status, equipment, obstacles, piercingShotBoostTimer } = useGameStore();
   const { scene } = useThree();
   
   const bullets = useRef(new Array(MAX_BULLETS).fill(0).map((_, i) => ({
@@ -66,13 +66,15 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
     const time = state.clock.getElapsedTime();
 
     // 1. Auto-Fire Logic
-    const fireInterval = 1 / stats.fireRate;
+    const hasPiercingBoost = piercingShotBoostTimer > 0;
+    const boostedFireRate = hasPiercingBoost ? stats.fireRate * 3 : stats.fireRate;
+    const fireInterval = 1 / boostedFireRate;
     const targetPos = targetPosRef.current;
-    
+
     if (targetPos && time - lastShot.current > fireInterval) {
       lastShot.current = time;
       const dir = new Vector3().subVectors(targetPos, playerPos).normalize();
-      const count = Math.min(7, stats.multishot); 
+      const count = hasPiercingBoost ? 7 : Math.min(7, stats.multishot); 
       
       for (let i = 0; i < count; i++) {
         const bullet = bullets.current.find(b => !b.active);

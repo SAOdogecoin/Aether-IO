@@ -143,7 +143,7 @@ const WarningNotification: React.FC<{ note: GameNotification; onRemove: (id: str
             initial={{ y: -50, opacity: 0, scale: 0.5 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: -50, opacity: 0, scale: 0.5 }}
-            className="text-3xl font-black text-red-500 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] stroke-black tracking-tighter text-center whitespace-nowrap"
+            className="text-3xl font-black text-red-500 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] stroke-black tracking-tighter text-center"
             style={{ WebkitTextStroke: '1px black' }}
         >
             {note.message}
@@ -214,7 +214,7 @@ const UniversalSkillSlot: React.FC<{
     const isDimmed = !active || level === 0;
     const isPotion = label === '1' || label === '2';
     const qty = isPotion ? level : 0;
-    const slotSize = 'w-14 h-14';
+    const slotSize = isPassive ? 'w-12 h-12' : 'w-14 h-14';
 
     return (
         <div className="flex flex-col items-center gap-0.5">
@@ -281,13 +281,12 @@ const UniversalSkillSlot: React.FC<{
                         </div>
                     )}
                 </button>
-
             </div>
 
-            {/* Skill name — below slot, single line */}
-            <div className="text-xs font-bold leading-tight text-center max-w-[60px] truncate whitespace-nowrap"
+            {/* Skill name — below slot */}
+            <div className="text-[10px] font-bold leading-tight text-center max-w-[56px] truncate"
                 style={{ color: isDimmed ? 'rgba(100,100,110,0.5)' : 'rgba(220,210,190,0.9)', textShadow: '0 1px 3px rgba(0,0,0,0.8)', WebkitTextStroke: '0.2px rgba(0,0,0,0.5)' }}>
-                {desc.split('.')[0].split(':')[0]}
+                {desc.split('.')[0].split(':')[0].slice(0, 12)}
             </div>
         </div>
     );
@@ -445,12 +444,6 @@ export const GameUI: React.FC = () => {
   }, [closeAllUI]);
 
   useEffect(() => {
-      if (!panelOpen) {
-          setHoveredItem(null);
-      }
-  }, [panelOpen]);
-
-  useEffect(() => {
       if (actionResult) {
           if (actionResult.success && actionResult.type === 'UPGRADE' && actionResult.item) {
               setSelectedUpgradeItem(actionResult.item);
@@ -500,11 +493,10 @@ export const GameUI: React.FC = () => {
     return inventory.some(item => {
       if (item.type !== 'WEAPON' && item.type !== 'ARMOR' && item.type !== 'ACCESSORY' && item.type !== 'PET') return false;
       if (RARITY_LEVEL_REQ[item.rarity] > level) return false;
-      if (item.classType && item.classType !== hero) return false;
       const equipped = item.type === 'WEAPON' ? equipment.weapon : item.type === 'ARMOR' ? equipment.armor : item.type === 'ACCESSORY' ? equipment.accessory : equipment.pet;
       return calculateItemCP(item) > (equipped ? calculateItemCP(equipped) : 0);
     });
-  }, [inventory, equipment, level, hero]);
+  }, [inventory, equipment, level]);
 
   const hasAlerts = skillPoints > 0 || hasBetterItem;
 
@@ -582,7 +574,7 @@ export const GameUI: React.FC = () => {
 
       {/* LOBBY / HERO SELECT */}
       {status === GameStatus.MENU && (
-          <div className="absolute inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm pointer-events-auto z-50">
+          <div className="absolute inset-0 flex items-center justify-center bg-black/80 backdrop-blur-xl pointer-events-auto z-50">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -743,9 +735,11 @@ export const GameUI: React.FC = () => {
              </div>
 
              {/* Currency */}
-             <div className="flex items-center gap-2 text-white/90">
-                 <Coins size={18} className="text-yellow-400" />
-                 <span className="font-black text-2xl rpg-text tracking-tight">{score.toLocaleString()}</span>
+             <div className="flex gap-2 items-center">
+                 <div className="px-3 py-1.5 rounded-md flex items-center gap-2" style={{background:'rgba(12,12,18,0.92)',border:'1px solid rgba(180,150,70,0.2)',boxShadow:'0 2px 10px rgba(0,0,0,0.5)'}}>
+                    <Coins size={14} className="text-yellow-400"/>
+                    <span className="font-black text-white text-sm rpg-text">{score.toLocaleString()}</span>
+                 </div>
              </div>
           </div>
 
@@ -808,14 +802,6 @@ export const GameUI: React.FC = () => {
                     onClick={() => fireKey('KeyQ')}
                 />
 
-                {/* E = special */}
-                <UniversalSkillSlot
-                    icon={eIcon} level={skillLevels.special} cooldown={skills.e} maxCooldown={skillMaxCooldowns.e * (1 - stats.cooldownReduction)}
-                    label="E" desc={eAbilityDesc} active={skillLevels.special > 0}
-                    manaCost={getManaCost('e')} currentMana={mana} heroClass={hero}
-                    onClick={() => fireKey('KeyE')}
-                />
-
                 {/* R = active skill */}
                 <UniversalSkillSlot
                     icon={qIcon}
@@ -825,13 +811,21 @@ export const GameUI: React.FC = () => {
                     onClick={() => fireKey('KeyR')}
                 />
 
+                {/* E = special */}
+                <UniversalSkillSlot
+                    icon={eIcon} level={skillLevels.special} cooldown={skills.e} maxCooldown={skillMaxCooldowns.e * (1 - stats.cooldownReduction)}
+                    label="E" desc={eAbilityDesc} active={skillLevels.special > 0}
+                    manaCost={getManaCost('e')} currentMana={mana} heroClass={hero}
+                    onClick={() => fireKey('KeyE')}
+                />
+
                 <div className="w-px h-12 bg-white/15 self-center mx-0.5" />
 
                 {/* SPACE = dash */}
                 <UniversalSkillSlot
                     icon={fi(Wind)}
                     level={skillLevels.dash} cooldown={skills.dash} maxCooldown={skillMaxCooldowns.dash * (1 - stats.cooldownReduction)}
-                    label="SPACE" desc="Dash" active={true}
+                    label="SPC" desc="Dash" active={true}
                     manaCost={getManaCost('dash')} currentMana={mana} heroClass={hero}
                     charges={dashCharges} maxCharges={maxDashCharges}
                     onClick={() => fireKey('Space')}
@@ -872,41 +866,29 @@ export const GameUI: React.FC = () => {
             );
           })()}
 
+          {/* Persistent skill-point alert */}
+          <AnimatePresence>
+          {skillPoints > 0 && !panelOpen && status === GameStatus.PLAYING && (
+            <motion.div
+              key="sp-alert"
+              initial={{ x: 60, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 60, opacity: 0 }}
+              className="absolute right-6 bottom-64 flex items-center gap-2.5 px-3 py-2 rounded pointer-events-auto cursor-pointer z-30"
+              style={{ background: 'linear-gradient(180deg,rgba(236,72,153,0.18) 0%,rgba(16,16,24,0.97) 100%)', border: '1px solid rgba(236,72,153,0.45)', boxShadow: '0 4px 12px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05)', minWidth: 190 }}
+              onClick={() => { setPanelTab('SKILLS'); openSpecificShop('SKILLS'); }}
+            >
+              <Star size={14} fill="#ec4899" strokeWidth={0} style={{color:'#ec4899'}} />
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-white rpg-text leading-none">Unused Skill Points</span>
+                <span className="text-[10px] font-bold text-pink-400 leading-snug">{skillPoints} SP available — tap to spend</span>
+              </div>
+              <div className="ml-auto w-5 h-5 rounded-full bg-pink-500 flex items-center justify-center text-[9px] font-black text-white shrink-0">{skillPoints}</div>
+            </motion.div>
+          )}
+          </AnimatePresence>
+
           {/* Toast notifications above minimap (right side) */}
           <div className="absolute right-6 bottom-48 flex flex-col-reverse gap-1.5 items-end pointer-events-none z-30 w-72">
               <AnimatePresence>
-                  {skillPoints > 0 && !panelOpen && status === GameStatus.PLAYING && (
-                    <motion.div
-                      key="sp-alert"
-                      initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }}
-                      className="mb-1 px-3 py-2 rounded text-white flex items-center gap-2 pointer-events-auto min-w-[180px]"
-                      style={{ background: 'linear-gradient(180deg,rgba(236,72,153,0.18) 0%,rgba(16,16,24,0.97) 100%)', border: '1px solid rgba(236,72,153,0.45)', boxShadow: '0 4px 12px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05)' }}
-                      onClick={() => { setPanelTab('SKILLS'); openSpecificShop('SKILLS'); }}
-                    >
-                      <div className="w-2 h-2 rounded-full bg-pink-400" />
-                      <div className="flex-1 flex flex-col">
-                        <span className="text-xs font-black text-white rpg-text leading-none">Unused Skill Points</span>
-                        <span className="text-[10px] font-bold text-pink-300 leading-snug">{skillPoints} SP available — spend now</span>
-                      </div>
-                      <div className="ml-auto w-5 h-5 rounded-full bg-pink-500 flex items-center justify-center text-[9px] font-black text-white shrink-0">{skillPoints}</div>
-                    </motion.div>
-                  )}
-                  {hasBetterItem && !panelOpen && status === GameStatus.PLAYING && (
-                    <motion.div
-                      key="item-alert"
-                      initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }}
-                      className="mb-1 px-3 py-2 rounded text-white flex items-center gap-2 pointer-events-auto min-w-[180px]"
-                      style={{ background: 'linear-gradient(180deg,rgba(220,38,38,0.18) 0%,rgba(16,16,24,0.97) 100%)', border: '1px solid rgba(220,38,38,0.45)', boxShadow: '0 4px 12px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05)' }}
-                      onClick={() => { setPanelTab('INVENTORY'); if (!isInventoryOpen) { closeAllUI(); setTimeout(toggleInventory, 10); } }}
-                    >
-                      <div className="w-2 h-2 rounded-full bg-red-500" />
-                      <div className="flex-1 flex flex-col">
-                        <span className="text-xs font-black text-white rpg-text leading-none">Better Gear Available</span>
-                        <span className="text-[10px] font-bold text-red-300 leading-snug">Open inventory to auto equip your best items</span>
-                      </div>
-                      <div className="ml-auto w-5 h-5 rounded-full bg-red-500 flex items-center justify-center text-[9px] font-black text-white shrink-0">!</div>
-                    </motion.div>
-                  )}
                   {notifications.filter(n => n.type !== 'WARNING').map((note) => (
                       <NotificationItem key={note.id} note={note} onRemove={removeNotification} />
                   ))}
@@ -1115,22 +1097,21 @@ export const GameUI: React.FC = () => {
                           <div className="flex flex-col justify-between ml-auto gap-2">
                             <button
                               onClick={() => autoEquip()}
-                              className="relative px-3 py-2 text-xs font-black text-white uppercase rounded-md transition-all active:scale-95 rpg-text"
+                              className="px-3 py-2 text-xs font-black text-white uppercase rounded-md transition-all active:scale-95 rpg-text"
                               style={{ background: 'linear-gradient(180deg,rgba(99,102,241,0.8) 0%,rgba(59,130,246,0.65) 100%)', border:'1px solid rgba(99,102,241,0.5)', boxShadow:'0 3px 0 rgba(30,30,80,0.7), inset 0 1px 0 rgba(255,255,255,0.12)' }}>
                               AUTO EQUIP
-                              {hasBetterItem && <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500 border border-black" />}
                             </button>
                             <span className="text-[10px] text-slate-600 font-bold text-right">{inventory.length}/{maxInventorySlots}</span>
                           </div>
                         </div>
                         <div className="grid grid-cols-6 gap-2">
                           {sortedInventory.map(item => {
-                            const locked = RARITY_LEVEL_REQ[item.rarity] > level || (item.classType && item.classType !== hero);
+                            const locked = RARITY_LEVEL_REQ[item.rarity] > level;
                             const isSelected = selectedItem?.id === item.id;
                             const isHovered = hoveredItem?.id === item.id;
                             return (
                               <button key={item.id}
-                                onClick={() => setSelectedItem(isSelected ? null : item)}
+                                onClick={() => { if(!locked) { setSelectedItem(isSelected ? null : item); } }}
                                 onMouseEnter={() => setHoveredItem(item)}
                                 onMouseLeave={() => setHoveredItem(null)}
                                 className="aspect-square rounded-xl flex items-center justify-center relative transition-transform"
@@ -1181,13 +1162,10 @@ export const GameUI: React.FC = () => {
                             <div className="text-sm font-black text-yellow-500 flex items-center gap-1"><Coins size={13}/>Sell: {Math.floor(selectedItem.price*0.3)} G</div>
                             <div className="flex gap-2 mt-1">
                               {selectedItem.type!=='POTION' && selectedItem.type!=='CORE' && selectedItem.type!=='REVIVE' && (
-                                <button onClick={() => { if (RARITY_LEVEL_REQ[selectedItem.rarity] <= level && (!selectedItem.classType || selectedItem.classType === hero)) { equipItem(selectedItem); setSelectedItem(null); } }} disabled={RARITY_LEVEL_REQ[selectedItem.rarity] > level || (selectedItem.classType && selectedItem.classType !== hero)} className="flex-1 py-2.5 rounded-xl text-sm font-black text-white" style={{ background:'rgba(99,102,241,0.6)', border:'1px solid rgba(99,102,241,0.4)', opacity: RARITY_LEVEL_REQ[selectedItem.rarity] > level || (selectedItem.classType && selectedItem.classType !== hero) ? 0.4 : 1 }}>EQUIP</button>
+                                <button onClick={() => { equipItem(selectedItem); setSelectedItem(null); }} className="flex-1 py-2.5 rounded-xl text-sm font-black text-white" style={{ background:'rgba(99,102,241,0.6)', border:'1px solid rgba(99,102,241,0.4)' }}>EQUIP</button>
                               )}
                               <button onClick={() => { setSellDialogItem(selectedItem); setSellAmount(1); setSelectedItem(null); }} className="flex-1 py-2.5 rounded-xl text-sm font-black" style={{ background:'rgba(239,68,68,0.12)', border:'1px solid rgba(239,68,68,0.3)', color:'#ef4444' }}>SELL</button>
                             </div>
-                            {selectedItem.type!=='POTION' && selectedItem.type!=='CORE' && selectedItem.type!=='REVIVE' && (
-                              <button onClick={() => { setPanelTab('CRAFTING'); setBlacksmithTab('UPGRADE'); setSelectedUpgradeItem(selectedItem); }} className="mt-2 w-full py-2.5 rounded-xl text-sm font-black text-white" style={{ background:'rgba(239,68,68,0.85)', border:'1px solid rgba(239,68,68,0.5)' }}>UPGRADE</button>
-                            )}
                           </div>
                         ) : (
                           <div className="flex-1 flex items-center justify-center opacity-25">
@@ -1469,15 +1447,11 @@ export const GameUI: React.FC = () => {
                                             <button 
                                                 onClick={() => upgradeSkill(skillKey)}
                                                 disabled={!canAfford || isMax}
-                                                className={`flex items-center gap-2 px-3 py-2 rounded-xl font-bold text-xs shadow-sm transition-all active:scale-95
+                                                className={`px-4 py-2 rounded-xl font-bold text-xs shadow-sm transition-all active:scale-95
                                                     ${isMax ? 'bg-slate-100 text-slate-400' : canAfford ? 'bg-pink-500 text-white hover:bg-pink-600' : 'bg-slate-200 text-slate-400'}
                                                 `}
                                             >
-                                                <span className={`w-8 h-8 grid place-items-center rounded-lg ${isMax ? 'bg-white/10 text-slate-400' : 'bg-white/15 text-white'}`}>
-                                                    <Plus size={14} />
-                                                </span>
-                                                <span className="text-[11px] font-black">{isMax ? 'MAX' : `${cost} SP`}</span>
-                                                <span className="text-[10px] uppercase tracking-[0.1em] text-white/80">Lv {lvl}</span>
+                                                {isMax ? 'MAX' : `${cost} SP`}
                                             </button>
                                         </div>
                                     );
@@ -1669,6 +1643,47 @@ export const GameUI: React.FC = () => {
                 </motion.div>
             )}
 
+            {/* HOVER TOOLTIP */}
+            {hoveredItem && !sellDialogItem && (
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.1 }}
+                    className="fixed z-[60] bg-white p-4 rounded-2xl shadow-2xl border border-slate-100 w-64 pointer-events-none"
+                    style={{ 
+                        left: Math.min(window.innerWidth - 280, mousePos.x + 20), 
+                        top: Math.min(window.innerHeight - 200, mousePos.y + 20) 
+                    }}
+                >
+                    <div className="flex gap-3 mb-3">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${getRarityBg(hoveredItem.rarity)}`}>
+                            <ItemIcon item={hoveredItem} size={24} />
+                        </div>
+                        <div>
+                            <div className={`font-black text-sm ${getRarityTextColor(hoveredItem.rarity)}`}>
+                                {hoveredItem.name} {hoveredItem.level > 1 && <span className="text-amber-500">+{hoveredItem.level-1}</span>}
+                            </div>
+                            <div className="text-[10px] font-bold text-slate-400 uppercase">{hoveredItem.rarity} {hoveredItem.type}</div>
+                        </div>
+                    </div>
+                    <div className="h-px bg-slate-100 w-full mb-3" />
+                    <div className="text-xs text-slate-600 font-medium mb-3">{hoveredItem.description}</div>
+                    
+                    {hoveredItem.stats && (
+                        <div className="grid grid-cols-2 gap-1 mb-2">
+                            {Object.entries(hoveredItem.stats).map(([k, v]) => (
+                                <div key={k} className="flex justify-between text-[10px]">
+                                    <span className="text-slate-400 font-bold capitalize">{k}</span>
+                                    <span className="text-slate-800 font-mono">{formatStat(k, v as number)}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    
+                    <div className="text-right text-xs font-black text-amber-500 mt-2">Sell: {Math.floor(hoveredItem.price * 0.3)} G</div>
+                </motion.div>
+            )}
 
             {/* GAME OVER SCREEN - FIXED Z-INDEX & POINTER EVENTS */}
             {status === GameStatus.GAME_OVER && (

@@ -28,7 +28,7 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
   const isMovingRef = useRef(false);
   const isAttackingRef = useRef(false);
 
-  const { stats, status, setPlayerPosition, skills, triggerSkillCooldown, tickCooldowns, takeDamage, equipment, useMana, triggerInvincibility, obstacles, crates, isInvincible, toggleInventory, breakCrate, hero, levelUpVisualTimer, health, mana, level, activeAbilityQ, activateRage, rageMode, skillLevels, activateEarthwall, activateWarVitality, activateSprint, reviveAnimTimer, dashCharges, getManaCost, addNotification, revivingCountdown, isInventoryOpen, isShopOpen, isCharacterSheetOpen } = useGameStore();
+  const { stats, status, setPlayerPosition, skills, triggerSkillCooldown, tickCooldowns, takeDamage, equipment, useMana, triggerInvincibility, obstacles, crates, isInvincible, toggleInventory, breakCrate, hero, levelUpVisualTimer, health, mana, level, activeAbilityQ, activateRage, rageMode, skillLevels, activateEarthwall, activateWarVitality, activateSprint, reviveAnimTimer, dashCharges, getManaCost, addNotification, revivingCountdown, isInventoryOpen, isShopOpen, isCharacterSheetOpen, piercingShotBoostTimer, set: setState } = useGameStore();
   const { camera, scene, raycaster, pointer } = useThree();
   
   const [pos] = useState(new Vector3(0, 0, 0));
@@ -102,30 +102,32 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
       const cost = isQ ? getManaCost('q') : getManaCost('r');
       if (useMana(cost)) {
           triggerSkillCooldown(isQ ? 'q' : 'r');
-          
+
           if (ability === 'RAGE') {
               activateRage();
           } else if (ability === 'PIERCING_SHOT') {
-              spawnBullet('PIERCING_ARROW', 50, 1.75, { pierce: 99, knockback: 4.0, lifetime: 3.0 });
+              // Archer Q: 3x attack speed + max multishot for 2.5s
+              setState({ piercingShotBoostTimer: 2.5 });
           } else if (ability === 'GRAVITY_SPELL') {
               const limit = 8 + (skillLevels.gravity * 1);
-              spawnBullet('BLACKHOLE', 0, 5.0, { pierce: 99, lifetime: 2.6, trailTimer: 0.1, maxPullCount: limit }); 
+              spawnBullet('BLACKHOLE', 0, 5.0, { pierce: 99, lifetime: 2.6, trailTimer: 0.1, maxPullCount: limit });
           } else if (ability === 'ARROW_RAIN') {
               arrowRainState.current.active = true;
-              arrowRainState.current.wavesLeft = 1;
-              arrowRainState.current.timer = 0; 
+              arrowRainState.current.wavesLeft = 3;
+              arrowRainState.current.timer = 0;
           } else if (ability === 'FIREBALL') {
-              spawnBullet('FIREBALL', 10, 2.0 * 0.63, { 
-                  pierce: 100, 
-                  lifetime: 8.0, 
-                  effect: { type: 'BURN', duration: 5, value: stats.damage * 0.6 } 
+              // Wizard Q: 50% less range (lifetime 2.5s instead of 5.0s)
+              spawnBullet('FIREBALL', 5, 2.0 * 0.63, {
+                  pierce: 100,
+                  lifetime: 2.5,
+                  effect: { type: 'BURN', duration: 5, value: stats.damage * 0.3 }
               });
           } else if (ability === 'AXE_SPIN') {
               axeSpinTime.current = 3.0;
-              axeDamageTimer.current = 0.2; 
+              axeDamageTimer.current = 0.2;
           }
       } else {
-          addNotification('Not enough Mana', 'red', 'WARNING');
+          addNotification('Insufficient Mana', '#60a5fa', 'WARNING');
       }
   };
 
@@ -146,8 +148,6 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
           } else if (hero === 'ARCHER') {
               activateSprint();
           }
-      } else {
-          addNotification('Not enough Mana', 'red', 'WARNING');
       }
   };
 
@@ -192,8 +192,8 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
     if (arrowRainState.current.active) {
         arrowRainState.current.timer -= delta;
         if (arrowRainState.current.timer <= 0) {
-            const count = 6; 
-            const angleOffset = 0;
+            const count = 12; 
+            const angleOffset = (3 - arrowRainState.current.wavesLeft) * (Math.PI / 8); 
 
             for (let i = 0; i < count; i++) {
                 const bullet = bulletsDataRef.current.find(b => !b.active);
@@ -325,17 +325,13 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
     if (dashTime.current <= 0) { 
         for(let i = 0; i < enemyBullets.length; i++) {
             const b = enemyBullets[i];
-            if (b.active) {
-                const horizontalDist = Math.hypot(b.position.x - pos.x, b.position.z - pos.z);
-                const verticalGap = Math.abs(b.position.y - pos.y);
-                if (horizontalDist < PLAYER_RADIUS + 0.5 && verticalGap < 1.2) {
-                    const dmg = b.damage || 10;
-                    takeDamage(dmg);
-                    b.active = false;
-                    window.dispatchEvent(new CustomEvent('damage', { 
-                        detail: { position: pos, damage: dmg, isCrit: false, isPlayer: true } 
-                    }));
-                }
+            if (b.active && b.position.distanceTo(pos) < PLAYER_RADIUS + 0.5) { 
+                const dmg = b.damage || 10;
+                takeDamage(dmg);
+                b.active = false;
+                window.dispatchEvent(new CustomEvent('damage', { 
+                    detail: { position: pos, damage: dmg, isCrit: false, isPlayer: true } 
+                }));
             }
         }
     }
@@ -361,19 +357,12 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
         {/* Floating HP/MP bars — hidden during menus/reward/revive */}
         {status !== GameStatus.LEVEL_UP && !isInventoryOpen && !isShopOpen && !isCharacterSheetOpen && revivingCountdown <= 0 && (
         <Html position={[0, 3.4, 0]} center zIndexRange={[50, 0]} style={{ pointerEvents: 'none' }}>
-            <div style={{ width: 108, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 26, height: 26, borderRadius: 999, background: 'rgba(0,0,0,0.85)', border: '1px solid rgba(255,255,255,0.16)', display: 'grid', placeItems: 'center', color: '#fff', fontSize: 11, fontWeight: 800, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>
-                        {level}
-                    </div>
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
-                        <div style={{ height: 8, background: 'rgba(0,0,0,0.7)', borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.8)', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.8)' }}>
-                            <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, (health / stats.maxHealth) * 100))}%`, background: 'linear-gradient(90deg,#b91c1c,#ef4444)', borderRadius: 3, transition: 'width 0.1s' }} />
-                        </div>
-                        <div style={{ height: 6, background: 'rgba(0,0,0,0.7)', borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.8)', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.8)' }}>
-                            <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, (mana / stats.maxMana) * 100))}%`, background: 'linear-gradient(90deg,#1d4ed8,#3b82f6)', borderRadius: 3, transition: 'width 0.1s' }} />
-                        </div>
-                    </div>
+            <div style={{ width: 80, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <div style={{ height: 8, background: 'rgba(0,0,0,0.7)', borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.8)', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.8)' }}>
+                    <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, (health / stats.maxHealth) * 100))}%`, background: 'linear-gradient(90deg,#b91c1c,#ef4444)', borderRadius: 3, transition: 'width 0.1s' }} />
+                </div>
+                <div style={{ height: 6, background: 'rgba(0,0,0,0.7)', borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.8)', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.8)' }}>
+                    <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, (mana / stats.maxMana) * 100))}%`, background: 'linear-gradient(90deg,#1d4ed8,#3b82f6)', borderRadius: 3, transition: 'width 0.1s' }} />
                 </div>
             </div>
         </Html>
@@ -394,15 +383,15 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
         )}
 
         {reviveAnimTimer > 0 && (
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.1, 0]}>
-                <ringGeometry args={[1 + (2 - reviveAnimTimer) * 4, 1.2 + (2 - reviveAnimTimer) * 4, 64]} />
-                <meshStandardMaterial
-                    color="#fbbf24"
-                    transparent
-                    opacity={Math.max(0, Math.min(1, reviveAnimTimer * 0.35))}
-                    emissive="#fbbf24"
-                    emissiveIntensity={2}
-                    side={2}
+            <mesh position={[0, 0, 0]}>
+                <cylinderGeometry args={[2, 2, 20, 16, 1, true]} />
+                <meshBasicMaterial 
+                    color="#fef3c7" 
+                    transparent 
+                    opacity={Math.min(1, reviveAnimTimer) * 0.6} 
+                    depthWrite={false} 
+                    side={2} 
+                    blending={2} 
                 />
             </mesh>
         )}

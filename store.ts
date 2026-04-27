@@ -84,6 +84,7 @@ interface GameState {
   levelUpVisualTimer: number;
   reviveAnimTimer: number;
   revivingCountdown: number;
+  piercingShotBoostTimer: number;
 
   petReviveCooldown: number;
 
@@ -447,7 +448,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   gems: 0,
   level: 1,
   experience: 0,
-  experienceToNextLevel: 250, 
+  experienceToNextLevel: 250,
   skillPoints: 0,
   health: 100,
   mana: 100,
@@ -512,6 +513,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   levelUpVisualTimer: 0,
   reviveAnimTimer: 0,
   revivingCountdown: 0,
+  piercingShotBoostTimer: 0,
 
   petReviveCooldown: 0,
 
@@ -606,43 +608,36 @@ export const useGameStore = create<GameState>((set, get) => ({
             { ...ITEMS_POOL.find(i => i.id === 'potion_hp')!, id: `start_hp_${Math.random()}`, quantity: 10 },
             { ...ITEMS_POOL.find(i => i.id === 'potion_mana')!, id: `start_mana_${Math.random()}`, quantity: 10 },
             { ...ITEMS_POOL.find(i => i.id === 'revive_ankh')!, id: `start_revive_${Math.random()}`, quantity: 1 },
-            { ...ITEMS_POOL.find(i => i.id === 'upgrade_core')!, id: `start_cores_${Math.random()}`, quantity: 5 } 
+            { ...ITEMS_POOL.find(i => i.id === 'upgrade_core')!, id: `start_cores_${Math.random()}`, quantity: 30 } 
           ];
       }
 
-      const selectedWeapon = finalEquipment.weapon;
-      let newActiveQ = state.activeAbilityQ;
-      if (!newActiveQ && selectedWeapon?.classType) {
-          if (selectedWeapon.classType === 'ARCHER') newActiveQ = 'PIERCING_SHOT';
-          if (selectedWeapon.classType === 'WIZARD') newActiveQ = 'GRAVITY_SPELL';
-          if (selectedWeapon.classType === 'BARBARIAN') newActiveQ = 'RAGE';
-      }
-
-      const options = generateUpgradeOptions(state.hero, state.skillLevels);
-      const runBaseStats = state.baseStats;
-
       set({
-        status: options.length > 0 ? GameStatus.LEVEL_UP : GameStatus.PLAYING,
-        upgradeOptions: options,
+        status: GameStatus.PLAYING,
         level: 1,
         experience: 0,
         experienceToNextLevel: 250,
-        health: runBaseStats.maxHealth,
-        mana: runBaseStats.maxMana,
-        baseStats: runBaseStats,
-        stats: calculateStats(runBaseStats, finalEquipment),
-        activeAbilityQ: newActiveQ,
-        activeAbilityR: state.activeAbilityR,
+        skillPoints: 0, 
+        health: startStats.maxHealth, 
+        mana: startStats.maxMana,
+        baseStats: startStats,
+        stats: calculateStats(startStats, finalEquipment),
+        skillLevels: { 
+            orbital: 0, thunder: 0, regen: 0, magnet: 1, dash: 1, weapon: 1, barrier: 1, storm: 0, special: 0,
+            piercing: 0, burning: 0, freezing: 0, freezeSpell: 0, gravity: 0, stamp: 0, rage: 0
+        },
+        activeAbilityQ: null,
+        activeAbilityR: null,
         playerPosition: new Vector3(0, 0, 0),
         inventory: finalInventory,
         equipment: finalEquipment,
         drops: [],
         skills: { dash: 0, q: 0, r: 0, e: 0 },
         skillMaxCooldowns: { dash: 2.0, q: 3.5, r: 7.5, e: 10.0 },
-        dashCharges: state.maxDashCharges,
-        maxDashCharges: state.maxDashCharges,
-        shieldCharges: state.maxShieldCharges,
-        maxShieldCharges: state.maxShieldCharges,
+        dashCharges: 1,
+        maxDashCharges: 1,
+        shieldCharges: 1,
+        maxShieldCharges: 1,
         obstacles: generateObstacles(),
         crates: generateCrates(),
         wave: 1,
@@ -660,6 +655,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         levelUpVisualTimer: 0,
         reviveAnimTimer: 0,
         revivingCountdown: 0,
+        piercingShotBoostTimer: 0,
         bossData: { active: false, name: '', hp: 0, maxHp: 0 },
         notifications: [],
         rageMode: false,
@@ -668,8 +664,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         warVitalityTimer: 0,
         sprintTimer: 0,
         lastInventoryFullNotification: 0,
-        maxInventorySlots: state.maxInventorySlots,
-        materials: state.materials,
+        maxInventorySlots: INVENTORY_LIMIT,
+        materials: { 'COMMON': 50, 'RARE': 20, 'EPIC': 5, 'LEGENDARY': 0, 'MYTHIC': 0 },
         petReviveCooldown: 0,
       });
   },
@@ -848,7 +844,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       let level = 0;
 
       if (skill === 'r') {
-          return Math.max(1, Math.ceil(60 * 0.75));
+          return 60; 
       }
       
       if (skill === 'q') {
@@ -856,26 +852,26 @@ export const useGameStore = create<GameState>((set, get) => ({
           if (state.activeAbilityQ === 'PIERCING_SHOT') level = state.skillLevels.piercing;
           if (state.activeAbilityQ === 'GRAVITY_SPELL') level = state.skillLevels.gravity;
           if (state.activeAbilityQ === 'RAGE') level = state.skillLevels.rage;
-          return Math.max(1, Math.ceil((base + (level * 5)) * 0.75));
+          return base + (level * 5);
       }
 
       if (skill === 'e') {
           base = 20;
           level = state.skillLevels.special;
-          return Math.max(1, Math.ceil((base + (level * 5)) * 0.75));
+          return base + (level * 5);
       }
 
       if (skill === 'dash') {
           base = 5;
           level = state.skillLevels.dash;
-          return Math.max(1, Math.ceil((base + (level * 2)) * 0.75));
+          return base + (level * 2);
       }
 
       level = state.skillLevels[skill as keyof SkillLevels] || 0;
-      if (skill === 'thunder') return Math.max(1, Math.ceil((5 + level) * 0.75));
-      if (skill === 'burning' || skill === 'freezing') return Math.max(1, Math.ceil((5 + level) * 0.75));
-      if (skill === 'freezeSpell') return Math.max(1, Math.ceil((15 + (level * 2)) * 0.75));
-      if (skill === 'stamp') return Math.max(1, Math.ceil((15 + (level * 2)) * 0.75));
+      if (skill === 'thunder') return 5 + level;
+      if (skill === 'burning' || skill === 'freezing') return 5 + level;
+      if (skill === 'freezeSpell') return 15 + (level * 2);
+      if (skill === 'stamp') return 15 + (level * 2);
       
       return 0;
   },
@@ -1180,7 +1176,6 @@ export const useGameStore = create<GameState>((set, get) => ({
               get().triggerInvincibility(5.0);
               // Restore one shield charge for the barrier activation
               const newCharges = Math.min(state.maxShieldCharges, state.shieldCharges + 1);
-              window.dispatchEvent(new Event('barrier-trigger'));
               set({
                   health: reviveHealth,
                   reviveAnimTimer: 2.0,
@@ -1242,6 +1237,8 @@ export const useGameStore = create<GameState>((set, get) => ({
            }
       }
 
+      let newPiercingShotBoost = Math.max(0, state.piercingShotBoostTimer - delta);
+
       set({
           skills: newSkills,
           dashCharges: newDashCharges,
@@ -1258,12 +1255,13 @@ export const useGameStore = create<GameState>((set, get) => ({
           mpPotionCooldown: newMpCD,
           barrierCooldown: newBarrierCooldown,
           inventory: inventory,
-          waveTimer: state.bossData.active ? state.waveTimer : state.waveTimer + delta,
+          waveTimer: state.waveTimer + delta,
           invincibilityTimer: newInvincibilityTimer,
           isInvincible: newIsInvincible,
           levelUpVisualTimer: newLevelUpTimer,
           reviveAnimTimer: newReviveAnimTimer,
           revivingCountdown: newRevivingCountdown,
+          piercingShotBoostTimer: newPiercingShotBoost,
           petReviveCooldown: newPetReviveCooldown,
       });
   },
@@ -1338,53 +1336,47 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   resetGame: () => {
     const state = get();
-    const preservedProgress = {
-      score: state.score,
-      gems: state.gems,
-      inventory: state.inventory,
-      maxInventorySlots: state.maxInventorySlots,
-      equipment: state.equipment,
-      materials: state.materials,
-      baseStats: state.baseStats,
-      skillLevels: state.skillLevels,
-      passiveSkillState: state.passiveSkillState,
-      skillPoints: state.skillPoints,
-      hero: state.hero,
-      recentRuns: state.recentRuns,
-      gameStats: state.gameStats,
-    };
-
-    set({
+    const initialState = {
       status: GameStatus.MENU,
-      score: preservedProgress.score,
-      gems: preservedProgress.gems,
+      score: 0,
+      gems: 0,
       level: 1,
       experience: 0,
       experienceToNextLevel: 250,
-      skillPoints: preservedProgress.skillPoints,
+      skillPoints: 0,
       health: 100,
       mana: 100,
       playerPosition: new Vector3(0, 0, 0),
-      stats: preservedProgress.baseStats,
-      baseStats: preservedProgress.baseStats,
+      stats: { ...INITIAL_STATS },
+      baseStats: { ...INITIAL_STATS },
       wave: 1,
       waveTimer: 0,
-      skillLevels: preservedProgress.skillLevels,
-      passiveSkillState: preservedProgress.passiveSkillState,
-      activeAbilityQ: state.activeAbilityQ,
-      activeAbilityR: state.activeAbilityR,
-      inventory: preservedProgress.inventory,
-      maxInventorySlots: preservedProgress.maxInventorySlots,
-      equipment: preservedProgress.equipment,
+      skillLevels: { 
+          orbital: 0, thunder: 0, regen: 0, magnet: 1, dash: 1, weapon: 1, barrier: 1, storm: 0, special: 0,
+          piercing: 0, burning: 0, freezing: 0, freezeSpell: 0, gravity: 0, stamp: 0, rage: 0
+      },
+      passiveSkillState: {
+          orbitalCooldown: 0, orbitalMaxCooldown: 0.5,
+          thunderCooldown: 0, thunderMaxCooldown: 0.5,
+          burningCooldown: 0, burningMaxCooldown: 4,
+          freezingCooldown: 0, freezingMaxCooldown: 3.5,
+          blizzardCooldown: 0, blizzardMaxCooldown: 5,
+          stampCooldown: 0, stampMaxCooldown: 5,
+          stormCooldown: 0, stormMaxCooldown: 7.5
+      },
+      activeAbilityQ: null,
+      activeAbilityR: null,
+      inventory: [],
+      maxInventorySlots: INVENTORY_LIMIT,
+      equipment: { weapon: null, armor: null, accessory: null, pet: null },
       gachaResults: [],
       upgradeOptions: [],
       drops: [],
       bossData: { active: false, name: '', hp: 0, maxHp: 0 },
       notifications: [],
       minimapEnemies: [],
-      materials: preservedProgress.materials,
-      gameStats: preservedProgress.gameStats,
-    });
+    };
+    set(initialState);
   },
   addNotification: (message, color = 'white', type = 'ITEM', action) => set(state => ({ notifications: [...state.notifications, { id: Math.random().toString(), message, color, type, action }] })),
   removeNotification: (id) => set(state => ({ notifications: state.notifications.filter(n => n.id !== id) })),
