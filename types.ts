@@ -1,16 +1,16 @@
 
 import { Vector3 } from 'three';
 
-export enum GameStatus {
-  MENU = 'MENU',
-  HERO_SELECT = 'HERO_SELECT',
-  PLAYING = 'PLAYING',
-  PAUSED = 'PAUSED',
-  LEVEL_UP = 'LEVEL_UP',
-  GAME_OVER = 'GAME_OVER',
-  INVENTORY = 'INVENTORY',
-  SHOP = 'SHOP',
-}
+export const GameStatus = {
+  MENU: 'MENU',
+  HERO_SELECT: 'HERO_SELECT',
+  PLAYING: 'PLAYING',
+  PAUSED: 'PAUSED',
+  LEVEL_UP: 'LEVEL_UP',
+  GAME_OVER: 'GAME_OVER',
+  INVENTORY: 'INVENTORY',
+  SHOP: 'SHOP',
+} as const;
 
 export type HeroClass = 'ARCHER' | 'WIZARD' | 'BARBARIAN';
 
