@@ -873,29 +873,25 @@ export const GameUI: React.FC = () => {
             );
           })()}
 
-          {/* Persistent skill-point alert */}
-          <AnimatePresence>
-          {skillPoints > 0 && !panelOpen && status === GameStatus.PLAYING && (
-            <motion.div
-              key="sp-alert"
-              initial={{ x: 60, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 60, opacity: 0 }}
-              className="absolute right-6 bottom-[220px] flex items-center gap-2.5 px-3 py-2 rounded pointer-events-auto cursor-pointer z-30"
-              style={{ background: 'linear-gradient(180deg,rgba(236,72,153,0.18) 0%,rgba(16,16,24,0.97) 100%)', border: '1px solid rgba(236,72,153,0.45)', boxShadow: '0 4px 12px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05)', minWidth: 190 }}
-              onClick={() => { setPanelTab('SKILLS'); openSpecificShop('SKILLS'); }}
-            >
-              <Star size={14} fill="#ec4899" strokeWidth={0} style={{color:'#ec4899'}} />
-              <div className="flex flex-col">
-                <span className="text-xs font-black text-white rpg-text leading-none">Unused Skill Points</span>
-                <span className="text-[10px] font-bold text-pink-400 leading-snug">{skillPoints} SP available — tap to spend</span>
-              </div>
-              <div className="ml-auto w-5 h-5 rounded-full bg-pink-500 flex items-center justify-center text-[9px] font-black text-white shrink-0">{skillPoints}</div>
-            </motion.div>
-          )}
-          </AnimatePresence>
-
           {/* Toast notifications above minimap (right side) */}
           <div className="absolute right-6 bottom-48 flex flex-col-reverse gap-1.5 items-end pointer-events-none z-30 w-72">
               <AnimatePresence>
+                  {skillPoints > 0 && !panelOpen && status === GameStatus.PLAYING && (
+                    <motion.div
+                      key="sp-alert"
+                      initial={{ x: 60, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 60, opacity: 0 }}
+                      className="px-3 py-2 rounded pointer-events-auto cursor-pointer z-30 mb-1 flex items-center gap-2.5 min-w-[190px]"
+                      style={{ background: 'linear-gradient(180deg,rgba(28,28,40,0.97) 0%,rgba(16,16,24,0.97) 100%)', border: '1px solid rgba(236,72,153,0.45)', boxShadow: '0 4px 12px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04)' }}
+                      onClick={() => { setPanelTab('SKILLS'); openSpecificShop('SKILLS'); }}
+                    >
+                      <Star size={14} fill="#ec4899" strokeWidth={0} style={{color:'#ec4899'}} />
+                      <div className="flex flex-col">
+                        <span className="text-xs font-black text-white rpg-text leading-none">Unused Skill Points</span>
+                        <span className="text-[10px] font-bold text-pink-400 leading-snug">{skillPoints} SP available — tap to spend</span>
+                      </div>
+                      <div className="ml-auto w-5 h-5 rounded-full bg-pink-500 flex items-center justify-center text-[9px] font-black text-white shrink-0">{skillPoints}</div>
+                    </motion.div>
+                  )}
                   {notifications.filter(n => n.type !== 'WARNING').map((note) => (
                       <NotificationItem key={note.id} note={note} onRemove={removeNotification} />
                   ))}

@@ -40,6 +40,7 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
   const dashVelocity = useRef(new Vector3());
   const dashTime = useRef(0);
   const dashDebounce = useRef(0);
+  const manaDebounce = useRef(0);
   const cooldownDebounce = useRef(0); // Debounce for cooldown notifications
   const axeSpinTime = useRef(0);
   const axeDamageTimer = useRef(0);
@@ -66,6 +67,13 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
       if (cooldownDebounce.current <= 0) {
           addNotification(`${skillName} Cooldown!`, 'red', 'WARNING');
           cooldownDebounce.current = 1.5; 
+      }
+  };
+
+  const notifyMana = () => {
+      if (manaDebounce.current <= 0) {
+          addNotification("Insufficient Mana!", '#3b82f6', 'WARNING');
+          manaDebounce.current = 1.5;
       }
   };
 
@@ -124,6 +132,8 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
               axeSpinTime.current = 3.0;
               axeDamageTimer.current = 0.2; 
           }
+      } else {
+          notifyMana();
       }
   };
 
@@ -144,6 +154,8 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
           } else if (hero === 'ARCHER') {
               activateSprint();
           }
+      } else {
+          notifyMana();
       }
   };
 
@@ -153,6 +165,7 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
 
     tickCooldowns(delta);
     if (cooldownDebounce.current > 0) cooldownDebounce.current -= delta;
+    if (manaDebounce.current > 0) manaDebounce.current -= delta;
 
     raycaster.setFromCamera(pointer, camera);
     const target = new Vector3();
@@ -268,6 +281,8 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
                     dashVelocity.current.copy(moveDir.length() > 0 ? moveDir.normalize() : new Vector3(0, 0, -1).applyQuaternion(meshRef.current.quaternion));
                     dashVelocity.current.multiplyScalar(40); 
                     triggerInvincibility(0.2);
+                } else {
+                    notifyMana();
                 }
             } else {
                 notifyCooldown("Dash");
