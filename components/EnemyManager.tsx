@@ -327,6 +327,16 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                     }
                     e.position.copy(nextPos);
                 }
+
+                // Clamp enemies to arena boundary so they don't escape into the void
+                const ex = e.position.x, ez = e.position.z;
+                const d2 = ex * ex + ez * ez;
+                const elim = (ARENA_SIZE / 2) - 4; // 56 — just outside tree ring
+                if (d2 > elim * elim) {
+                    const s = elim / Math.sqrt(d2);
+                    e.position.x *= s;
+                    e.position.z *= s;
+                }
             }
 
             e.stateTimer = (e.stateTimer || 0) + delta;

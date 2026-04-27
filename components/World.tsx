@@ -87,23 +87,32 @@ export const World: React.FC = () => {
 
   return (
     <group>
+      {/* Distance fog — dark forest green, aggressive past the tree boundary */}
+      <fog attach="fog" args={['#0a1905', 48, 82]} />
+
       {/* RPG Lighting - Day Mode */}
       <ambientLight intensity={1.0} color="#ffffff" />
-      <directionalLight 
-        position={[60, 80, 40]} 
-        intensity={2.0} 
-        castShadow 
+      <directionalLight
+        position={[60, 80, 40]}
+        intensity={2.0}
+        castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0001}
         color="#fffbeb" // Warm sun
       >
         <orthographicCamera attach="shadow-camera" args={[-80, 80, 80, -80]} />
       </directionalLight>
-      
+
       {/* Ground & Environment */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]} receiveShadow>
         <planeGeometry args={[ARENA_SIZE * 3, ARENA_SIZE * 3]} />
         <meshStandardMaterial color={COLORS.ground} roughness={1} metalness={0} />
+      </mesh>
+
+      {/* Dark wall cylinder just outside the tree ring — seen from inside */}
+      <mesh position={[0, 6, 0]}>
+        <cylinderGeometry args={[ARENA_SIZE / 2 - 2, ARENA_SIZE / 2 - 2, 18, 80, 1, true]} />
+        <meshBasicMaterial color="#010a01" side={THREE.BackSide} transparent opacity={0.95} />
       </mesh>
 
       <Environment />

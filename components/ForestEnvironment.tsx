@@ -122,20 +122,21 @@ export const ForestEnvironment: React.FC = () => {
     [treesObs],
   );
 
-  // ── Boundary ring (replaces the 300 procedural cones) ────────
+  // ── Boundary ring — dense wall just past player clamp (45) ──
   const [boundV1, boundV2, boundV3, boundV4, boundV5] = useMemo(() => {
     const rand = makeRand(42);
-    const count = 240;
+    const count = 320; // denser to close gaps
     const R = ARENA_SIZE / 2;
     const raw: Transform[] = Array.from({ length: count }, (_, i) => {
-      const angle  = (i / count) * Math.PI * 2;
-      const deg    = (angle * 180 / Math.PI + 360) % 360;
-      let r        = R * 0.87;
-      if (Math.abs(deg -  45) < 30) r += 22;
-      if (Math.abs(deg - 160) < 30) r += 22;
-      if (Math.abs(deg - 280) < 30) r += 22;
-      r += (rand() - 0.5) * 10;
-      return { x: Math.cos(angle) * r, z: Math.sin(angle) * r, scale: 1.3 + rand() * 1.8 };
+      const angle = (i / count) * Math.PI * 2;
+      const deg   = (angle * 180 / Math.PI + 360) % 360;
+      // Base radius 48 (inside player clamp at 45), ±2 variation
+      let r = R * 0.80;
+      if (Math.abs(deg -  45) < 30) r += 18;
+      if (Math.abs(deg - 160) < 30) r += 18;
+      if (Math.abs(deg - 280) < 30) r += 18;
+      r += (rand() - 0.5) * 4;
+      return { x: Math.cos(angle) * r, z: Math.sin(angle) * r, scale: 1.4 + rand() * 1.6 };
     });
     return splitByVariant(raw, 5);
   }, []);
@@ -144,9 +145,9 @@ export const ForestEnvironment: React.FC = () => {
   // ── Render ────────────────────────────────────────────────────
   return (
     <group>
-      {/* Dark void ring at map boundary */}
+      {/* Dark void floor starting at arena edge */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.09, 0]}>
-        <ringGeometry args={[ARENA_SIZE / 2 + 20, ARENA_SIZE / 2 + 100, 64]} />
+        <ringGeometry args={[ARENA_SIZE / 2, ARENA_SIZE / 2 + 200, 80]} />
         <meshBasicMaterial color="#000000" />
       </mesh>
 

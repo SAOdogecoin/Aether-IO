@@ -303,7 +303,8 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
         }
     }
 
-    const limit = (ARENA_SIZE / 2) - 2;
+    // Clamp well inside the visual tree ring (trees at ~48-52, player stops at 45)
+    const limit = (ARENA_SIZE / 2) - 15;
     if (proposedPos.length() > limit) {
         proposedPos.normalize().multiplyScalar(limit);
     }
