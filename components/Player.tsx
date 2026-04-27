@@ -379,15 +379,15 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
         )}
 
         {reviveAnimTimer > 0 && (
-            <mesh position={[0, 0, 0]}>
-                <cylinderGeometry args={[2, 2, 20, 16, 1, true]} />
-                <meshBasicMaterial 
-                    color="#fef3c7" 
-                    transparent 
-                    opacity={Math.min(1, reviveAnimTimer) * 0.6} 
-                    depthWrite={false} 
-                    side={2} 
-                    blending={2} 
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.1, 0]}>
+                <ringGeometry args={[1 + (2 - reviveAnimTimer) * 4, 1.2 + (2 - reviveAnimTimer) * 4, 64]} />
+                <meshStandardMaterial
+                    color="#fbbf24"
+                    transparent
+                    opacity={Math.max(0, Math.min(1, reviveAnimTimer * 0.35))}
+                    emissive="#fbbf24"
+                    emissiveIntensity={2}
+                    side={2}
                 />
             </mesh>
         )}

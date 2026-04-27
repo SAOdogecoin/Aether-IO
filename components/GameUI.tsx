@@ -282,16 +282,10 @@ const UniversalSkillSlot: React.FC<{
                     )}
                 </button>
 
-                {/* Tooltip on hover */}
-                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-40 bg-gray-950 border border-gray-700 text-xs p-2 rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center shadow-xl">
-                    <div className="font-bold text-white mb-0.5">{desc}</div>
-                    {manaCost > 0 && active && <div className="text-blue-400 text-[9px]">MP: {actualCost}</div>}
-                    {!active && <div className="text-gray-600 text-[9px]">Locked</div>}
-                </div>
             </div>
 
-            {/* Skill name — below slot, up to 2 lines */}
-            <div className="text-xs font-bold leading-tight text-center max-w-[60px] line-clamp-2 break-words"
+            {/* Skill name — below slot, single line */}
+            <div className="text-xs font-bold leading-tight text-center max-w-[60px] truncate whitespace-nowrap"
                 style={{ color: isDimmed ? 'rgba(100,100,110,0.5)' : 'rgba(220,210,190,0.9)', textShadow: '0 1px 3px rgba(0,0,0,0.8)', WebkitTextStroke: '0.2px rgba(0,0,0,0.5)' }}>
                 {desc.split('.')[0].split(':')[0]}
             </div>
