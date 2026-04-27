@@ -140,72 +140,41 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                 const bossName = wave % 20 === 0 ? "VOID REAPER" : "ABYSS LORD";
                 addNotification(`⚠️ ${bossName} APPEARED ⚠️`, COLORS.enemyBoss, 'BOSS');
                 setBossData({ active: true, name: bossName, hp: 1, maxHp: 1 });
-                
-                enemy.type = 2; 
-                enemy.health = (2000 + (level * 250) + (wave * 100)) * hpMult * globalHpReduction * 0.8;
+
+                enemy.type = 2;
+                enemy.health = (2000 + (level * 250) + (wave * 100)) * hpMult * globalHpReduction * 0.8 * 0.5;
                 enemy.speed = (2.5 + (level * 0.1)) * speedMult;
                 enemy.radius = 2.5;
-                enemy.scale = 3.0; 
+                enemy.scale = 3.0;
                 setBossData({ hp: enemy.health, maxHp: enemy.health });
-
-            } else {
-                // Elite Logic: Start Wave 5, every 3 waves (5, 8, 11, 14...)
-                const eliteWaveActive = wave >= 5 && (wave - 5) % 3 === 0;
-                
-                if (eliteWaveActive && !waveState.current.eliteSpawned) {
-                     waveState.current.eliteSpawned = true;
-                     addNotification("⚠️ ELITE SQUAD", COLORS.enemyElite, 'BOSS');
-                }
-
-                // Increase Elite spawn chance during elite waves
-                const isElite = eliteWaveActive && (r < 0.15 || !waveState.current.eliteSpawned); // Force at least one if none spawned? No, just high chance.
-
-                if (isElite) {
-                    if (Math.random() > 0.7) {
-                        enemy.type = 5; 
-                        enemy.health = (120 + (level * 15)) * hpMult * globalHpReduction;
-                        enemy.speed = (3.5 + (level * 0.1)) * speedMult;
-                        enemy.radius = 1.8;
-                        enemy.scale = 1.6;
-                    } else {
-                        enemy.type = 1; 
-                        enemy.health = (150 + (level * 20)) * hpMult * globalHpReduction;
-                        enemy.speed = (4 + (level * 0.1)) * speedMult;
-                        enemy.radius = 1.5;
-                        enemy.scale = 1.5; 
-                    }
-                } 
-                else if (wave >= 3 && r > 0.925) { 
-                    if (Math.random() > 0.5) {
-                        enemy.type = 3; 
-                        enemy.health = (15 + (level * 5)) * hpMult * globalHpReduction;
-                        enemy.speed = 3.0 * speedMult;
-                        enemy.radius = 0.8;
-                        enemy.scale = 1.0; 
-                    } else {
-                        enemy.type = 6;
-                        enemy.health = (20 + (level * 6)) * hpMult * globalHpReduction;
-                        enemy.speed = 2.0 * speedMult;
-                        enemy.radius = 0.8;
-                        enemy.scale = 1.1;
-                    }
-                } 
-                else if (wave >= 2 && r > 0.85) { 
-                    enemy.type = 4;
-                    const baseHp = (10 + (level * 4)) * hpMult * globalHpReduction;
-                    enemy.health = baseHp * 0.5;
-                    const baseSpeed = (4 + (level * 0.15)) * speedMult;
-                    enemy.speed = baseSpeed * 2.0;
-                    enemy.radius = 0.6;
-                    enemy.scale = 0.8;
-                }
-                else {
-                    enemy.type = 0; 
-                    enemy.health = (10 + (level * 4)) * hpMult * globalHpReduction;
-                    enemy.speed = (4 + (level * 0.15)) * speedMult;
-                    enemy.radius = 0.6;
+            } else if (wave >= 3 && r > 0.925) {
+                if (Math.random() > 0.5) {
+                    enemy.type = 3;
+                    enemy.health = (15 + (level * 5)) * hpMult * globalHpReduction;
+                    enemy.speed = 3.0 * speedMult;
+                    enemy.radius = 0.8;
                     enemy.scale = 1.0;
+                } else {
+                    enemy.type = 6;
+                    enemy.health = (20 + (level * 6)) * hpMult * globalHpReduction;
+                    enemy.speed = 2.0 * speedMult;
+                    enemy.radius = 0.8;
+                    enemy.scale = 1.1;
                 }
+            } else if (wave >= 2 && r > 0.85) {
+                enemy.type = 4;
+                const baseHp = (10 + (level * 4)) * hpMult * globalHpReduction;
+                enemy.health = baseHp * 0.5;
+                const baseSpeed = (4 + (level * 0.15)) * speedMult;
+                enemy.speed = baseSpeed * 2.0;
+                enemy.radius = 0.6;
+                enemy.scale = 0.8;
+            } else {
+                enemy.type = 0;
+                enemy.health = (10 + (level * 4)) * hpMult * globalHpReduction;
+                enemy.speed = (4 + (level * 0.15)) * speedMult;
+                enemy.radius = 0.6;
+                enemy.scale = 1.0;
             }
             enemy.maxHealth = enemy.health;
         }

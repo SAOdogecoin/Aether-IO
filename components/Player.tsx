@@ -112,13 +112,13 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
               spawnBullet('BLACKHOLE', 0, 5.0, { pierce: 99, lifetime: 2.6, trailTimer: 0.1, maxPullCount: limit }); 
           } else if (ability === 'ARROW_RAIN') {
               arrowRainState.current.active = true;
-              arrowRainState.current.wavesLeft = 3;
+              arrowRainState.current.wavesLeft = 1;
               arrowRainState.current.timer = 0; 
           } else if (ability === 'FIREBALL') {
-              spawnBullet('FIREBALL', 5, 2.0 * 0.63, { 
+              spawnBullet('FIREBALL', 10, 2.0 * 0.63, { 
                   pierce: 100, 
-                  lifetime: 5.0, 
-                  effect: { type: 'BURN', duration: 5, value: stats.damage * 0.3 } 
+                  lifetime: 8.0, 
+                  effect: { type: 'BURN', duration: 5, value: stats.damage * 0.6 } 
               });
           } else if (ability === 'AXE_SPIN') {
               axeSpinTime.current = 3.0;
@@ -192,8 +192,8 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
     if (arrowRainState.current.active) {
         arrowRainState.current.timer -= delta;
         if (arrowRainState.current.timer <= 0) {
-            const count = 12; 
-            const angleOffset = (3 - arrowRainState.current.wavesLeft) * (Math.PI / 8); 
+            const count = 6; 
+            const angleOffset = 0;
 
             for (let i = 0; i < count; i++) {
                 const bullet = bulletsDataRef.current.find(b => !b.active);
@@ -325,13 +325,17 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
     if (dashTime.current <= 0) { 
         for(let i = 0; i < enemyBullets.length; i++) {
             const b = enemyBullets[i];
-            if (b.active && b.position.distanceTo(pos) < PLAYER_RADIUS + 0.5) { 
-                const dmg = b.damage || 10;
-                takeDamage(dmg);
-                b.active = false;
-                window.dispatchEvent(new CustomEvent('damage', { 
-                    detail: { position: pos, damage: dmg, isCrit: false, isPlayer: true } 
-                }));
+            if (b.active) {
+                const horizontalDist = Math.hypot(b.position.x - pos.x, b.position.z - pos.z);
+                const verticalGap = Math.abs(b.position.y - pos.y);
+                if (horizontalDist < PLAYER_RADIUS + 0.5 && verticalGap < 1.2) {
+                    const dmg = b.damage || 10;
+                    takeDamage(dmg);
+                    b.active = false;
+                    window.dispatchEvent(new CustomEvent('damage', { 
+                        detail: { position: pos, damage: dmg, isCrit: false, isPlayer: true } 
+                    }));
+                }
             }
         }
     }

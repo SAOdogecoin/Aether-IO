@@ -117,7 +117,7 @@ export const World: React.FC = () => {
       </mesh>
 
       {/* Game Logic Entities */}
-      {(status === GameStatus.PLAYING || status === GameStatus.PAUSED || status === GameStatus.LEVEL_UP || status === GameStatus.GAME_OVER || status === GameStatus.INVENTORY || status === GameStatus.SHOP) && (
+      {status !== GameStatus.MENU && (
         <>
           <Suspense fallback={null}>
             <Player

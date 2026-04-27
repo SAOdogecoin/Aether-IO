@@ -582,7 +582,7 @@ export const GameUI: React.FC = () => {
 
       {/* LOBBY / HERO SELECT */}
       {status === GameStatus.MENU && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/80 backdrop-blur-xl pointer-events-auto z-50">
+          <div className="absolute inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm pointer-events-auto z-50">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
