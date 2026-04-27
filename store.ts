@@ -194,6 +194,9 @@ const INITIAL_GAME_STATS: GameStatistics = {
     classHighestWave: { ARCHER: 0, WIZARD: 0, BARBARIAN: 0 }
 };
 
+const INITIAL_PLAYER_POS = () => new Vector3(0, 0, 0);
+const INITIAL_EARTHWALL_POS = () => new Vector3();
+
 export const calculateItemCP = (item: Item): number => {
     if (item.type === 'POTION' || item.type === 'CORE' || item.type === 'REVIVE') return 0;
     if (!item.stats) return 0;
@@ -454,7 +457,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   skillPoints: 0,
   health: 100,
   mana: 100,
-  playerPosition: new Vector3(0, 0, 0),
+  playerPosition: INITIAL_PLAYER_POS(),
   stats: { ...INITIAL_STATS },
   baseStats: { ...INITIAL_STATS },
   
@@ -500,7 +503,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   shieldCharges: 1,
   maxShieldCharges: 1,
   
-  earthwall: { active: false, position: new Vector3(), timer: 0, radius: 12.0 }, 
+  earthwall: { active: false, position: INITIAL_EARTHWALL_POS(), timer: 0, radius: 12.0 }, 
   warVitalityTimer: 0,
   sprintTimer: 0,
 
