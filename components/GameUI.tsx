@@ -1661,47 +1661,6 @@ export const GameUI: React.FC = () => {
                 </motion.div>
             )}
 
-            {/* HOVER TOOLTIP */}
-            {hoveredItem && !sellDialogItem && (
-                <motion.div 
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.1 }}
-                    className="fixed z-[60] bg-white p-4 rounded-2xl shadow-2xl border border-slate-100 w-64 pointer-events-none"
-                    style={{ 
-                        left: Math.min(window.innerWidth - 280, mousePos.x + 20), 
-                        top: Math.min(window.innerHeight - 200, mousePos.y + 20) 
-                    }}
-                >
-                    <div className="flex gap-3 mb-3">
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${getRarityBg(hoveredItem.rarity)}`}>
-                            <ItemIcon item={hoveredItem} size={24} />
-                        </div>
-                        <div>
-                            <div className={`font-black text-sm ${getRarityTextColor(hoveredItem.rarity)}`}>
-                                {hoveredItem.name} {hoveredItem.level > 1 && <span className="text-amber-500">+{hoveredItem.level-1}</span>}
-                            </div>
-                            <div className="text-[10px] font-bold text-slate-400 uppercase">{hoveredItem.rarity} {hoveredItem.type}</div>
-                        </div>
-                    </div>
-                    <div className="h-px bg-slate-100 w-full mb-3" />
-                    <div className="text-xs text-slate-600 font-medium mb-3">{hoveredItem.description}</div>
-                    
-                    {hoveredItem.stats && (
-                        <div className="grid grid-cols-2 gap-1 mb-2">
-                            {Object.entries(hoveredItem.stats).map(([k, v]) => (
-                                <div key={k} className="flex justify-between text-[10px]">
-                                    <span className="text-slate-400 font-bold capitalize">{k}</span>
-                                    <span className="text-slate-800 font-mono">{formatStat(k, v as number)}</span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                    
-                    <div className="text-right text-xs font-black text-amber-500 mt-2">Sell: {Math.floor(hoveredItem.price * 0.3)} G</div>
-                </motion.div>
-            )}
 
             {/* GAME OVER SCREEN - FIXED Z-INDEX & POINTER EVENTS */}
             {status === GameStatus.GAME_OVER && (
