@@ -16,8 +16,8 @@ const EnemyHealthBar: React.FC<{ slot: EnemyData }> = ({ slot }) => {
   const barColor = pct > 0.5 ? '#4ade80' : pct > 0.25 ? '#facc15' : '#ef4444';
   return (
     <Html position={[0, isBoss ? 4.5 : 3.0, 0]} center zIndexRange={[10, 0]} style={{ pointerEvents: 'none' }}>
-      <div style={{ width: isBoss ? 80 : 52, height: 5, background: 'rgba(0,0,0,0.7)', borderRadius: 2, border: '1px solid rgba(0,0,0,0.8)', overflow: 'hidden' }}>
-        <div style={{ width: `${pct * 100}%`, height: '100%', background: barColor, borderRadius: 2, transition: 'width 0.1s' }} />
+      <div style={{ width: isBoss ? 96 : 64, height: isBoss ? 10 : 7, background: 'rgba(0,0,0,0.75)', borderRadius: 3, border: '1px solid rgba(0,0,0,0.9)', overflow: 'hidden', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.7)' }}>
+        <div style={{ width: `${pct * 100}%`, height: '100%', background: barColor, borderRadius: 3, transition: 'width 0.1s' }} />
       </div>
     </Html>
   );

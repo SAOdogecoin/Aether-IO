@@ -220,7 +220,7 @@ const UniversalSkillSlot: React.FC<{
         <div className="flex flex-col items-center gap-0.5">
             {/* PASSIVE label or Key label — above slot */}
             {isPassive ? (
-                <div className="text-[8px] font-black uppercase tracking-widest leading-none" style={{ color: 'rgba(180,150,70,0.7)', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>PASSIVE</div>
+                <div className="text-[10px] font-black uppercase tracking-widest leading-none text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,1)', WebkitTextStroke: '0.3px rgba(0,0,0,0.6)' }}>PASSIVE</div>
             ) : label && (
                 <div className="text-xs font-black text-white/70 uppercase tracking-widest leading-none" style={{ textShadow: '0 1px 3px rgba(0,0,0,1)', WebkitTextStroke: '0.3px rgba(0,0,0,0.6)' }}>{label}</div>
             )}
@@ -290,10 +290,10 @@ const UniversalSkillSlot: React.FC<{
                 </div>
             </div>
 
-            {/* Skill name — below slot */}
-            <div className="text-[10px] font-bold leading-tight text-center max-w-[56px] truncate"
+            {/* Skill name — below slot, up to 2 lines */}
+            <div className="text-xs font-bold leading-tight text-center max-w-[60px] line-clamp-2 break-words"
                 style={{ color: isDimmed ? 'rgba(100,100,110,0.5)' : 'rgba(220,210,190,0.9)', textShadow: '0 1px 3px rgba(0,0,0,0.8)', WebkitTextStroke: '0.2px rgba(0,0,0,0.5)' }}>
-                {desc.split('.')[0].split(':')[0].slice(0, 12)}
+                {desc.split('.')[0].split(':')[0]}
             </div>
         </div>
     );
@@ -495,6 +495,17 @@ export const GameUI: React.FC = () => {
   const manaPercent = (mana / stats.maxMana) * 100;
   const xpPercent = (experience / experienceToNextLevel) * 100;
   const currentCP = calculateTotalCP(stats);
+
+  const hasBetterItem = useMemo(() => {
+    return inventory.some(item => {
+      if (item.type !== 'WEAPON' && item.type !== 'ARMOR' && item.type !== 'ACCESSORY' && item.type !== 'PET') return false;
+      if (RARITY_LEVEL_REQ[item.rarity] > level) return false;
+      const equipped = item.type === 'WEAPON' ? equipment.weapon : item.type === 'ARMOR' ? equipment.armor : item.type === 'ACCESSORY' ? equipment.accessory : equipment.pet;
+      return calculateItemCP(item) > (equipped ? calculateItemCP(equipped) : 0);
+    });
+  }, [inventory, equipment, level]);
+
+  const hasAlerts = skillPoints > 0 || hasBetterItem;
 
   const hpPotion = inventory.find(i => i.type === 'POTION' && (i.name === 'Health Potion' || i.name === 'Big Health Potion'));
   const manaPotion = inventory.find(i => i.type === 'POTION' && (i.name === 'Mana Potion' || i.name === 'Big Mana Potion'));
@@ -758,6 +769,9 @@ export const GameUI: React.FC = () => {
                     }}>
                     {panelOpen ? <X size={20} /> : <Menu size={20} />}
                     <span className="text-[7px] font-black uppercase tracking-wider">{panelOpen ? 'CLOSE' : 'MENU'}</span>
+                    {!panelOpen && hasAlerts && (
+                      <div className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 border border-black" />
+                    )}
                   </button>
                 );
               })()}
@@ -859,6 +873,26 @@ export const GameUI: React.FC = () => {
             );
           })()}
 
+          {/* Persistent skill-point alert */}
+          <AnimatePresence>
+          {skillPoints > 0 && !panelOpen && status === GameStatus.PLAYING && (
+            <motion.div
+              key="sp-alert"
+              initial={{ x: 60, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 60, opacity: 0 }}
+              className="absolute right-6 bottom-[220px] flex items-center gap-2.5 px-3 py-2 rounded pointer-events-auto cursor-pointer z-30"
+              style={{ background: 'linear-gradient(180deg,rgba(236,72,153,0.18) 0%,rgba(16,16,24,0.97) 100%)', border: '1px solid rgba(236,72,153,0.45)', boxShadow: '0 4px 12px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05)', minWidth: 190 }}
+              onClick={() => { setPanelTab('SKILLS'); openSpecificShop('SKILLS'); }}
+            >
+              <Star size={14} fill="#ec4899" strokeWidth={0} style={{color:'#ec4899'}} />
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-white rpg-text leading-none">Unused Skill Points</span>
+                <span className="text-[10px] font-bold text-pink-400 leading-snug">{skillPoints} SP available — tap to spend</span>
+              </div>
+              <div className="ml-auto w-5 h-5 rounded-full bg-pink-500 flex items-center justify-center text-[9px] font-black text-white shrink-0">{skillPoints}</div>
+            </motion.div>
+          )}
+          </AnimatePresence>
+
           {/* Toast notifications above minimap (right side) */}
           <div className="absolute right-6 bottom-48 flex flex-col-reverse gap-1.5 items-end pointer-events-none z-30 w-72">
               <AnimatePresence>
@@ -916,10 +950,17 @@ export const GameUI: React.FC = () => {
                             <h2 className="text-5xl font-black text-yellow-300 mb-1 tracking-tight rpg-title" style={{WebkitTextStroke:'1px rgba(0,0,0,0.7)'}}>WAVE CLEARED!</h2>
                             <p className="text-white/60 font-bold tracking-widest text-xs uppercase rpg-text">Choose a Reward</p>
                         </div>
-                        <div className="grid grid-cols-3 gap-4 w-full">
-                            {upgradeOptions.map((opt) => {
+                        {(() => {
+                            // Mark highest-rarity option as suggested
+                            const rarityRank: Record<string,number> = { MYTHIC:5, LEGENDARY:4, EPIC:3, RARE:2, COMMON:1 };
+                            const bestIdx = upgradeOptions.reduce((bi, o, i) =>
+                                (rarityRank[o.rarity]||0) > (rarityRank[upgradeOptions[bi]?.rarity]||0) ? i : bi, 0);
+                            return (
+                            <div className="grid grid-cols-3 gap-4 w-full">
+                            {upgradeOptions.map((opt, idx) => {
                                 const rarityAccent = opt.rarity === 'MYTHIC' ? '#f87171' : opt.rarity === 'LEGENDARY' ? '#fbbf24' : opt.rarity === 'EPIC' ? '#c084fc' : opt.rarity === 'RARE' ? '#60a5fa' : '#94a3b8';
-                                const rarityBg = opt.rarity === 'MYTHIC' ? 'rgba(220,38,38,0.18)' : opt.rarity === 'LEGENDARY' ? 'rgba(202,138,4,0.18)' : opt.rarity === 'EPIC' ? 'rgba(147,51,234,0.18)' : opt.rarity === 'RARE' ? 'rgba(59,130,246,0.15)' : 'rgba(30,30,40,0.92)';
+                                const solidBg = opt.rarity === 'MYTHIC' ? '#1a0505' : opt.rarity === 'LEGENDARY' ? '#1a1205' : opt.rarity === 'EPIC' ? '#110720' : opt.rarity === 'RARE' ? '#050e1f' : '#0e0e18';
+                                const isSuggested = idx === bestIdx;
                                 return (
                                 <motion.button
                                     key={opt.id}
@@ -927,18 +968,25 @@ export const GameUI: React.FC = () => {
                                     animate={{ y: 0, opacity: 1 }}
                                     whileHover={{ scale: 1.03, y: -3 }}
                                     onClick={() => selectUpgrade(opt)}
-                                    className="flex flex-col items-center rounded-md overflow-hidden cursor-pointer group"
+                                    className="flex flex-col items-center rounded-md overflow-hidden cursor-pointer group relative"
                                     style={{
-                                        background: `linear-gradient(180deg, ${rarityBg} 0%, rgba(10,10,16,0.97) 100%)`,
-                                        border: `1.5px solid ${rarityAccent}55`,
-                                        boxShadow: `0 4px 20px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06)`,
+                                        background: `linear-gradient(180deg, ${solidBg} 0%, #0a0a10 100%)`,
+                                        border: isSuggested ? `2px solid ${rarityAccent}` : `1.5px solid ${rarityAccent}55`,
+                                        boxShadow: isSuggested ? `0 4px 24px ${rarityAccent}55, 0 0 0 1px ${rarityAccent}30` : `0 4px 20px rgba(0,0,0,0.8)`,
                                         minHeight: 260,
                                     }}
                                 >
+                                    {/* Suggested badge */}
+                                    {isSuggested && (
+                                        <div className="absolute top-0 left-0 right-0 py-1 text-center text-[9px] font-black uppercase tracking-widest rpg-text"
+                                            style={{ background: rarityAccent, color: '#000' }}>
+                                            ★ SUGGESTED
+                                        </div>
+                                    )}
                                     {/* Big icon area */}
-                                    <div className="flex-1 flex items-center justify-center w-full py-8">
+                                    <div className={`flex-1 flex items-center justify-center w-full ${isSuggested ? 'pt-8 pb-6' : 'py-8'}`}>
                                         <div className="flex items-center justify-center"
-                                            style={{ width: 80, height: 80, borderRadius: 8, background: `${rarityAccent}15`, border: `2px solid ${rarityAccent}45` }}>
+                                            style={{ width: 80, height: 80, borderRadius: 8, background: `${rarityAccent}20`, border: `2px solid ${rarityAccent}60` }}>
                                             {opt.type.includes('SKILL')
                                                 ? <Star size={40} fill={rarityAccent} strokeWidth={0} style={{color: rarityAccent}}/>
                                                 : <ArrowUpCircle size={40} fill={rarityAccent} strokeWidth={0} style={{color: rarityAccent}}/>
@@ -947,18 +995,20 @@ export const GameUI: React.FC = () => {
                                     </div>
                                     {/* Text area */}
                                     <div className="w-full px-4 pb-4 flex flex-col items-center gap-2">
-                                        <div className="text-[9px] font-black uppercase tracking-widest px-3 py-0.5 rounded" style={{ color: rarityAccent, background: `${rarityAccent}18`, border: `1px solid ${rarityAccent}30` }}>{opt.rarity}</div>
+                                        <div className="text-[9px] font-black uppercase tracking-widest px-3 py-0.5 rounded" style={{ color: rarityAccent, background: `${rarityAccent}25`, border: `1px solid ${rarityAccent}40` }}>{opt.rarity}</div>
                                         <div className="font-black text-base text-white leading-tight text-center rpg-text">{opt.name}</div>
-                                        <div className="text-xs text-slate-400 font-medium leading-relaxed text-center">{opt.description}</div>
+                                        <div className="text-xs text-slate-300 font-medium leading-relaxed text-center">{opt.description}</div>
                                         <div className="mt-1 w-full py-2 rounded font-black text-sm text-center rpg-text"
-                                            style={{ background: `${rarityAccent}28`, color: rarityAccent, border: `1px solid ${rarityAccent}50` }}>
+                                            style={{ background: isSuggested ? rarityAccent : `${rarityAccent}35`, color: isSuggested ? '#000' : rarityAccent, border: `1px solid ${rarityAccent}60` }}>
                                             SELECT
                                         </div>
                                     </div>
                                 </motion.button>
                                 );
                             })}
-                        </div>
+                            </div>
+                            );
+                        })()}
                     </motion.div>
                 </div>
             )}
@@ -973,7 +1023,9 @@ export const GameUI: React.FC = () => {
 
                   {/* Tab bar */}
                   <div className="flex items-center shrink-0" style={{ borderBottom: '1px solid rgba(180,150,70,0.18)', background: 'rgba(0,0,0,0.3)' }}>
-                    {(['INVENTORY','CRAFTING','SKILLS','SHOP','CHARACTER'] as const).map(tab => (
+                    {(['INVENTORY','CRAFTING','SKILLS','SHOP','CHARACTER'] as const).map(tab => {
+                      const showDot = (tab === 'SKILLS' && skillPoints > 0) || (tab === 'INVENTORY' && hasBetterItem);
+                      return (
                       <button key={tab} onClick={() => {
                         setPanelTab(tab);
                         if (tab==='INVENTORY' && !isInventoryOpen) { closeAllUI(); setTimeout(toggleInventory,10); }
@@ -985,9 +1037,13 @@ export const GameUI: React.FC = () => {
                         className="relative px-5 py-4 text-xs font-black uppercase tracking-widest transition-colors rpg-text"
                         style={{ color: panelTab===tab ? '#f0c040' : 'rgba(100,100,110,0.5)' }}>
                         {tab}
+                        {showDot && panelTab !== tab && (
+                          <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500 border border-black" />
+                        )}
                         {panelTab===tab && <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg,transparent,#f0c040,transparent)' }} />}
                       </button>
-                    ))}
+                      );
+                    })}
                     <div className="ml-auto flex items-center gap-4 px-5">
                       <span className="text-sm font-black text-yellow-500 flex items-center gap-1 rpg-text"><Coins size={13}/>{score.toLocaleString()}</span>
                       {panelTab==='SKILLS' && <span className="text-xs font-bold text-pink-400 flex items-center gap-1"><Star size={12}/>{skillPoints} SP</span>}
@@ -1073,7 +1129,7 @@ export const GameUI: React.FC = () => {
                                   transform: isHovered ? 'scale(1.1)' : undefined,
                                   boxShadow: isSelected ? '0 0 12px rgba(240,192,64,0.4)' : undefined,
                                 }}>
-                                <ItemIcon item={item} size={24}/>
+                                <ItemIcon item={item} size={30}/>
                                 {(item.quantity||1)>1 && <div className="absolute bottom-0 right-0 text-[9px] px-1.5 py-0.5 text-white font-black rounded-tl" style={{background:'rgba(0,0,0,0.8)'}}>{item.quantity}</div>}
                                 {locked && <Lock size={10} className="absolute top-0.5 left-0.5 text-red-500"/>}
                               </button>
