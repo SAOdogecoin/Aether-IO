@@ -76,7 +76,7 @@ export const DamageTextManager: React.FC = () => {
         text.life = 1.4;
         text.text = label;
         text.color = color;
-        text.scale = 1.3;
+        text.scale = 0.55;
       }
     };
 

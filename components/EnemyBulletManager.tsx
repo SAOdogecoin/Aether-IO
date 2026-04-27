@@ -3,7 +3,7 @@ import React, { useRef, useLayoutEffect, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { InstancedMesh, Object3D, Vector3, DynamicDrawUsage } from 'three';
 import { useGameStore } from '../store';
-import { MAX_ENEMY_BULLETS, COLORS } from '../constants';
+import { MAX_ENEMY_BULLETS, COLORS, PLAYER_RADIUS } from '../constants';
 import { GameStatus, BulletData } from '../types';
 
 interface EnemyBulletManagerProps {
@@ -14,7 +14,7 @@ const dummy = new Object3D();
 
 export const EnemyBulletManager: React.FC<EnemyBulletManagerProps> = ({ enemyBulletsDataRef }) => {
   const meshRef = useRef<InstancedMesh>(null);
-  const { status, earthwall, obstacles } = useGameStore();
+  const { status, earthwall, obstacles, playerPosition, takeDamage, isInvincible } = useGameStore();
   
   // Local storage
   const bullets = useRef(new Array(MAX_ENEMY_BULLETS).fill(0).map((_, i) => ({
@@ -65,6 +65,16 @@ export const EnemyBulletManager: React.FC<EnemyBulletManagerProps> = ({ enemyBul
                         b.lifetime = 0;
                         break;
                     }
+                }
+            }
+
+            // Player hit detection
+            if (b.active && !isInvincible) {
+                const distToPlayer = b.position.distanceTo(playerPosition);
+                if (distToPlayer < PLAYER_RADIUS + 0.5) {
+                    takeDamage(b.damage);
+                    b.active = false;
+                    b.lifetime = 0;
                 }
             }
 
