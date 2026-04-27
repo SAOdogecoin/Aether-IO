@@ -185,11 +185,12 @@ export interface CrateData {
 export interface DropData {
   id: number;
   position: Vector3;
-  item: Item | null; 
+  item: Item | null;
   type: 'ITEM' | 'GOLD' | 'XP' | 'GEM';
   active: boolean;
   value: number;
   rotation: number;
+  orbMultiplier?: 5 | 10;
 }
 
 export interface SkillLevels {

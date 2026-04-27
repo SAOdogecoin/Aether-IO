@@ -961,7 +961,8 @@ export const useGameStore = create<GameState>((set, get) => ({
               }
           }
       }
-      return { drops: [...state.drops, { id: Math.random(), position: position.clone(), type, value, item, active: true, rotation: Math.random() * Math.PI }] };
+      const orbMultiplier = (type === 'GOLD' || type === 'XP') && Math.random() < 0.5 ? 10 : 5;
+      return { drops: [...state.drops, { id: Math.random(), position: position.clone(), type, value, item, active: true, rotation: Math.random() * Math.PI, orbMultiplier }] };
   }),
 
   handleInventoryFull: () => {
@@ -1016,14 +1017,12 @@ export const useGameStore = create<GameState>((set, get) => ({
       
       if (drop.type === 'XP') {
           addExperience(drop.value);
-          addNotification(`+${drop.value} XP`, '#fbbf24', 'SYSTEM');
           window.dispatchEvent(new CustomEvent('loot-text', {
               detail: { position: state.playerPosition.clone().add(new Vector3(0, 3.5, 0)), text: `+${drop.value} XP`, color: '#a3e635' }
           }));
       }
       else if (drop.type === 'GOLD') {
           addScore(drop.value);
-          addNotification(`+${drop.value} G`, '#fbbf24', 'SYSTEM');
           window.dispatchEvent(new CustomEvent('loot-text', {
               detail: { position: state.playerPosition.clone().add(new Vector3(0, 3.5, 0)), text: `+${drop.value} G`, color: '#fbbf24' }
           }));

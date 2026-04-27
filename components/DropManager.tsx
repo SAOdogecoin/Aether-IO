@@ -161,10 +161,15 @@ export const DropManager: React.FC = () => {
 
         if (drop.type === 'GOLD') {
             dummy.scale.set(0.4, 0.4, 0.4);
-            tempColor.set(COLORS.uiAccent);
-        } else {
-            dummy.scale.set(0.3, 0.3, 0.3);
-            tempColor.set(COLORS.dropXp);
+            tempColor.set('#fbbf24');
+        } else if (drop.type === 'XP') {
+            if (drop.orbMultiplier === 10) {
+                dummy.scale.set(0.35, 0.35, 0.35);
+                tempColor.set('#000000');
+            } else {
+                dummy.scale.set(0.25, 0.25, 0.25);
+                tempColor.set('#ec4899');
+            }
         }
 
         dummy.updateMatrix();

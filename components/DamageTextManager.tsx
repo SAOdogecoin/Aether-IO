@@ -150,10 +150,10 @@ export const DamageTextManager: React.FC = () => {
       {textsRef.current.map((t, i) => (
          <Text
            key={i}
-           position={[0, -100, 0]} 
-           fontSize={1}
+           position={[0, -100, 0]}
+           fontSize={1.8}
            color={t.color} // Reactive prop
-           outlineWidth={0.05}
+           outlineWidth={0.08}
            outlineColor="black"
            anchorX="center"
            anchorY="middle"
