@@ -444,6 +444,10 @@ export const GameUI: React.FC = () => {
   }, [closeAllUI]);
 
   useEffect(() => {
+      if (!panelOpen) setHoveredItem(null);
+  }, [panelOpen]);
+
+  useEffect(() => {
       if (actionResult) {
           if (actionResult.success && actionResult.type === 'UPGRADE' && actionResult.item) {
               setSelectedUpgradeItem(actionResult.item);
@@ -638,8 +642,14 @@ export const GameUI: React.FC = () => {
           {/* Top Bar */}
           <div className="flex justify-between items-start pointer-events-auto w-full z-20">
 
-             {/* Spacer for layout */}
-             <div className="w-64 shrink-0"/>
+             {/* Level Indicator & Spacer for layout */}
+             <div className="flex items-center gap-2">
+               <div className="px-2.5 py-1.5 rounded-md flex items-center justify-center" style={{background:'rgba(12,12,18,0.92)',border:'1px solid rgba(180,150,70,0.2)',boxShadow:'0 2px 10px rgba(0,0,0,0.5)'}}>
+                 <span className="text-xs font-black text-white rpg-text">LV</span>
+                 <span className="ml-1 text-sm font-black text-yellow-400 rpg-text">{level}</span>
+               </div>
+               <div className="w-60 shrink-0"/>
+             </div>
 
              {/* Center: Wave + Boss */}
              <div className="flex flex-col items-center flex-1 mx-4 relative">
@@ -1231,7 +1241,7 @@ export const GameUI: React.FC = () => {
                               <div className="flex-1 min-w-0"><div className="font-bold text-white text-xs leading-tight">{info.name}</div><div className="text-[9px] text-slate-600 leading-tight truncate">{info.description}</div></div>
                               <div className="flex flex-col items-end gap-1 shrink-0">
                                 <div className="text-[8px] font-bold px-1.5 py-0.5 rounded" style={{background: lvl>0 ? acc+'28' : 'rgba(255,255,255,0.05)', color: lvl>0 ? acc : '#555'}}>LV{lvl}</div>
-                                <button onClick={() => upgradeSkill(sk)} disabled={!canAfford||isMax} className="text-[9px] font-black px-2 py-1 rounded-md" style={{ background: isMax ? 'rgba(255,255,255,0.03)' : canAfford ? acc+'cc' : 'rgba(255,255,255,0.04)', color: isMax ? '#444' : canAfford ? '#fff' : '#555', border:`1px solid ${isMax ? 'transparent' : canAfford ? acc+'80' : 'rgba(255,255,255,0.05)'}` }}>{isMax ? 'MAX' : `${cost}SP`}</button>
+                                <button onClick={() => upgradeSkill(sk)} disabled={!canAfford||isMax} className="w-7 h-7 rounded flex items-center justify-center" style={{ background: isMax ? 'rgba(255,255,255,0.03)' : canAfford ? acc+'cc' : 'rgba(255,255,255,0.04)', color: isMax ? '#444' : canAfford ? '#fff' : '#555', border:`1px solid ${isMax ? 'transparent' : canAfford ? acc+'80' : 'rgba(255,255,255,0.05)'}` }} title={`Cost: ${cost}SP`}>{isMax ? '✓' : <Plus size={14} />}</button>
                               </div>
                             </div>
                           );

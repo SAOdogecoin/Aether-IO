@@ -76,8 +76,8 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
         meshRef.current.userData.enemies = enemies.current;
     }
 
-    // Wave ends at 30s
-    if (waveTimer > 30) {
+    // Wave ends at 30s (paused if boss is active)
+    if (waveTimer > 30 && !bossData.active) {
         advanceWave();
     }
     
@@ -142,7 +142,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                 setBossData({ active: true, name: bossName, hp: 1, maxHp: 1 });
 
                 enemy.type = 2;
-                enemy.health = (2000 + (level * 250) + (wave * 100)) * hpMult * globalHpReduction * 0.8 * 0.5;
+                enemy.health = (2000 + (level * 250) + (wave * 100)) * hpMult * globalHpReduction * 0.5;
                 enemy.speed = (2.5 + (level * 0.1)) * speedMult;
                 enemy.radius = 2.5;
                 enemy.scale = 3.0;
@@ -340,7 +340,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                         if (bullet) {
                             bullet.active = true;
                             bullet.lifetime = 4.0;
-                            bullet.damage = 15; 
+                            bullet.damage = 0; 
                             bullet.position.copy(e.position).add(new Vector3(0, 1.5, 0));
                             bullet.velocity.set(Math.cos(e.bossAngle), 0, Math.sin(e.bossAngle)).multiplyScalar(10);
                         }
@@ -354,7 +354,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                             if (bullet) {
                                 bullet.active = true;
                                 bullet.lifetime = 4.0;
-                                bullet.damage = 15;
+                                bullet.damage = 0;
                                 bullet.position.copy(e.position).add(new Vector3(0, 1.5, 0));
                                 const a = (Math.PI * 2 * k) / 12;
                                 bullet.velocity.set(Math.cos(a), 0, Math.sin(a)).multiplyScalar(8);
@@ -369,7 +369,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                         if (bullet) {
                             bullet.active = true;
                             bullet.lifetime = 4.0;
-                            bullet.damage = 20;
+                            bullet.damage = 0;
                             bullet.position.copy(e.position).add(new Vector3(0, 1.5, 0));
 
                             tempVec.subVectors(playerPosition, e.position).normalize();
