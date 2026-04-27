@@ -100,7 +100,6 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
 
   const handleAbility = (ability: string, isQ: boolean) => {
       const cost = isQ ? getManaCost('q') : getManaCost('r');
-      const abilityLabel = ability === 'RAGE' ? 'Rage' : ability === 'PIERCING_SHOT' ? 'Piercing Shot' : ability === 'GRAVITY_SPELL' ? 'Gravity Spell' : ability === 'ARROW_RAIN' ? 'Arrow Rain' : ability === 'FIREBALL' ? 'Fireball' : ability === 'AXE_SPIN' ? 'Axe Spin' : 'Ability';
       if (useMana(cost)) {
           triggerSkillCooldown(isQ ? 'q' : 'r');
           
@@ -126,7 +125,7 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
               axeDamageTimer.current = 0.2; 
           }
       } else {
-          addNotification(`Not enough Mana for ${abilityLabel}!`, 'red', 'WARNING');
+          addNotification('Not enough Mana', 'red', 'WARNING');
       }
   };
 
@@ -148,7 +147,7 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
               activateSprint();
           }
       } else {
-          addNotification('Not enough Mana for Skill E!', 'red', 'WARNING');
+          addNotification('Not enough Mana', 'red', 'WARNING');
       }
   };
 

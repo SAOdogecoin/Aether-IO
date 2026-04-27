@@ -143,7 +143,7 @@ const WarningNotification: React.FC<{ note: GameNotification; onRemove: (id: str
             initial={{ y: -50, opacity: 0, scale: 0.5 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: -50, opacity: 0, scale: 0.5 }}
-            className="text-3xl font-black text-red-500 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] stroke-black tracking-tighter text-center"
+            className="text-3xl font-black text-red-500 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] stroke-black tracking-tighter text-center whitespace-nowrap"
             style={{ WebkitTextStroke: '1px black' }}
         >
             {note.message}
@@ -826,7 +826,7 @@ export const GameUI: React.FC = () => {
                 <UniversalSkillSlot
                     icon={fi(Wind)}
                     level={skillLevels.dash} cooldown={skills.dash} maxCooldown={skillMaxCooldowns.dash * (1 - stats.cooldownReduction)}
-                    label="SPC" desc="Dash" active={true}
+                    label="SPACE" desc="Dash" active={true}
                     manaCost={getManaCost('dash')} currentMana={mana} heroClass={hero}
                     charges={dashCharges} maxCharges={maxDashCharges}
                     onClick={() => fireKey('Space')}
