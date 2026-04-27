@@ -12,7 +12,6 @@ import { EnemyBulletManager } from './EnemyBulletManager';
 import { SkillManager } from './SkillManager';
 import { DamageTextManager } from './DamageTextManager';
 import { Pet } from './Pet';
-import { ShopStructures } from './ShopStructures';
 import { ARENA_SIZE, COLORS } from '../constants';
 import { useGameStore } from '../store';
 import { GameStatus, BulletData, EnemyData } from '../types';
@@ -116,7 +115,6 @@ export const World: React.FC = () => {
       </mesh>
 
       <Environment />
-      <ShopStructures />
 
       {/* Earthwall Visual */}
       <mesh ref={earthwallRef} visible={false}>

@@ -303,8 +303,8 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
         }
     }
 
-    // Clamp well inside the visual tree ring (trees at ~48-52, player stops at 45)
-    const limit = (ARENA_SIZE / 2) - 15;
+    // Allow player to reach the dark boundary zone just before the void (void at ARENA_SIZE/2=60)
+    const limit = (ARENA_SIZE / 2) - 2;
     if (proposedPos.length() > limit) {
         proposedPos.normalize().multiplyScalar(limit);
     }

@@ -409,6 +409,14 @@ export const GameUI: React.FC = () => {
   }, []);
 
   useEffect(() => {
+      const handleKey = (e: KeyboardEvent) => {
+          if (e.key === 'Escape') closeAllUI();
+      };
+      window.addEventListener('keydown', handleKey);
+      return () => window.removeEventListener('keydown', handleKey);
+  }, [closeAllUI]);
+
+  useEffect(() => {
       if (actionResult) {
           if (actionResult.success && actionResult.type === 'UPGRADE' && actionResult.item) {
               setSelectedUpgradeItem(actionResult.item);
@@ -592,30 +600,29 @@ export const GameUI: React.FC = () => {
           <div className="flex justify-between items-start pointer-events-auto w-full z-20">
              
              {/* Player Status */}
-             <div className="flex flex-col gap-2 w-72">
-                 <div className="bg-white/90 p-2 rounded-3xl shadow-lg border border-white flex items-center gap-3 backdrop-blur-md">
-                    <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center border-2 border-slate-200">
-                        {hero === 'ARCHER' && <Crosshair size={24} className="text-green-500"/>}
-                        {hero === 'WIZARD' && <Wand2 size={24} className="text-blue-500"/>}
-                        {hero === 'BARBARIAN' && <Axe size={24} className="text-red-500"/>}
+             <div className="flex flex-col gap-1.5 w-72">
+                 <div className="p-2 rounded-2xl flex items-center gap-3" style={{ background:'rgba(18,18,26,0.88)', border:'1px solid rgba(255,255,255,0.09)', boxShadow:'0 4px 20px rgba(0,0,0,0.5)' }}>
+                    <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${CLASS_COLOR[hero]??'#6366f1'}18`, border:`1.5px solid ${CLASS_COLOR[hero]??'#6366f1'}50` }}>
+                        {hero === 'ARCHER'    && <Crosshair size={22} style={{color:CLASS_COLOR[hero]}}/>}
+                        {hero === 'WIZARD'    && <Wand2     size={22} style={{color:CLASS_COLOR[hero]}}/>}
+                        {hero === 'BARBARIAN' && <Axe       size={22} style={{color:CLASS_COLOR[hero]}}/>}
                     </div>
                     <div className="flex-1">
-                        <div className="flex justify-between items-baseline mb-1 px-1">
-                            <span className="font-black text-slate-700 text-sm tracking-tight">{hero} <span className="text-slate-400 text-xs">LVL {level}</span></span>
-                            <span className="font-mono text-orange-500 font-bold text-xs">CP:{currentCP}</span>
+                        <div className="flex justify-between items-baseline mb-1.5 px-0.5">
+                            <span className="font-black text-white text-sm tracking-tight">{hero} <span className="text-white/40 text-xs font-bold">LV{level}</span></span>
+                            <span className="font-mono font-bold text-xs" style={{color: CLASS_COLOR[hero]??'#f97316'}}>CP {currentCP}</span>
                         </div>
-                        {/* Bars */}
-                        <div className="h-2 bg-slate-200 rounded-full overflow-hidden mb-1">
-                            <motion.div className="h-full bg-red-500" initial={false} animate={{ width: `${hpPercent}%` }} />
+                        <div className="h-2 rounded-full overflow-hidden mb-1" style={{background:'rgba(255,255,255,0.08)'}}>
+                            <motion.div className="h-full bg-red-500" initial={false} animate={{ width: `${hpPercent}%` }} style={{boxShadow:'0 0 6px rgba(239,68,68,0.6)'}}/>
                         </div>
-                        <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                            <motion.div className="h-full bg-blue-500" initial={false} animate={{ width: `${manaPercent}%` }} />
+                        <div className="h-2 rounded-full overflow-hidden" style={{background:'rgba(255,255,255,0.08)'}}>
+                            <motion.div className="h-full bg-blue-500" initial={false} animate={{ width: `${manaPercent}%` }} style={{boxShadow:'0 0 6px rgba(59,130,246,0.6)'}}/>
                         </div>
                     </div>
                  </div>
                  {/* XP Bar */}
-                 <div className="h-3 bg-white/50 rounded-full overflow-hidden border border-white/50 shadow-sm mx-4">
-                    <motion.div className="h-full bg-yellow-400" initial={false} animate={{ width: `${xpPercent}%` }} />
+                 <div className="h-2 rounded-full overflow-hidden mx-3" style={{background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.05)'}}>
+                    <motion.div className="h-full bg-yellow-400" initial={false} animate={{ width: `${xpPercent}%` }} style={{boxShadow:'0 0 6px rgba(250,204,21,0.5)'}}/>
                  </div>
              </div>
              
@@ -631,29 +638,26 @@ export const GameUI: React.FC = () => {
                  </div>
 
                  {bossData.active ? (
-                     <div className="w-full max-w-md bg-white/90 rounded-2xl p-2 shadow-xl border-2 border-red-100">
-                         <div className="flex justify-between text-xs font-black text-red-500 mb-1 px-2 uppercase">
+                     <div className="w-full max-w-md rounded-2xl p-2 shadow-xl" style={{background:'rgba(18,18,26,0.9)',border:'2px solid rgba(239,68,68,0.4)'}}>
+                         <div className="flex justify-between text-xs font-black text-red-400 mb-1.5 px-2 uppercase">
                              <span>{bossData.name}</span>
                              <span>{Math.ceil(bossData.hp).toLocaleString()}</span>
                          </div>
-                         <div className="h-4 bg-slate-200 rounded-full overflow-hidden">
-                             <motion.div className="h-full bg-red-500" animate={{ width: `${Math.max(0, (bossData.hp / bossData.maxHp) * 100)}%` }} />
+                         <div className="h-4 rounded-full overflow-hidden" style={{background:'rgba(255,255,255,0.08)'}}>
+                             <motion.div className="h-full bg-red-500" animate={{ width: `${Math.max(0, (bossData.hp / bossData.maxHp) * 100)}%` }} style={{boxShadow:'0 0 8px rgba(239,68,68,0.7)'}}/>
                          </div>
                      </div>
                  ) : (
-                     <div className="flex flex-col items-center">
+                     <div className="flex flex-col items-center gap-1">
                          {waveTimer > 30 && (
-                             <motion.div 
-                                initial={{ scale: 0.5, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                className="mb-2 px-4 py-1 bg-red-500 text-white font-black text-xs rounded-full shadow-lg border-2 border-red-400 animate-pulse"
-                             >
+                             <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                                className="px-4 py-1 bg-red-500/80 text-white font-black text-xs rounded-full shadow-lg animate-pulse border border-red-400/60">
                                  NEXT WAVE IN {(40 - waveTimer).toFixed(0)}s
                              </motion.div>
                          )}
-                         <div className="bg-white/90 px-8 py-3 rounded-2xl shadow-xl flex flex-col items-center border-b-4 border-slate-200">
-                             <div className="text-3xl font-black text-slate-800 tracking-tighter">WAVE {wave}</div>
-                             <div className="flex items-center gap-1 text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full mt-1">
+                         <div className="px-8 py-3 rounded-2xl flex flex-col items-center" style={{background:'rgba(18,18,26,0.88)',border:'1px solid rgba(255,255,255,0.09)',boxShadow:'0 4px 20px rgba(0,0,0,0.5)'}}>
+                             <div className="text-4xl font-black text-white tracking-tighter">WAVE {wave}</div>
+                             <div className="flex items-center gap-1 text-xs font-bold text-white/40 mt-0.5">
                                  <Timer size={10} /> {Math.floor(waveTimer)}s
                              </div>
                          </div>
@@ -662,14 +666,14 @@ export const GameUI: React.FC = () => {
              </div>
 
              {/* Currency */}
-             <div className="flex gap-3">
-                 <div className="bg-white/90 px-4 py-2 rounded-full shadow-lg flex items-center gap-2 border border-slate-100">
-                    <div className="bg-emerald-100 p-1 rounded-full"><Gem size={16} className="text-emerald-500" /></div>
-                    <span className="font-mono font-bold text-slate-700">{gems.toLocaleString()}</span>
+             <div className="flex gap-2">
+                 <div className="px-4 py-2 rounded-full flex items-center gap-2" style={{background:'rgba(18,18,26,0.88)',border:'1px solid rgba(255,255,255,0.09)',boxShadow:'0 4px 16px rgba(0,0,0,0.4)'}}>
+                    <Gem size={15} className="text-emerald-400"/>
+                    <span className="font-mono font-bold text-white text-sm">{gems.toLocaleString()}</span>
                  </div>
-                 <div className="bg-white/90 px-4 py-2 rounded-full shadow-lg flex items-center gap-2 border border-slate-100">
-                    <div className="bg-yellow-100 p-1 rounded-full"><Coins size={16} className="text-yellow-500" /></div>
-                    <span className="font-mono font-bold text-slate-700">{score.toLocaleString()}</span>
+                 <div className="px-4 py-2 rounded-full flex items-center gap-2" style={{background:'rgba(18,18,26,0.88)',border:'1px solid rgba(255,255,255,0.09)',boxShadow:'0 4px 16px rgba(0,0,0,0.4)'}}>
+                    <Coins size={15} className="text-yellow-400"/>
+                    <span className="font-mono font-bold text-white text-sm">{score.toLocaleString()}</span>
                  </div>
              </div>
           </div>
