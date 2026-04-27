@@ -35,8 +35,8 @@ export const SHOP_POSITIONS = [
 
 export const COLORS = {
   background: '#87CEEB', 
-  ground: '#4ade80',     
-  groundDark: '#166534', 
+  ground: '#4a7a20',
+  groundDark: '#3a5e18',
   
   player: '#2563eb', 
   
