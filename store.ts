@@ -488,8 +488,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   gachaResults: [],
   upgradeOptions: [],
   drops: [],
-  obstacles: generateObstacles(),
-  crates: generateCrates(),
+  obstacles: [],
+  crates: [],
   minimapEnemies: [],
   
   skills: { dash: 0, q: 0, r: 0, e: 0 },
