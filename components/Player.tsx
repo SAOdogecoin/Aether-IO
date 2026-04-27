@@ -359,6 +359,9 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
         <Html position={[0, 3.4, 0]} center zIndexRange={[50, 0]} style={{ pointerEvents: 'none' }}>
             <div style={{ width: 108, display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 26, height: 26, borderRadius: 999, background: 'rgba(0,0,0,0.85)', border: '1px solid rgba(255,255,255,0.16)', display: 'grid', placeItems: 'center', color: '#fff', fontSize: 11, fontWeight: 800, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>
+                        {level}
+                    </div>
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
                         <div style={{ height: 8, background: 'rgba(0,0,0,0.7)', borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.8)', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.8)' }}>
                             <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, (health / stats.maxHealth) * 100))}%`, background: 'linear-gradient(90deg,#b91c1c,#ef4444)', borderRadius: 3, transition: 'width 0.1s' }} />
@@ -366,9 +369,6 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
                         <div style={{ height: 6, background: 'rgba(0,0,0,0.7)', borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.8)', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.8)' }}>
                             <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, (mana / stats.maxMana) * 100))}%`, background: 'linear-gradient(90deg,#1d4ed8,#3b82f6)', borderRadius: 3, transition: 'width 0.1s' }} />
                         </div>
-                    </div>
-                    <div style={{ width: 26, height: 26, borderRadius: 999, background: 'rgba(0,0,0,0.85)', border: '1px solid rgba(255,255,255,0.16)', display: 'grid', placeItems: 'center', color: '#fff', fontSize: 11, fontWeight: 800, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>
-                        {level}
                     </div>
                 </div>
             </div>

@@ -500,10 +500,11 @@ export const GameUI: React.FC = () => {
     return inventory.some(item => {
       if (item.type !== 'WEAPON' && item.type !== 'ARMOR' && item.type !== 'ACCESSORY' && item.type !== 'PET') return false;
       if (RARITY_LEVEL_REQ[item.rarity] > level) return false;
+      if (item.classType && item.classType !== hero) return false;
       const equipped = item.type === 'WEAPON' ? equipment.weapon : item.type === 'ARMOR' ? equipment.armor : item.type === 'ACCESSORY' ? equipment.accessory : equipment.pet;
       return calculateItemCP(item) > (equipped ? calculateItemCP(equipped) : 0);
     });
-  }, [inventory, equipment, level]);
+  }, [inventory, equipment, level, hero]);
 
   const hasAlerts = skillPoints > 0 || hasBetterItem;
 
@@ -1124,12 +1125,12 @@ export const GameUI: React.FC = () => {
                         </div>
                         <div className="grid grid-cols-6 gap-2">
                           {sortedInventory.map(item => {
-                            const locked = RARITY_LEVEL_REQ[item.rarity] > level;
+                            const locked = RARITY_LEVEL_REQ[item.rarity] > level || (item.classType && item.classType !== hero);
                             const isSelected = selectedItem?.id === item.id;
                             const isHovered = hoveredItem?.id === item.id;
                             return (
                               <button key={item.id}
-                                onClick={() => { if(!locked) { setSelectedItem(isSelected ? null : item); } }}
+                                onClick={() => setSelectedItem(isSelected ? null : item)}
                                 onMouseEnter={() => setHoveredItem(item)}
                                 onMouseLeave={() => setHoveredItem(null)}
                                 className="aspect-square rounded-xl flex items-center justify-center relative transition-transform"
@@ -1180,10 +1181,13 @@ export const GameUI: React.FC = () => {
                             <div className="text-sm font-black text-yellow-500 flex items-center gap-1"><Coins size={13}/>Sell: {Math.floor(selectedItem.price*0.3)} G</div>
                             <div className="flex gap-2 mt-1">
                               {selectedItem.type!=='POTION' && selectedItem.type!=='CORE' && selectedItem.type!=='REVIVE' && (
-                                <button onClick={() => { equipItem(selectedItem); setSelectedItem(null); }} className="flex-1 py-2.5 rounded-xl text-sm font-black text-white" style={{ background:'rgba(99,102,241,0.6)', border:'1px solid rgba(99,102,241,0.4)' }}>EQUIP</button>
+                                <button onClick={() => { if (RARITY_LEVEL_REQ[selectedItem.rarity] <= level && (!selectedItem.classType || selectedItem.classType === hero)) { equipItem(selectedItem); setSelectedItem(null); } }} disabled={RARITY_LEVEL_REQ[selectedItem.rarity] > level || (selectedItem.classType && selectedItem.classType !== hero)} className="flex-1 py-2.5 rounded-xl text-sm font-black text-white" style={{ background:'rgba(99,102,241,0.6)', border:'1px solid rgba(99,102,241,0.4)', opacity: RARITY_LEVEL_REQ[selectedItem.rarity] > level || (selectedItem.classType && selectedItem.classType !== hero) ? 0.4 : 1 }}>EQUIP</button>
                               )}
                               <button onClick={() => { setSellDialogItem(selectedItem); setSellAmount(1); setSelectedItem(null); }} className="flex-1 py-2.5 rounded-xl text-sm font-black" style={{ background:'rgba(239,68,68,0.12)', border:'1px solid rgba(239,68,68,0.3)', color:'#ef4444' }}>SELL</button>
                             </div>
+                            {selectedItem.type!=='POTION' && selectedItem.type!=='CORE' && selectedItem.type!=='REVIVE' && (
+                              <button onClick={() => { setPanelTab('CRAFTING'); setBlacksmithTab('UPGRADE'); setSelectedUpgradeItem(selectedItem); }} className="mt-2 w-full py-2.5 rounded-xl text-sm font-black text-white" style={{ background:'rgba(239,68,68,0.85)', border:'1px solid rgba(239,68,68,0.5)' }}>UPGRADE</button>
+                            )}
                           </div>
                         ) : (
                           <div className="flex-1 flex items-center justify-center opacity-25">
