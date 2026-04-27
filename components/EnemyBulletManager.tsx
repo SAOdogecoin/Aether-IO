@@ -22,7 +22,8 @@ export const EnemyBulletManager: React.FC<EnemyBulletManagerProps> = ({ enemyBul
     active: false,
     position: new Vector3(),
     velocity: new Vector3(),
-    lifetime: 0
+    lifetime: 0,
+    damage: 0
   })));
 
   // Sync ref

@@ -369,9 +369,9 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                         if (bullet) {
                             bullet.active = true;
                             bullet.lifetime = 4.0;
-                            bullet.damage = 20; 
+                            bullet.damage = 20;
                             bullet.position.copy(e.position).add(new Vector3(0, 1.5, 0));
-                            
+
                             tempVec.subVectors(playerPosition, e.position).normalize();
                             const spread = (Math.random() - 0.5) * 0.3;
                             tempVec.applyAxisAngle(new Vector3(0,1,0), spread);

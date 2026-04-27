@@ -886,6 +886,25 @@ export const GameUI: React.FC = () => {
           )}
           </AnimatePresence>
 
+          {/* Better Equipment Alert */}
+          <AnimatePresence>
+          {hasBetterItem && !panelOpen && status === GameStatus.PLAYING && (
+            <motion.div
+              key="better-item-alert"
+              initial={{ x: 60, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 60, opacity: 0 }}
+              className="absolute right-6 bottom-56 flex items-center gap-2.5 px-3 py-2 rounded pointer-events-auto cursor-pointer z-30"
+              style={{ background: 'linear-gradient(180deg,rgba(59,130,246,0.18) 0%,rgba(16,16,24,0.97) 100%)', border: '1px solid rgba(59,130,246,0.45)', boxShadow: '0 4px 12px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05)', minWidth: 190 }}
+              onClick={() => { setPanelTab('INVENTORY'); openSpecificShop('INVENTORY'); }}
+            >
+              <Sparkles size={14} fill="#3b82f6" strokeWidth={0} style={{color:'#3b82f6'}} />
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-white rpg-text leading-none">Better Equipment</span>
+                <span className="text-[10px] font-bold text-blue-400 leading-snug">Upgrade available — tap to equip</span>
+              </div>
+            </motion.div>
+          )}
+          </AnimatePresence>
+
           {/* Toast notifications above minimap (right side) */}
           <div className="absolute right-6 bottom-48 flex flex-col-reverse gap-1.5 items-end pointer-events-none z-30 w-72">
               <AnimatePresence>
@@ -1097,8 +1116,9 @@ export const GameUI: React.FC = () => {
                           <div className="flex flex-col justify-between ml-auto gap-2">
                             <button
                               onClick={() => autoEquip()}
-                              className="px-3 py-2 text-xs font-black text-white uppercase rounded-md transition-all active:scale-95 rpg-text"
+                              className="px-3 py-2 text-xs font-black text-white uppercase rounded-md transition-all active:scale-95 rpg-text relative"
                               style={{ background: 'linear-gradient(180deg,rgba(99,102,241,0.8) 0%,rgba(59,130,246,0.65) 100%)', border:'1px solid rgba(99,102,241,0.5)', boxShadow:'0 3px 0 rgba(30,30,80,0.7), inset 0 1px 0 rgba(255,255,255,0.12)' }}>
+                              {hasBetterItem && <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
                               AUTO EQUIP
                             </button>
                             <span className="text-[10px] text-slate-600 font-bold text-right">{inventory.length}/{maxInventorySlots}</span>

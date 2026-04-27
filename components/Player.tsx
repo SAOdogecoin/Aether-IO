@@ -23,6 +23,8 @@ interface PlayerProps {
 export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsDataRef, targetPosRef, enemiesDataRef, spatialGrid }) => {
   const meshRef = useRef<any>(null);
   const axeSpinRef = useRef<any>(null);
+  const reviveVisualRef = useRef<any>(null);
+  const reviveVisualTimer = useRef(0);
 
   // Animation state signals for PlayerModel
   const isMovingRef = useRef(false);
@@ -322,18 +324,37 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
     meshRef.current.lookAt(targetPosRef.current);
 
     const enemyBullets = enemyBulletsDataRef.current;
-    if (dashTime.current <= 0) { 
+    if (dashTime.current <= 0) {
         for(let i = 0; i < enemyBullets.length; i++) {
             const b = enemyBullets[i];
-            if (b.active && b.position.distanceTo(pos) < PLAYER_RADIUS + 0.5) { 
+            if (b.active && b.position.distanceTo(pos) < PLAYER_RADIUS + 0.5) {
                 const dmg = b.damage || 10;
                 takeDamage(dmg);
                 b.active = false;
-                window.dispatchEvent(new CustomEvent('damage', { 
-                    detail: { position: pos, damage: dmg, isCrit: false, isPlayer: true } 
+                window.dispatchEvent(new CustomEvent('damage', {
+                    detail: { position: pos, damage: dmg, isCrit: false, isPlayer: true }
                 }));
             }
         }
+    }
+
+    // Revive visual effect
+    if (reviveAnimTimer > 0) {
+        if (reviveVisualTimer.current <= 0) {
+            reviveVisualTimer.current = 0.3;
+        }
+    }
+    if (reviveVisualTimer.current > 0) {
+        reviveVisualTimer.current -= delta;
+        if (reviveVisualRef.current) {
+            reviveVisualRef.current.visible = true;
+            reviveVisualRef.current.position.copy(pos).add(new Vector3(0, 0.1, 0));
+            const scaleBase = 40;
+            reviveVisualRef.current.scale.setScalar(1 + (0.3 - reviveVisualTimer.current) * scaleBase);
+            reviveVisualRef.current.material.opacity = reviveVisualTimer.current * 0.8;
+        }
+    } else if (reviveVisualRef.current) {
+        reviveVisualRef.current.visible = false;
     }
 
     const targetCamPos = new Vector3(pos.x, 35, pos.z + 28);
@@ -383,18 +404,25 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
         )}
 
         {reviveAnimTimer > 0 && (
-            <mesh position={[0, 0, 0]}>
-                <cylinderGeometry args={[2, 2, 20, 16, 1, true]} />
-                <meshBasicMaterial 
-                    color="#fef3c7" 
-                    transparent 
-                    opacity={Math.min(1, reviveAnimTimer) * 0.6} 
-                    depthWrite={false} 
-                    side={2} 
-                    blending={2} 
-                />
-            </mesh>
+            <>
+                <mesh position={[0, 0, 0]}>
+                    <cylinderGeometry args={[2, 2, 20, 16, 1, true]} />
+                    <meshBasicMaterial
+                        color="#fef3c7"
+                        transparent
+                        opacity={Math.min(1, reviveAnimTimer) * 0.6}
+                        depthWrite={false}
+                        side={2}
+                        blending={2}
+                    />
+                </mesh>
+            </>
         )}
+
+        <mesh ref={reviveVisualRef} rotation={[-Math.PI/2, 0, 0]} visible={false}>
+            <ringGeometry args={[0.8, 1, 32]} />
+            <meshStandardMaterial color="#fbbf24" transparent opacity={0.6} emissive="#fbbf24" />
+        </mesh>
 
         {rageMode && (
             <mesh position={[0, 0.5, 0]}>
