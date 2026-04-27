@@ -357,7 +357,12 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
         {/* Floating HP/MP bars — hidden during menus/reward/revive */}
         {status !== GameStatus.LEVEL_UP && !isInventoryOpen && !isShopOpen && !isCharacterSheetOpen && revivingCountdown <= 0 && (
         <Html position={[0, 3.4, 0]} center zIndexRange={[50, 0]} style={{ pointerEvents: 'none' }}>
-            <div style={{ width: 80, display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <div style={{ width: 80, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <div style={{ padding: '2px 7px', borderRadius: 999, background: 'rgba(0,0,0,0.75)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
+                        LV {level}
+                    </div>
+                </div>
                 <div style={{ height: 8, background: 'rgba(0,0,0,0.7)', borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.8)', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.8)' }}>
                     <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, (health / stats.maxHealth) * 100))}%`, background: 'linear-gradient(90deg,#b91c1c,#ef4444)', borderRadius: 3, transition: 'width 0.1s' }} />
                 </div>

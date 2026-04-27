@@ -1465,11 +1465,15 @@ export const GameUI: React.FC = () => {
                                             <button 
                                                 onClick={() => upgradeSkill(skillKey)}
                                                 disabled={!canAfford || isMax}
-                                                className={`px-4 py-2 rounded-xl font-bold text-xs shadow-sm transition-all active:scale-95
+                                                className={`flex items-center gap-2 px-3 py-2 rounded-xl font-bold text-xs shadow-sm transition-all active:scale-95
                                                     ${isMax ? 'bg-slate-100 text-slate-400' : canAfford ? 'bg-pink-500 text-white hover:bg-pink-600' : 'bg-slate-200 text-slate-400'}
                                                 `}
                                             >
-                                                {isMax ? 'MAX' : `${cost} SP`}
+                                                <span className={`w-8 h-8 grid place-items-center rounded-lg ${isMax ? 'bg-white/10 text-slate-400' : 'bg-white/15 text-white'}`}>
+                                                    <Plus size={14} />
+                                                </span>
+                                                <span className="text-[11px] font-black">{isMax ? 'MAX' : `${cost} SP`}</span>
+                                                <span className="text-[10px] uppercase tracking-[0.1em] text-white/80">Lv {lvl}</span>
                                             </button>
                                         </div>
                                     );
