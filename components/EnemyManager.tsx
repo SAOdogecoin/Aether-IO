@@ -27,13 +27,14 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
   const meshRef = useRef<InstancedMesh>(null);
   const stunIconsRef = useRef<InstancedMesh>(null);
   const playerPositionRef = useRef<{ x: number; z: number }>({ x: 0, z: 0 });
-  const { playerPosition, addScore, takeDamage, status, level, stats, spawnDrop, wave, waveTimer, advanceWave, addNotification, setBossData, earthwall, updateMinimapEnemies, obstacles } = useGameStore();
+  const { playerPosition, addScore, takeDamage, status, level, stats, spawnDrop, wave, waveTimer, advanceWave, addNotification, setBossData, earthwall, updateMinimapEnemies, obstacles, bossData } = useGameStore();
 
   const enemies = enemiesDataRef;
 
   const spawnTimer = useRef(0);
   const dotTicker = useRef(0);
   const waveState = useRef({ wave: 1, bossSpawned: false, eliteSpawned: false });
+  const bossActiveRef = useRef(false);
   const minimapThrottle = useRef(0); 
 
   useEffect(() => {
@@ -86,12 +87,23 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
         waveState.current.eliteSpawned = false;
     }
 
+    const bossJustStarted = bossData.active && !bossActiveRef.current;
+    if (bossJustStarted) {
+        // Remove any existing regular enemies and clear their bullets when boss fight begins.
+        enemies.current.forEach(e => {
+            if (e.active && e.type !== 2) e.active = false;
+        });
+        enemyBulletsDataRef.current.forEach(b => { if (b.active) b.active = false; });
+    }
+
+    bossActiveRef.current = bossData.active;
+
     spawnTimer.current += delta;
     // 50% Slower Spawn Rate (doubled the base threshold value)
     const spawnRate = Math.max(0.1, 1.6 - (level * 0.04) - (wave * 0.1));
     
     // Only spawn enemies if waveTimer is less than 30 seconds
-    if (waveTimer < 30 && spawnTimer.current > spawnRate) {
+    if (waveTimer < 30 && !bossData.active && spawnTimer.current > spawnRate) {
         spawnTimer.current = 0;
         const enemy = enemies.current.find(e => !e.active);
         if (enemy) {
