@@ -414,7 +414,7 @@ export const GameUI: React.FC = () => {
         const rsA = rarityScore[a.rarity];
         const rsB = rarityScore[b.rarity];
         if (rsA !== rsB) return rsB - rsA;
-        
+
         // Sort by Type (Weapon > Armor > Acc > Pet > Others)
         const typeScore = { 'WEAPON': 6, 'ARMOR': 5, 'ACCESSORY': 4, 'PET': 3, 'POTION': 2, 'CORE': 1, 'REVIVE': 0 };
         // @ts-ignore
@@ -422,10 +422,20 @@ export const GameUI: React.FC = () => {
         // @ts-ignore
         const tsB = typeScore[b.type] || 0;
         if (tsA !== tsB) return tsB - tsA;
-        
+
         return 0;
     });
   }, [inventory]);
+
+  const hasBetterItem = useMemo(() => {
+    return inventory.some(item => {
+      if (item.type !== 'WEAPON' && item.type !== 'ARMOR' && item.type !== 'ACCESSORY' && item.type !== 'PET') return false;
+      if (RARITY_LEVEL_REQ[item.rarity] > level) return false;
+      if (item.classType && item.classType !== hero) return false;
+      const equipped = item.type === 'WEAPON' ? equipment.weapon : item.type === 'ARMOR' ? equipment.armor : item.type === 'ACCESSORY' ? equipment.accessory : equipment.pet;
+      return calculateItemCP(item) > (equipped ? calculateItemCP(equipped) : 0);
+    });
+  }, [inventory, equipment, level, hero]);
 
   useEffect(() => {
       const handleMouseMove = (e: MouseEvent) => {
@@ -512,16 +522,6 @@ export const GameUI: React.FC = () => {
   const manaPercent = (mana / stats.maxMana) * 100;
   const xpPercent = (experience / experienceToNextLevel) * 100;
   const currentCP = calculateTotalCP(stats);
-
-  const hasBetterItem = useMemo(() => {
-    return inventory.some(item => {
-      if (item.type !== 'WEAPON' && item.type !== 'ARMOR' && item.type !== 'ACCESSORY' && item.type !== 'PET') return false;
-      if (RARITY_LEVEL_REQ[item.rarity] > level) return false;
-      if (item.classType && item.classType !== hero) return false;
-      const equipped = item.type === 'WEAPON' ? equipment.weapon : item.type === 'ARMOR' ? equipment.armor : item.type === 'ACCESSORY' ? equipment.accessory : equipment.pet;
-      return calculateItemCP(item) > (equipped ? calculateItemCP(equipped) : 0);
-    });
-  }, [inventory, equipment, level, hero]);
 
   const hasAlerts = skillPoints > 0 || hasBetterItem;
 
