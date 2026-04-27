@@ -457,6 +457,26 @@ export const GameUI: React.FC = () => {
       }
   }, [actionResult, clearActionResult]);
 
+  // Skill points persistent notification
+  useEffect(() => {
+      if (skillPoints > 0 && status === GameStatus.PLAYING && !panelOpen) {
+          const existingSpNotif = notifications.find(n => n.message.includes('Skill Points'));
+          if (!existingSpNotif) {
+              addNotification(`${skillPoints} Unused Skill Points`, '#ec4899', 'SYSTEM', { label: 'SPEND', onClick: () => { setPanelTab('SKILLS'); openSpecificShop('SKILLS'); } });
+          }
+      }
+  }, [skillPoints, status, panelOpen, notifications, addNotification]);
+
+  // Better equipment persistent notification
+  useEffect(() => {
+      if (hasBetterItem && status === GameStatus.PLAYING && !panelOpen) {
+          const existingItemNotif = notifications.find(n => n.message.includes('Better Equipment'));
+          if (!existingItemNotif) {
+              addNotification('Better Equipment Available', '#3b82f6', 'SYSTEM', { label: 'EQUIP', onClick: () => { setPanelTab('INVENTORY'); openSpecificShop('INVENTORY'); } });
+          }
+      }
+  }, [hasBetterItem, status, panelOpen, notifications, addNotification]);
+
   const onInventoryItemClick = (item: Item) => {
       if (isShopOpen) {
           if (activeShopTab === 'BLACKSMITH') {
@@ -497,10 +517,11 @@ export const GameUI: React.FC = () => {
     return inventory.some(item => {
       if (item.type !== 'WEAPON' && item.type !== 'ARMOR' && item.type !== 'ACCESSORY' && item.type !== 'PET') return false;
       if (RARITY_LEVEL_REQ[item.rarity] > level) return false;
+      if (item.classType && item.classType !== hero) return false;
       const equipped = item.type === 'WEAPON' ? equipment.weapon : item.type === 'ARMOR' ? equipment.armor : item.type === 'ACCESSORY' ? equipment.accessory : equipment.pet;
       return calculateItemCP(item) > (equipped ? calculateItemCP(equipped) : 0);
     });
-  }, [inventory, equipment, level]);
+  }, [inventory, equipment, level, hero]);
 
   const hasAlerts = skillPoints > 0 || hasBetterItem;
 
@@ -681,11 +702,17 @@ export const GameUI: React.FC = () => {
                  )}
              </div>
 
-             {/* Currency */}
-             <div className="flex gap-2 items-center">
-                 <div className="px-3 py-1.5 rounded-md flex items-center gap-2" style={{background:'rgba(12,12,18,0.92)',border:'1px solid rgba(180,150,70,0.2)',boxShadow:'0 2px 10px rgba(0,0,0,0.5)'}}>
-                    <Coins size={14} className="text-yellow-400"/>
-                    <span className="font-black text-white text-sm rpg-text">{score.toLocaleString()}</span>
+             {/* Currency & Stats */}
+             <div className="flex gap-6 items-center">
+                 <div className="flex items-center gap-2">
+                    <Coins size={16} className="text-yellow-400"/>
+                    <span className="font-black text-white text-lg rpg-text">{score.toLocaleString()}</span>
+                 </div>
+                 <div className="flex items-center gap-4 text-xs">
+                    <div className="flex items-center gap-1"><span style={{color: CLASS_COLOR[hero] ?? '#6366f1'}} className="font-black uppercase">{hero}</span></div>
+                    <div className="flex items-center gap-1"><span className="text-yellow-400 font-black">LV{level}</span></div>
+                    <div className="flex items-center gap-1"><span className="text-red-400 font-bold">{Math.ceil(health)}/{stats.maxHealth}</span><Heart size={12} className="text-red-400"/></div>
+                    <div className="flex items-center gap-1"><span className="text-blue-400 font-bold">{Math.ceil(mana)}/{stats.maxMana}</span><Zap size={12} className="text-blue-400"/></div>
                  </div>
              </div>
           </div>
@@ -813,44 +840,6 @@ export const GameUI: React.FC = () => {
             );
           })()}
 
-          {/* Persistent skill-point alert */}
-          <AnimatePresence>
-          {skillPoints > 0 && !panelOpen && status === GameStatus.PLAYING && (
-            <motion.div
-              key="sp-alert"
-              initial={{ x: 60, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 60, opacity: 0 }}
-              className="absolute right-6 bottom-64 flex items-center gap-2.5 px-3 py-2 rounded pointer-events-auto cursor-pointer z-30"
-              style={{ background: 'linear-gradient(180deg,rgba(236,72,153,0.18) 0%,rgba(16,16,24,0.97) 100%)', border: '1px solid rgba(236,72,153,0.45)', boxShadow: '0 4px 12px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05)', minWidth: 190 }}
-              onClick={() => { setPanelTab('SKILLS'); openSpecificShop('SKILLS'); }}
-            >
-              <Star size={14} fill="#ec4899" strokeWidth={0} style={{color:'#ec4899'}} />
-              <div className="flex flex-col">
-                <span className="text-xs font-black text-white rpg-text leading-none">Unused Skill Points</span>
-                <span className="text-[10px] font-bold text-pink-400 leading-snug">{skillPoints} SP available — tap to spend</span>
-              </div>
-              <div className="ml-auto w-5 h-5 rounded-full bg-pink-500 flex items-center justify-center text-[9px] font-black text-white shrink-0">{skillPoints}</div>
-            </motion.div>
-          )}
-          </AnimatePresence>
-
-          {/* Better Equipment Alert */}
-          <AnimatePresence>
-          {hasBetterItem && !panelOpen && status === GameStatus.PLAYING && (
-            <motion.div
-              key="better-item-alert"
-              initial={{ x: 60, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 60, opacity: 0 }}
-              className="absolute right-6 bottom-56 flex items-center gap-2.5 px-3 py-2 rounded pointer-events-auto cursor-pointer z-30"
-              style={{ background: 'linear-gradient(180deg,rgba(59,130,246,0.18) 0%,rgba(16,16,24,0.97) 100%)', border: '1px solid rgba(59,130,246,0.45)', boxShadow: '0 4px 12px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05)', minWidth: 190 }}
-              onClick={() => { setPanelTab('INVENTORY'); openSpecificShop('INVENTORY'); }}
-            >
-              <Sparkles size={14} fill="#3b82f6" strokeWidth={0} style={{color:'#3b82f6'}} />
-              <div className="flex flex-col">
-                <span className="text-xs font-black text-white rpg-text leading-none">Better Equipment</span>
-                <span className="text-[10px] font-bold text-blue-400 leading-snug">Upgrade available — tap to equip</span>
-              </div>
-            </motion.div>
-          )}
-          </AnimatePresence>
 
           {/* Toast notifications above minimap (right side) */}
           <div className="absolute right-6 bottom-48 flex flex-col-reverse gap-1.5 items-end pointer-events-none z-30 w-72">

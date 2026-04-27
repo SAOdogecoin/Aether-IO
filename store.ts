@@ -854,35 +854,35 @@ export const useGameStore = create<GameState>((set, get) => ({
       let level = 0;
 
       if (skill === 'r') {
-          return 60; 
+          return Math.ceil(60 * 0.75);
       }
-      
+
       if (skill === 'q') {
           base = 30;
           if (state.activeAbilityQ === 'PIERCING_SHOT') level = state.skillLevels.piercing;
           if (state.activeAbilityQ === 'GRAVITY_SPELL') level = state.skillLevels.gravity;
           if (state.activeAbilityQ === 'RAGE') level = state.skillLevels.rage;
-          return base + (level * 5);
+          return Math.ceil((base + (level * 5)) * 0.75);
       }
 
       if (skill === 'e') {
           base = 20;
           level = state.skillLevels.special;
-          return base + (level * 5);
+          return Math.ceil((base + (level * 5)) * 0.75);
       }
 
       if (skill === 'dash') {
           base = 5;
           level = state.skillLevels.dash;
-          return base + (level * 2);
+          return Math.ceil((base + (level * 2)) * 0.5);
       }
 
       level = state.skillLevels[skill as keyof SkillLevels] || 0;
-      if (skill === 'thunder') return 5 + level;
-      if (skill === 'burning' || skill === 'freezing') return 5 + level;
-      if (skill === 'freezeSpell') return 15 + (level * 2);
-      if (skill === 'stamp') return 15 + (level * 2);
-      
+      if (skill === 'thunder') return Math.ceil((5 + level) * 0.75);
+      if (skill === 'burning' || skill === 'freezing') return Math.ceil((5 + level) * 0.75);
+      if (skill === 'freezeSpell') return Math.ceil((15 + (level * 2)) * 0.75);
+      if (skill === 'stamp') return Math.ceil((15 + (level * 2)) * 0.75);
+
       return 0;
   },
 
