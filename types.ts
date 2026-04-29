@@ -210,7 +210,7 @@ export interface SkillLevels {
     rage: number;
     
     // Passive Skills
-    burning: number;
+    poison: number;
     freezing: number;
     freezeSpell: number; // Renamed to Blizzard (Passive)
     stamp: number; // Renamed to Mega Stamp (Passive)
@@ -221,8 +221,8 @@ export interface PassiveSkillState {
     orbitalMaxCooldown: number;
     thunderCooldown: number;
     thunderMaxCooldown: number;
-    burningCooldown: number;
-    burningMaxCooldown: number;
+    poisonCooldown: number;
+    poisonMaxCooldown: number;
     freezingCooldown: number;
     freezingMaxCooldown: number;
     blizzardCooldown: number;

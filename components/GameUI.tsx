@@ -513,9 +513,9 @@ export const GameUI: React.FC = () => {
 
   // Skill points persistent notification
   useEffect(() => {
-      const existingSpNotif = notifications.find(n => n.message.includes('Spend Unused Skill Points'));
+      const existingSpNotif = notifications.find(n => n.message.includes('UPGRADABLE SKILLS'));
       if (hasUpgradableSkills && !existingSpNotif) {
-          addNotification('Spend Unused Skill Points', '#ec4899', 'SYSTEM', {
+          addNotification('UPGRADABLE SKILLS', '#ec4899', 'SYSTEM', {
               label: 'SKILLS',
               onClick: () => { setPanelTab('SKILLS'); openSpecificShop('SKILLS'); }
           }, true);
@@ -526,9 +526,9 @@ export const GameUI: React.FC = () => {
 
   // Better equipment persistent notification
   useEffect(() => {
-      const existingItemNotif = notifications.find(n => n.message.includes('Better Equipment Available'));
+      const existingItemNotif = notifications.find(n => n.message.includes('BETTER ITEMS'));
       if (hasBetterItem && !existingItemNotif) {
-          addNotification('Better Equipment Available', '#3b82f6', 'SYSTEM', {
+          addNotification('BETTER ITEMS', '#3b82f6', 'SYSTEM', {
               label: 'EQUIP',
               onClick: () => { setPanelTab('INVENTORY'); toggleInventory(); }
           }, true);
@@ -904,8 +904,8 @@ export const GameUI: React.FC = () => {
                 {(hero === 'WIZARD' || !SKILLS_INFO.storm.classType) && (
                     <UniversalSkillSlot icon={fi(Tornado, 22)} level={skillLevels.storm} cooldown={passiveSkillState.stormCooldown} maxCooldown={passiveSkillState.stormMaxCooldown} desc="Storm" active={skillLevels.storm > 0} manaCost={0} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
                 )}
-                {(hero === 'ARCHER' || !SKILLS_INFO.burning.classType) && (
-                    <UniversalSkillSlot icon={fi(Flame, 22)} level={skillLevels.burning} cooldown={passiveSkillState.burningCooldown} maxCooldown={passiveSkillState.burningMaxCooldown} desc="Burning" active={skillLevels.burning > 0} manaCost={getManaCost('burning')} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
+                {(hero === 'ARCHER' || !SKILLS_INFO.poison.classType) && (
+                    <UniversalSkillSlot icon={fi(Flame, 22)} level={skillLevels.poison} cooldown={passiveSkillState.poisonCooldown} maxCooldown={passiveSkillState.poisonMaxCooldown} desc="Poison" active={skillLevels.poison > 0} manaCost={getManaCost('poison')} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
                 )}
                 {(hero === 'ARCHER' || !SKILLS_INFO.freezing.classType) && (
                     <UniversalSkillSlot icon={fiC(Gem, '#67e8f9', 22)} level={skillLevels.freezing} cooldown={passiveSkillState.freezingCooldown} maxCooldown={passiveSkillState.freezingMaxCooldown} desc="Freeze" active={skillLevels.freezing > 0} manaCost={getManaCost('freezing')} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
