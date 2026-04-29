@@ -1270,25 +1270,25 @@ export const useGameStore = create<GameState>((set, get) => ({
       const manaThreshold = state.stats.maxMana * 0.7;
 
       if (newHpCD <= 0 && newHealthAfterPot < hpThreshold) {
-          const hpPotIndex = inventory.findIndex(i => i.type === 'POTION' && (i.name === 'Health Potion' || i.name === 'Big Health Potion'));
+          const hpPotIndex = inventory.findIndex(i => i.type === 'POTION' && i.name.includes('Health'));
           if (hpPotIndex !== -1) {
               const pot = inventory[hpPotIndex];
               newHealthAfterPot = Math.min(state.stats.maxHealth, newHealthAfterPot + (pot.restoreAmount || 50));
               newHpCD = 10;
               inventory = [...inventory];
-              if ((pot.quantity || 1) > 1) { inventory[hpPotIndex] = { ...pot, quantity: (pot.quantity || 1) - 1 }; } 
+              if ((pot.quantity || 1) > 1) { inventory[hpPotIndex] = { ...pot, quantity: (pot.quantity || 1) - 1 }; }
               else { inventory.splice(hpPotIndex, 1); }
           }
       }
 
       if (newMpCD <= 0 && newManaAfterPot < manaThreshold) {
-           const manaPotIndex = inventory.findIndex(i => i.type === 'POTION' && (i.name === 'Mana Potion' || i.name === 'Big Mana Potion'));
+           const manaPotIndex = inventory.findIndex(i => i.type === 'POTION' && i.name.includes('Mana'));
            if (manaPotIndex !== -1) {
               const pot = inventory[manaPotIndex];
               newManaAfterPot = Math.min(state.stats.maxMana, newManaAfterPot + (pot.restoreAmount || 50));
               newMpCD = 10;
               inventory = [...inventory];
-              if ((pot.quantity || 1) > 1) { inventory[manaPotIndex] = { ...pot, quantity: (pot.quantity || 1) - 1 }; } 
+              if ((pot.quantity || 1) > 1) { inventory[manaPotIndex] = { ...pot, quantity: (pot.quantity || 1) - 1 }; }
               else { inventory.splice(manaPotIndex, 1); }
            }
       }

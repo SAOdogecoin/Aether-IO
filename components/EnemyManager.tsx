@@ -604,7 +604,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
 
         {stunnedEnemies.map(s => (
             <Html key={s.id} position={[s.x, s.y, s.z]} center zIndexRange={[40, 0]} style={{ pointerEvents: 'none' }}>
-                <div style={{ color: '#facc15', fontWeight: 900, fontSize: 11, textShadow: '0 0 4px black, 0 0 4px black', whiteSpace: 'nowrap', letterSpacing: 1 }}>STUNNED</div>
+                <div style={{ color: '#facc15', fontWeight: 900, fontSize: 18, textShadow: '0 0 6px black, 0 0 6px black', whiteSpace: 'nowrap', letterSpacing: 2 }}>STUNNED</div>
             </Html>
         ))}
     </>
