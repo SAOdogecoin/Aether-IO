@@ -809,17 +809,17 @@ export const GameUI: React.FC = () => {
                                     item.action();
                                 }
                             }}
-                            className="relative w-10 h-10 rounded-lg flex flex-col items-center justify-center transition-all hover:bg-white/10"
+                            className="relative w-12 h-12 rounded-xl flex items-center justify-center transition-all hover:bg-white/10"
                             style={{
                                 background: panelTab === item.id && panelOpen ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.4)',
                                 border: `1px solid ${panelTab === item.id && panelOpen ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)'}`,
                                 color: panelTab === item.id && panelOpen ? '#fbbf24' : '#cbd5e1'
                             }}
+                            title={item.label}
                         >
-                            <item.icon size={18} />
-                            <span className="text-[6px] font-black uppercase mt-0.5">{item.label}</span>
+                            <item.icon size={24} />
                             {item.dot && (
-                                <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-black animate-pulse" />
+                                <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-slate-900 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)] z-10" />
                             )}
                         </button>
                     ))}
