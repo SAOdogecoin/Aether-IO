@@ -71,15 +71,18 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
     const fireInterval = 1 / boostedFireRate;
     const targetPos = targetPosRef.current;
 
-    // Check enemies or crates within attack range
-    let hasEnemyInRange = false;
+    // Find nearest enemy in attack range for auto-aim
+    let nearestEnemyPos: Vector3 | null = null;
     if (enemiesDataRef && enemiesDataRef.current) {
-      hasEnemyInRange = enemiesDataRef.current.some(e =>
-        e.active && playerPos.distanceTo(e.position) <= stats.attackRange
-      );
+      let nearestDist = stats.attackRange;
+      for (const e of enemiesDataRef.current) {
+        if (!e.active) continue;
+        const d = playerPos.distanceTo(e.position);
+        if (d < nearestDist) { nearestDist = d; nearestEnemyPos = e.position; }
+      }
     }
     let nearestCratePos: Vector3 | null = null;
-    if (!hasEnemyInRange) {
+    if (!nearestEnemyPos) {
       let nearestCrateDist = stats.attackRange;
       for (const c of crates) {
         if (!c.active) continue;
@@ -87,11 +90,11 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
         if (d < nearestCrateDist) { nearestCrateDist = d; nearestCratePos = c.position; }
       }
     }
-    const hasTarget = hasEnemyInRange || nearestCratePos !== null;
+    const hasTarget = nearestEnemyPos !== null || nearestCratePos !== null;
 
-    if (targetPos && hasTarget && time - lastShot.current > fireInterval) {
+    if (hasTarget && time - lastShot.current > fireInterval) {
       lastShot.current = time;
-      const aimAt = nearestCratePos ?? targetPos;
+      const aimAt = nearestEnemyPos ?? nearestCratePos ?? targetPos;
       const dir = new Vector3().subVectors(aimAt, playerPos).normalize();
       const count = hasPiercingBoost ? 7 : Math.min(7, stats.multishot); 
       

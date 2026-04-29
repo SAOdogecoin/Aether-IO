@@ -35,16 +35,14 @@ export const CrateManager: React.FC<CrateManagerProps> = ({ bulletsDataRef }) =>
 
                         if (crate.hp - stats.damage <= 0) {
                             const r = Math.random();
-                            if (r < 0.1) {
-                                spawnDrop(crate.position.clone().add(new Vector3(0.5, 0, 0.5)), 'ITEM', 0);
-                            } else if (r < 0.4) {
-                                for (let x = 0; x < 5; x++) {
-                                    const off = new Vector3((Math.random()-0.5)*1.5, 0, (Math.random()-0.5)*1.5);
-                                    spawnDrop(crate.position.clone().add(off), 'XP', 10);
-                                }
-                            } else {
-                                spawnDrop(crate.position.clone(), 'GOLD', 100);
+                            if (r < 0.25) {
+                                spawnDrop(crate.position.clone(), 'XP', 1, undefined, 5);
+                            } else if (r < 0.5) {
+                                spawnDrop(crate.position.clone(), 'GOLD', 50);
+                            } else if (r < 0.75) {
+                                spawnDrop(crate.position.clone(), 'ITEM', 0);
                             }
+                            // else nothing (25% chance)
                         }
 
                         dummy.rotation.set(0, crate.rotation + Math.random() * 0.5, 0);

@@ -46,22 +46,20 @@ export const DamageTextManager: React.FC = () => {
         text.position.copy(position).add(new Vector3(0, 1.5 + Math.random(), 0));
         text.velocity.set((Math.random() - 0.5) * 2, 4, (Math.random() - 0.5) * 2);
         text.life = 0.8;
-        text.text = Math.round(damage).toString();
+        text.text = isCrit ? `${Math.round(damage)}!` : Math.round(damage).toString();
 
         if (isPlayer) {
             text.color = '#ff0000';
             text.scale = 1.2;
         } else {
-            if (damageType === 'FIRE') text.color = '#ef4444';
-            else if (damageType === 'ICE') text.color = '#3b82f6';
-            else if (damageType === 'POISON') text.color = '#22c55e';
-            else if (damageType === 'MAGIC') text.color = '#d8b4fe';
-            else if (damageType === 'PHYSICAL') text.color = isCrit ? '#facc15' : 'white';
-            else text.color = isCrit ? '#facc15' : 'white';
+            if (isCrit) { text.color = '#ef4444'; text.scale = 1.6; }
+            else if (damageType === 'FIRE') { text.color = '#f97316'; text.scale = 0.8; }
+            else if (damageType === 'ICE') { text.color = '#3b82f6'; text.scale = 0.8; }
+            else if (damageType === 'POISON') { text.color = '#22c55e'; text.scale = 0.8; }
+            else if (damageType === 'MAGIC') { text.color = '#d8b4fe'; text.scale = 0.8; }
+            else { text.color = 'white'; text.scale = 0.8; }
 
             if (!damageType && isDoT) text.color = '#f97316';
-
-            text.scale = isCrit ? 1.5 : 0.8;
         }
       }
     };

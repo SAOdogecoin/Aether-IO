@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect, Suspense } from 'react';
+import React, { useRef, useEffect, useState, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { InstancedMesh, Object3D, Vector3, Color } from 'three';
 import { useGameStore } from '../store';
@@ -7,6 +7,7 @@ import { ARENA_SIZE, COLORS } from '../constants';
 import { GameStatus, EnemyData, BulletData } from '../types';
 import { SpatialHashGrid } from '../utils/SpatialHashGrid';
 import { ASSET_FLAGS } from '../assetConfig';
+import { Html } from '@react-three/drei';
 import { NearbyEnemies } from './EnemyModels';
 
 const MAX_ENEMIES = 400;
@@ -35,7 +36,9 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
   const dotTicker = useRef(0);
   const waveState = useRef({ wave: 1, bossSpawned: false, eliteSpawned: false });
   const bossActiveRef = useRef(false);
-  const minimapThrottle = useRef(0); 
+  const minimapThrottle = useRef(0);
+  const [stunnedEnemies, setStunnedEnemies] = useState<Array<{id: number; x: number; y: number; z: number}>>([]);
+  const stunnedUpdateTimer = useRef(0); 
 
   useEffect(() => {
     const handleBarrier = (e: CustomEvent) => {
@@ -504,6 +507,15 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
     if (meshRef.current.instanceColor) meshRef.current.instanceColor.needsUpdate = true;
     if (stunIconsRef.current) stunIconsRef.current.instanceMatrix.needsUpdate = true;
 
+    stunnedUpdateTimer.current += delta;
+    if (stunnedUpdateTimer.current > 0.1) {
+        stunnedUpdateTimer.current = 0;
+        const newStunned = (enemies.current || [])
+            .filter(e => e && e.active && e.freezeTimer > 0)
+            .map(e => ({ id: e.id, x: e.position.x, y: e.position.y + e.scale * 2.8, z: e.position.z }));
+        setStunnedEnemies(newStunned);
+    }
+
     minimapThrottle.current += 1;
     if (minimapThrottle.current > 10) {
         minimapThrottle.current = 0;
@@ -543,6 +555,12 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
             />
           </Suspense>
         )}
+
+        {stunnedEnemies.map(s => (
+            <Html key={s.id} position={[s.x, s.y, s.z]} center zIndexRange={[40, 0]} style={{ pointerEvents: 'none' }}>
+                <div style={{ color: '#facc15', fontWeight: 900, fontSize: 11, textShadow: '0 0 4px black, 0 0 4px black', whiteSpace: 'nowrap', letterSpacing: 1 }}>STUNNED</div>
+            </Html>
+        ))}
     </>
   );
 };
