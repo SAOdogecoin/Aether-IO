@@ -452,6 +452,7 @@ export const SkillManager: React.FC<SkillManagerProps> = ({ enemyBulletsDataRef,
             blizzardVisualRef.current.visible = true;
             blizzardVisualRef.current.position.copy(playerPosition).add(new Vector3(0, 0.1, 0));
             blizzardVisualRef.current.scale.setScalar(1 + (1.5 - blizzardVisualTimer.current) * 20);
+            // @ts-ignore
             blizzardVisualRef.current.material.opacity = (blizzardVisualTimer.current / 1.5) * 0.5;
         }
     } else if (blizzardVisualRef.current) blizzardVisualRef.current.visible = false;
@@ -463,6 +464,7 @@ export const SkillManager: React.FC<SkillManagerProps> = ({ enemyBulletsDataRef,
             stampVisualRef.current.position.copy(playerPosition).add(new Vector3(0, 0.1, 0));
             const scaleBase = stampStage.current === 1 ? 30 : 50; 
             stampVisualRef.current.scale.setScalar(1 + (0.5 - stampVisualTimer.current) * scaleBase);
+            // @ts-ignore
             stampVisualRef.current.material.opacity = stampVisualTimer.current * 0.8;
         }
     } else if (stampVisualRef.current) stampVisualRef.current.visible = false;
@@ -474,6 +476,7 @@ export const SkillManager: React.FC<SkillManagerProps> = ({ enemyBulletsDataRef,
             barrierVisualRef.current.position.copy(playerPosition).add(new Vector3(0, 0.1, 0));
             const scale = 1 + (0.5 - barrierVisualTimer.current) * 40;
             barrierVisualRef.current.scale.setScalar(scale);
+            // @ts-ignore
             barrierVisualRef.current.material.opacity = barrierVisualTimer.current * 2.0; 
         }
     } else if (barrierVisualRef.current) {

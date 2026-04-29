@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { GameStatus, PlayerStats, Upgrade, Item, DropData, SkillLevels, Rarity, HeroClass, PassiveSkillState, Obstacle, CrateData, ItemType, GameNotification, BossData, AbilityType, GameStatistics, UpgradeType, ActionResult } from './types';
+import { GameStatus as GameStatusEnum, PlayerStats, Upgrade, Item, DropData, SkillLevels, Rarity, HeroClass, PassiveSkillState, Obstacle, CrateData, ItemType, GameNotification, BossData, AbilityType, GameStatistics, UpgradeType, ActionResult, GameStatus } from './types';
 import { ITEMS_POOL, HERO_STATS, PETS_POOL, ARENA_SIZE, COLORS, INVENTORY_LIMIT, UPGRADES_POOL, POTION_STACK_LIMIT, SKILLS_INFO, RECYCLE_YIELDS, CRAFTING_COSTS, MATERIAL_COMBINE_COST, RARITY_LEVEL_REQ } from './constants';
 import { Vector3 } from 'three';
 
@@ -160,6 +160,7 @@ interface GameState {
   addNotification: (message: string, color?: string, type?: 'ITEM' | 'BOSS' | 'SYSTEM' | 'WARNING', action?: { label: string, onClick: () => void }, persistent?: boolean) => void;
   removeNotification: (id: string) => void;
   handleInventoryFull: () => void;
+  setPiercingShotBoostTimer: (duration: number) => void;
 }
 
 const INITIAL_STATS: PlayerStats = {
@@ -453,7 +454,7 @@ const generateUpgradeOptions = (heroClass: HeroClass, skillLevels: SkillLevels):
 };
 
 export const useGameStore = create<GameState>((set, get) => ({
-  status: GameStatus.MENU,
+  status: GameStatusEnum.MENU,
   hero: 'ARCHER',
   score: 0,
   accumulatedWaveGold: 0,
@@ -549,10 +550,10 @@ export const useGameStore = create<GameState>((set, get) => ({
           isInventoryOpen: newState, 
           isCharacterSheetOpen: false,
           isCodexOpen: false,
-          status: get().status === GameStatus.PLAYING ? GameStatus.PAUSED : get().status
+          status: get().status === GameStatusEnum.PLAYING ? GameStatusEnum.PAUSED : get().status
       });
-      if (!newState && get().status === GameStatus.PAUSED && !get().isShopOpen) {
-          set({ status: GameStatus.PLAYING });
+      if (!newState && get().status === GameStatusEnum.PAUSED && !get().isShopOpen) {
+          set({ status: GameStatusEnum.PLAYING });
       }
   },
 
@@ -564,7 +565,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           isShopOpen: false, 
           isInventoryOpen: false, 
           isCodexOpen: false,
-          status: newState ? GameStatus.PAUSED : GameStatus.PLAYING 
+          status: newState ? GameStatusEnum.PAUSED : GameStatusEnum.PLAYING
       });
   },
 
@@ -576,7 +577,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           isCharacterSheetOpen: false, 
           isShopOpen: false, 
           isInventoryOpen: false, 
-          status: newState ? GameStatus.PAUSED : GameStatus.MENU 
+          status: newState ? GameStatusEnum.PAUSED : GameStatusEnum.MENU
       });
   },
 
@@ -587,11 +588,11 @@ export const useGameStore = create<GameState>((set, get) => ({
           isCharacterSheetOpen: false,
           isCodexOpen: false,
           activeShopTab: tab, 
-          status: GameStatus.PAUSED 
+          status: GameStatusEnum.PAUSED
       });
   },
   
-  closeAllUI: () => set({ isInventoryOpen: false, isShopOpen: false, isCharacterSheetOpen: false, isCodexOpen: false, status: GameStatus.PLAYING }),
+  closeAllUI: () => set({ isInventoryOpen: false, isShopOpen: false, isCharacterSheetOpen: false, isCodexOpen: false, status: GameStatusEnum.PLAYING }),
   clearActionResult: () => set({ actionResult: null }),
 
   selectHero: (hero) => set({ hero }),
@@ -625,7 +626,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
 
       set({
-        status: GameStatus.PLAYING,
+        status: GameStatusEnum.PLAYING,
         level: 1,
         experience: 0,
         experienceToNextLevel: 250,
@@ -747,7 +748,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   takeDamage: (amount) => {
     const state = get();
-    if (state.status !== GameStatus.PLAYING || state.isInvincible || state.health <= 0) return;
+    if (state.status !== GameStatusEnum.PLAYING || state.isInvincible || state.health <= 0) return;
     
     if (state.stats.dodge > 0 && Math.random() < state.stats.dodge) return;
 
@@ -828,7 +829,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
       set({ 
           health: 0, 
-          status: GameStatus.GAME_OVER,
+          status: GameStatusEnum.GAME_OVER,
           recentRuns: [state.wave, ...state.recentRuns.slice(0, 4)],
           score: state.score + state.accumulatedWaveGold,
           gameStats: newStats
@@ -1150,7 +1151,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           wave: state.wave + 1, 
           waveTimer: 0,
           accumulatedWaveGold: state.accumulatedWaveGold + 100,
-          status: GameStatus.LEVEL_UP,
+          status: GameStatusEnum.LEVEL_UP,
           upgradeOptions: options
       }));
   },
@@ -1407,7 +1408,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const state = get();
     const persistedInventory = state.inventory.filter(i => i.type === 'POTION' || i.type === 'CORE' || i.type === 'REVIVE');
     const initialState = {
-      status: GameStatus.MENU,
+      status: GameStatusEnum.MENU,
       score: state.score,
       gems: 0,
       level: 1,
@@ -1451,6 +1452,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   addNotification: (message, color = 'white', type = 'ITEM', action, persistent = false) => set(state => ({ notifications: [...state.notifications, { id: Math.random().toString(), message, color, type, action, persistent }] })),
   removeNotification: (id) => set(state => ({ notifications: state.notifications.filter(n => n.id !== id) })),
   
+  setPiercingShotBoostTimer: (duration) => set({ piercingShotBoostTimer: duration }),
+
   upgradeSkill: (skill) => {
     const state = get();
     const currentLevel = state.skillLevels[skill];
@@ -1530,7 +1533,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   selectUpgrade: (upgrade) => {
       get().applyUpgrade(upgrade);
-      set({ status: GameStatus.PLAYING });
+      set({ status: GameStatusEnum.PLAYING });
   },
 
   equipItem: (item) => {
