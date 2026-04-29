@@ -691,7 +691,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           ...currentBase,
           maxHealth: currentBase.maxHealth + 5,
           maxMana: currentBase.maxMana + 5,
-          damage: currentBase.damage + 1,
+          damage: currentBase.damage + 1.2,
           defense: currentBase.defense + 0.5
       };
       
@@ -1227,8 +1227,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       let newManaAfterPot = newMana;
       let inventory = state.inventory;
 
-      const hpThreshold = state.stats.maxHealth * 0.3;
-      const manaThreshold = state.stats.maxMana * 0.3;
+      const hpThreshold = state.stats.maxHealth * 0.7;
+      const manaThreshold = state.stats.maxMana * 0.7;
 
       if (newHpCD <= 0 && newHealthAfterPot < hpThreshold) {
           const hpPotIndex = inventory.findIndex(i => i.type === 'POTION' && (i.name === 'Health Potion' || i.name === 'Big Health Potion'));

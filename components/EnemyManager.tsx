@@ -99,12 +99,12 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
     bossActiveRef.current = bossData.active;
 
     spawnTimer.current += delta;
-    const spawnRate = Math.max(0.1, 1.6 - (level * 0.04) - (wave * 0.05));
-    
+    // Lower base = more enemies initially. Half wave factor = slower ramp-up per wave.
+    const spawnRate = Math.max(0.1, 1.07 - (level * 0.04) - (wave * 0.025));
+
     // Only spawn enemies if waveTimer is less than 30 seconds
     if (waveTimer < 30 && !bossData.active && spawnTimer.current > spawnRate) {
         spawnTimer.current = 0;
-        // Reduce spawn count by roughly 50%
         if (Math.random() < 0.5) return;
         const enemy = enemies.current.find(e => !e.active);
         if (enemy) {
