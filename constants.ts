@@ -57,7 +57,7 @@ export const COLORS = {
   enemyEliteShooter: '#ec4899', // Pink for elite shooter
   enemySlowShooter: '#14b8a6', // Teal for slow shooter
   
-  bulletPlayer: '#0ea5e9', 
+  bulletPlayer: '#22c55e', 
   bulletEnemy: '#facc15', 
   
   uiPrimary: '#f8fafc',
