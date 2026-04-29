@@ -162,6 +162,9 @@ export const DropManager: React.FC = () => {
         if (drop.type === 'GOLD') {
             dummy.scale.set(0.4, 0.4, 0.4);
             tempColor.set('#fbbf24');
+        } else if (drop.type === 'HEALTH') {
+            dummy.scale.set(0.35, 0.35, 0.35);
+            tempColor.set('#22c55e');
         } else if (drop.type === 'XP') {
             if (drop.orbMultiplier === 10) {
                 dummy.scale.set(0.35, 0.35, 0.35);

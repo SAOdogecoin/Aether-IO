@@ -21,7 +21,7 @@ const tempColor = new Color();
 
 export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.MutableRefObject<SpatialHashGrid> }> = ({ playerPos, targetPosRef, bulletsDataRef, projectileType = 'MAGIC', enemiesDataRef, spatialGrid }) => {
   const meshRef = useRef<InstancedMesh>(null);
-  const { stats, status, equipment, obstacles, piercingShotBoostTimer } = useGameStore();
+  const { stats, status, equipment, obstacles, piercingShotBoostTimer, crates } = useGameStore();
   const { scene } = useThree();
   
   const bullets = useRef(new Array(MAX_BULLETS).fill(0).map((_, i) => ({
@@ -71,17 +71,28 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
     const fireInterval = 1 / boostedFireRate;
     const targetPos = targetPosRef.current;
 
-    // Check if there's an enemy within attack range
+    // Check enemies or crates within attack range
     let hasEnemyInRange = false;
     if (enemiesDataRef && enemiesDataRef.current) {
       hasEnemyInRange = enemiesDataRef.current.some(e =>
         e.active && playerPos.distanceTo(e.position) <= stats.attackRange
       );
     }
+    let nearestCratePos: Vector3 | null = null;
+    if (!hasEnemyInRange) {
+      let nearestCrateDist = stats.attackRange;
+      for (const c of crates) {
+        if (!c.active) continue;
+        const d = playerPos.distanceTo(c.position);
+        if (d < nearestCrateDist) { nearestCrateDist = d; nearestCratePos = c.position; }
+      }
+    }
+    const hasTarget = hasEnemyInRange || nearestCratePos !== null;
 
-    if (targetPos && hasEnemyInRange && time - lastShot.current > fireInterval) {
+    if (targetPos && hasTarget && time - lastShot.current > fireInterval) {
       lastShot.current = time;
-      const dir = new Vector3().subVectors(targetPos, playerPos).normalize();
+      const aimAt = nearestCratePos ?? targetPos;
+      const dir = new Vector3().subVectors(aimAt, playerPos).normalize();
       const count = hasPiercingBoost ? 7 : Math.min(7, stats.multishot); 
       
       for (let i = 0; i < count; i++) {

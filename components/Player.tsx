@@ -175,13 +175,16 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
     raycaster.ray.intersectPlane(groundPlane, target);
     targetPosRef.current.copy(target); 
 
+    const frozen = revivingCountdown > 0;
     const moveDir = new Vector3(0, 0, 0);
-    if (keys['KeyW'] || keys['ArrowUp']) moveDir.z -= 1;
-    if (keys['KeyS'] || keys['ArrowDown']) moveDir.z += 1;
-    if (keys['KeyA'] || keys['ArrowLeft']) moveDir.x -= 1;
-    if (keys['KeyD'] || keys['ArrowRight']) moveDir.x += 1;
+    if (!frozen) {
+      if (keys['KeyW'] || keys['ArrowUp']) moveDir.z -= 1;
+      if (keys['KeyS'] || keys['ArrowDown']) moveDir.z += 1;
+      if (keys['KeyA'] || keys['ArrowLeft']) moveDir.x -= 1;
+      if (keys['KeyD'] || keys['ArrowRight']) moveDir.x += 1;
+    }
     moveDir.normalize();
-    isMovingRef.current = moveDir.lengthSq() > 0;
+    isMovingRef.current = !frozen && moveDir.lengthSq() > 0;
 
     // Q = weapon ability, R = active skill (swapped from original)
     if (keys['KeyQ']) {

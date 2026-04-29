@@ -142,7 +142,7 @@ interface GameState {
   upgradeItem: (item: Item) => { success: boolean, msg: string, newItem?: Item };
   resetGame: () => void;
   
-  spawnDrop: (position: Vector3, type: 'ITEM' | 'XP' | 'GOLD' | 'GEM', value: number, rarityOverride?: Rarity, orbMultiplier?: 5 | 10) => void;
+  spawnDrop: (position: Vector3, type: 'ITEM' | 'XP' | 'GOLD' | 'GEM' | 'HEALTH', value: number, rarityOverride?: Rarity, orbMultiplier?: 5 | 10) => void;
   collectDrop: (id: number) => void;
   triggerSkillCooldown: (skill: 'dash' | 'q' | 'r' | 'e') => void;
   activateRage: () => void;
@@ -1022,8 +1022,12 @@ export const useGameStore = create<GameState>((set, get) => ({
               detail: { position: state.playerPosition.clone().add(new Vector3(0, 3.5, 0)), text: `+${drop.value} G`, color: '#fbbf24' }
           }));
       }
-      else if (drop.type === 'GEM') { addGems(drop.value); } 
-      
+      else if (drop.type === 'GEM') { addGems(drop.value); }
+      else if (drop.type === 'HEALTH') {
+          const healAmt = Math.floor(state.stats.maxHealth * 0.1);
+          return { drops: newDrops, health: Math.min(state.stats.maxHealth, state.health + healAmt) };
+      }
+
       return { drops: newDrops };
   }),
 

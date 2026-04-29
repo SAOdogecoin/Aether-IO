@@ -103,17 +103,19 @@ const ItemIcon: React.FC<{ item: Item; size?: number }> = ({ item, size = 24 }) 
 };
 
 const NotificationItem: React.FC<{ note: GameNotification; onRemove: (id: string) => void }> = React.memo(({ note, onRemove }) => {
+    const isSticky = note.type === 'SYSTEM';
     useEffect(() => {
+        if (isSticky) return;
         const timer = setTimeout(() => onRemove(note.id), 3000);
         return () => clearTimeout(timer);
-    }, []); 
+    }, []);
 
     return (
         <motion.div
             initial={{ y: -20, opacity: 0, scale: 0.9 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: -20, opacity: 0, scale: 0.9 }}
-            layout 
+            layout
             className="mb-1 px-3 py-2 rounded text-white flex items-center gap-2.5 pointer-events-auto min-w-[180px]"
             style={{ background: 'linear-gradient(180deg,rgba(28,28,40,0.97) 0%,rgba(16,16,24,0.97) 100%)', border: '1px solid rgba(180,150,70,0.25)', boxShadow: '0 4px 12px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04)' }}
         >
@@ -127,6 +129,9 @@ const NotificationItem: React.FC<{ note: GameNotification; onRemove: (id: string
                 >
                     {note.action.label}
                 </button>
+            )}
+            {isSticky && (
+                <button onClick={() => onRemove(note.id)} className="ml-1 text-white/40 hover:text-white/80 text-xs font-black leading-none">✕</button>
             )}
         </motion.div>
     );

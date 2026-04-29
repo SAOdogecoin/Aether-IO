@@ -465,6 +465,10 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                         else spawnDrop(e.position, 'XP', e.type >= 3 ? 30 : 20, undefined, orbMult);
                     }
                 }
+                // 5% chance to drop a health orb
+                if (Math.random() < 0.05) {
+                    spawnDrop(e.position.clone(), 'HEALTH', 0);
+                }
                 dummy.position.set(0, -100, 0);
                 if (stunIconsRef.current) stunIconsRef.current.setMatrixAt(i, dummy.matrix);
             } else {
