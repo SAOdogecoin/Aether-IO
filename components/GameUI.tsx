@@ -156,6 +156,29 @@ const WarningNotification: React.FC<{ note: GameNotification; onRemove: (id: str
     );
 });
 
+const CenterNotification: React.FC<{ note: GameNotification; onRemove: (id: string) => void }> = React.memo(({ note, onRemove }) => {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: -20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+        className="absolute left-1/2 top-1/3 -translate-x-1/2 w-full max-w-lg pointer-events-auto z-[110]"
+      >
+        <div className="rounded-3xl p-5 bg-slate-950/95 border border-slate-500/40 shadow-2xl backdrop-blur-xl text-center">
+            <div className="text-sm font-black text-white uppercase tracking-[0.22em] mb-2">{note.message}</div>
+            {note.action && (
+              <button
+                onClick={() => { note.action!.onClick(); onRemove(note.id); }}
+                className="mt-2 px-5 py-3 rounded-full bg-amber-400 text-slate-950 font-black uppercase tracking-wider shadow-inner shadow-black/20 hover:bg-amber-300 transition"
+              >
+                {note.action.label}
+              </button>
+            )}
+        </div>
+      </motion.div>
+    );
+});
+
 const CLASS_COLOR: Record<string, string> = {
     ARCHER:    '#22c55e',
     WIZARD:    '#3b82f6',
@@ -207,7 +230,8 @@ const UniversalSkillSlot: React.FC<{
     heroClass?: string;
     isPassive?: boolean;
     onClick?: () => void;
-}> = ({ icon, level, cooldown = 0, maxCooldown = 1, label, desc, active, manaCost = 0, currentMana = 999, charges, maxCharges, heroClass, isPassive, onClick }) => {
+    onHover?: (desc: string | null) => void;
+}> = ({ icon, level, cooldown = 0, maxCooldown = 1, label, desc, active, manaCost = 0, currentMana = 999, charges, maxCharges, heroClass, isPassive, onClick, onHover }) => {
 
     const actualCost = heroClass === 'WIZARD' ? Math.ceil(manaCost * 1.3) : manaCost;
     const canAfford = currentMana >= actualCost;
@@ -223,10 +247,7 @@ const UniversalSkillSlot: React.FC<{
 
     return (
         <div className="flex flex-col items-center gap-0.5">
-            {/* PASSIVE label or Key label — above slot */}
-            {isPassive ? (
-                <div className="text-[10px] font-black uppercase tracking-widest leading-none text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,1)', WebkitTextStroke: '0.3px rgba(0,0,0,0.6)' }}>PASSIVE</div>
-            ) : label && (
+            {label && (
                 <div className="text-xs font-black text-white/70 uppercase tracking-widest leading-none" style={{ textShadow: '0 1px 3px rgba(0,0,0,1)', WebkitTextStroke: '0.3px rgba(0,0,0,0.6)' }}>{label}</div>
             )}
 
@@ -389,6 +410,7 @@ export const GameUI: React.FC = () => {
   } = useGameStore();
 
   const [hoveredItem, setHoveredItem] = useState<Item | null>(null);
+  const [hoveredSkillText, setHoveredSkillText] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [blacksmithTab, setBlacksmithTab] = useState<'UPGRADE' | 'RECYCLE' | 'CRAFT'>('UPGRADE');
@@ -801,6 +823,7 @@ export const GameUI: React.FC = () => {
                     label="Q" desc={weaponAbilityDesc} active={true}
                     manaCost={getManaCost('r')} currentMana={mana} heroClass={hero}
                     onClick={() => fireKey('KeyQ')}
+                    onHover={(text) => setHoveredSkillText(text)}
                 />
 
                 {/* E = special */}
@@ -809,6 +832,7 @@ export const GameUI: React.FC = () => {
                     label="E" desc={eAbilityDesc} active={skillLevels.special > 0}
                     manaCost={getManaCost('e')} currentMana={mana} heroClass={hero}
                     onClick={() => fireKey('KeyE')}
+                    onHover={(text) => setHoveredSkillText(text)}
                 />
 
                 {/* R = active skill */}
@@ -818,6 +842,7 @@ export const GameUI: React.FC = () => {
                     label="R" desc={qAbilityDesc} active={!!activeAbilityQ}
                     manaCost={getManaCost('q')} currentMana={mana} heroClass={hero}
                     onClick={() => fireKey('KeyR')}
+                    onHover={(text) => setHoveredSkillText(text)}
                 />
 
                 <div className="w-px h-12 bg-white/15 self-center mx-0.5" />
@@ -830,48 +855,57 @@ export const GameUI: React.FC = () => {
                     manaCost={getManaCost('dash')} currentMana={mana} heroClass={hero}
                     charges={dashCharges} maxCharges={maxDashCharges}
                     onClick={() => fireKey('Space')}
+                    onHover={(text) => setHoveredSkillText(text)}
                 />
 
                 <div className="w-px h-12 bg-white/15 self-center mx-0.5" />
 
                 {/* Passive Skills */}
                 {(hero === 'WIZARD' || !SKILLS_INFO.thunder.classType) && (
-                    <UniversalSkillSlot icon={fi(Zap, 22)} level={skillLevels.thunder} cooldown={passiveSkillState.thunderCooldown} maxCooldown={passiveSkillState.thunderMaxCooldown} desc="Thunder" active={skillLevels.thunder > 0} manaCost={getManaCost('thunder')} currentMana={mana} isPassive />
+                    <UniversalSkillSlot icon={fi(Zap, 22)} level={skillLevels.thunder} cooldown={passiveSkillState.thunderCooldown} maxCooldown={passiveSkillState.thunderMaxCooldown} desc="Thunder" active={skillLevels.thunder > 0} manaCost={getManaCost('thunder')} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
                 )}
                 {(hero === 'BARBARIAN' || !SKILLS_INFO.orbital.classType) && (
-                    <UniversalSkillSlot icon={fi(Activity, 22)} level={skillLevels.orbital} cooldown={passiveSkillState.orbitalCooldown} maxCooldown={passiveSkillState.orbitalMaxCooldown} desc="Orbital" active={skillLevels.orbital > 0} manaCost={0} currentMana={mana} isPassive />
+                    <UniversalSkillSlot icon={fi(Activity, 22)} level={skillLevels.orbital} cooldown={passiveSkillState.orbitalCooldown} maxCooldown={passiveSkillState.orbitalMaxCooldown} desc="Orbital" active={skillLevels.orbital > 0} manaCost={0} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
                 )}
                 {(hero === 'WIZARD' || !SKILLS_INFO.storm.classType) && (
-                    <UniversalSkillSlot icon={fi(Tornado, 22)} level={skillLevels.storm} cooldown={passiveSkillState.stormCooldown} maxCooldown={passiveSkillState.stormMaxCooldown} desc="Storm" active={skillLevels.storm > 0} manaCost={0} currentMana={mana} isPassive />
+                    <UniversalSkillSlot icon={fi(Tornado, 22)} level={skillLevels.storm} cooldown={passiveSkillState.stormCooldown} maxCooldown={passiveSkillState.stormMaxCooldown} desc="Storm" active={skillLevels.storm > 0} manaCost={0} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
                 )}
                 {(hero === 'ARCHER' || !SKILLS_INFO.burning.classType) && (
-                    <UniversalSkillSlot icon={fi(Flame, 22)} level={skillLevels.burning} cooldown={passiveSkillState.burningCooldown} maxCooldown={passiveSkillState.burningMaxCooldown} desc="Burning" active={skillLevels.burning > 0} manaCost={getManaCost('burning')} currentMana={mana} isPassive />
+                    <UniversalSkillSlot icon={fi(Flame, 22)} level={skillLevels.burning} cooldown={passiveSkillState.burningCooldown} maxCooldown={passiveSkillState.burningMaxCooldown} desc="Burning" active={skillLevels.burning > 0} manaCost={getManaCost('burning')} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
                 )}
                 {(hero === 'ARCHER' || !SKILLS_INFO.freezing.classType) && (
-                    <UniversalSkillSlot icon={fiC(Gem, '#67e8f9', 22)} level={skillLevels.freezing} cooldown={passiveSkillState.freezingCooldown} maxCooldown={passiveSkillState.freezingMaxCooldown} desc="Freeze" active={skillLevels.freezing > 0} manaCost={getManaCost('freezing')} currentMana={mana} isPassive />
+                    <UniversalSkillSlot icon={fiC(Gem, '#67e8f9', 22)} level={skillLevels.freezing} cooldown={passiveSkillState.freezingCooldown} maxCooldown={passiveSkillState.freezingMaxCooldown} desc="Freeze" active={skillLevels.freezing > 0} manaCost={getManaCost('freezing')} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
                 )}
                 {(hero === 'WIZARD' || !SKILLS_INFO.freezeSpell.classType) && (
-                    <UniversalSkillSlot icon={fi(Zap, 22)} level={skillLevels.freezeSpell} cooldown={passiveSkillState.blizzardCooldown} maxCooldown={passiveSkillState.blizzardMaxCooldown} desc="Blizzard" active={skillLevels.freezeSpell > 0} manaCost={getManaCost('freezeSpell')} currentMana={mana} isPassive />
+                    <UniversalSkillSlot icon={fi(Zap, 22)} level={skillLevels.freezeSpell} cooldown={passiveSkillState.blizzardCooldown} maxCooldown={passiveSkillState.blizzardMaxCooldown} desc="Blizzard" active={skillLevels.freezeSpell > 0} manaCost={getManaCost('freezeSpell')} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
                 )}
                 {(hero === 'BARBARIAN' || !SKILLS_INFO.stamp.classType) && (
-                    <UniversalSkillSlot icon={fi(Hammer, 22)} level={skillLevels.stamp} cooldown={passiveSkillState.stampCooldown} maxCooldown={passiveSkillState.stampMaxCooldown} desc="Stamp" active={skillLevels.stamp > 0} manaCost={getManaCost('stamp')} currentMana={mana} isPassive />
+                    <UniversalSkillSlot icon={fi(Hammer, 22)} level={skillLevels.stamp} cooldown={passiveSkillState.stampCooldown} maxCooldown={passiveSkillState.stampMaxCooldown} desc="Stamp" active={skillLevels.stamp > 0} manaCost={getManaCost('stamp')} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
                 )}
-                <UniversalSkillSlot icon={fiC(ShieldCheck, '#fb923c', 22)} level={skillLevels.barrier} desc="Shield" cooldown={barrierCooldown} maxCooldown={Math.max(10, 48-(skillLevels.barrier * 4))} charges={shieldCharges} maxCharges={maxShieldCharges} active={skillLevels.barrier > 0} manaCost={0} currentMana={mana} isPassive />
+                <UniversalSkillSlot icon={fiC(ShieldCheck, '#fb923c', 22)} level={skillLevels.barrier} desc="Shield" cooldown={barrierCooldown} maxCooldown={Math.max(10, 48-(skillLevels.barrier * 4))} charges={shieldCharges} maxCharges={maxShieldCharges} active={skillLevels.barrier > 0} manaCost={0} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
 
                 <div className="w-px h-12 bg-white/15 self-center mx-0.5" />
 
-                <UniversalSkillSlot icon={fiC(Heart, '#f87171', 20)} level={hpPotion?.quantity || 0} cooldown={hpPotionCooldown} maxCooldown={10} desc="HP Potion" active={true} label="1" />
-                <UniversalSkillSlot icon={fiC(FlaskConical, '#60a5fa', 20)} level={manaPotion?.quantity || 0} cooldown={mpPotionCooldown} maxCooldown={10} desc="MP Potion" active={true} label="2" />
+                <UniversalSkillSlot icon={fiC(Heart, '#f87171', 20)} level={hpPotion?.quantity || 0} cooldown={hpPotionCooldown} maxCooldown={10} desc="HP Potion" active={true} label="1" onHover={(text) => setHoveredSkillText(text)} />
+                <UniversalSkillSlot icon={fiC(FlaskConical, '#60a5fa', 20)} level={manaPotion?.quantity || 0} cooldown={mpPotionCooldown} maxCooldown={10} desc="MP Potion" active={true} label="2" onHover={(text) => setHoveredSkillText(text)} />
               </div>
+              {hoveredSkillText && (
+                <div className="mt-2 text-xs text-slate-200 font-bold text-center max-w-5xl mx-auto px-2">{hoveredSkillText}</div>
+              )}
             </div>
             );
           })()}
 
 
           {/* Toast notifications above minimap (right side) */}
+          <AnimatePresence>
+              {notifications.filter(n => n.type === 'SYSTEM' && n.action).map((note) => (
+                  <CenterNotification key={note.id} note={note} onRemove={removeNotification} />
+              ))}
+          </AnimatePresence>
           <div className="absolute right-6 bottom-48 flex flex-col-reverse gap-1.5 items-end pointer-events-none z-30 w-72">
               <AnimatePresence>
-                  {notifications.filter(n => n.type !== 'WARNING').map((note) => (
+                  {notifications.filter(n => n.type !== 'WARNING' && !n.action).map((note) => (
                       <NotificationItem key={note.id} note={note} onRemove={removeNotification} />
                   ))}
               </AnimatePresence>

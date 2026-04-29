@@ -68,10 +68,12 @@ export const EnemyBulletManager: React.FC<EnemyBulletManagerProps> = ({ enemyBul
                 }
             }
 
-            // Player hit detection
+            // Player hit detection (horizontal collision only)
             if (b.active && !isInvincible) {
-                const distToPlayer = b.position.distanceTo(playerPosition);
-                if (distToPlayer < PLAYER_RADIUS + 0.5) {
+                const dx = b.position.x - playerPosition.x;
+                const dz = b.position.z - playerPosition.z;
+                const horizontalDist = Math.sqrt(dx * dx + dz * dz);
+                if (horizontalDist < PLAYER_RADIUS + 0.5) {
                     takeDamage(b.damage);
                     b.active = false;
                     b.lifetime = 0;

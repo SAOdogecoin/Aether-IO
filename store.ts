@@ -717,7 +717,14 @@ export const useGameStore = create<GameState>((set, get) => ({
         if (skillToUnlock && newSkillLevels[skillToUnlock] === 0) {
           newSkillLevels[skillToUnlock] = 1;
           unlockedSkill = skillToUnlock;
-          addNotification(`Unlocked: ${skillToUnlock.toUpperCase()}`, '#60a5fa', 'ITEM');
+          const skillNames: Record<keyof SkillLevels, string> = {
+              orbital: 'Orbital Blades', thunder: 'Thundercaller', regen: 'Regeneration', magnet: 'Looter', dash: 'Dash Mastery', weapon: 'Weapon Mastery', barrier: 'Energy Shield', storm: 'Storm', special: 'Class Special', piercing: 'Piercing Arrow', gravity: 'Gravity Well', rage: 'Rage', burning: 'Burning Arrow', freezing: 'Freezing Arrow', freezeSpell: 'Blizzard', stamp: 'Mega Stamp'
+          };
+          const displayName = skillNames[skillToUnlock] || skillToUnlock.toUpperCase();
+          addNotification(`${displayName} Unlocked!`, '#60a5fa', 'SYSTEM', {
+              label: 'OPEN',
+              onClick: () => { get().openSpecificShop('SKILLS'); }
+          });
         }
       }
 
@@ -1661,6 +1668,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   buyItem: (item, quantity = 1) => {
       const state = get();
+      const purchaseQuantity = item.type === 'POTION' ? 10 : quantity;
       const totalCost = item.price * quantity;
       
       if (state.score >= totalCost) {
@@ -1673,14 +1681,14 @@ export const useGameStore = create<GameState>((set, get) => ({
           }
           
           if (isStackable && existingStack) {
-               const newInventory = state.inventory.map(i => i.name === item.name ? { ...i, quantity: (i.quantity || 1) + quantity } : i);
+               const newInventory = state.inventory.map(i => i.name === item.name ? { ...i, quantity: (i.quantity || 1) + purchaseQuantity } : i);
                set({ score: state.score - totalCost, inventory: newInventory });
           } else {
                if (state.inventory.length >= state.maxInventorySlots) {
                    get().addNotification("Inventory Full!", 'red', 'WARNING');
                    return false;
                }
-               const newItem = { ...item, id: Math.random().toString(), quantity };
+               const newItem = { ...item, id: Math.random().toString(), quantity: purchaseQuantity };
                set({ score: state.score - totalCost, inventory: [...state.inventory, newItem] });
           }
           
