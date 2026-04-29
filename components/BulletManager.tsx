@@ -24,7 +24,7 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
   const { stats, status, equipment, obstacles, piercingShotBoostTimer, crates } = useGameStore();
   const { scene } = useThree();
   
-  const bullets = useRef(new Array(MAX_BULLETS).fill(0).map((_, i) => ({
+  const bullets = useRef<BulletData[]>(new Array(MAX_BULLETS).fill(0).map((_, i) => ({
     id: i,
     active: false,
     position: new Vector3(),
@@ -39,6 +39,7 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
     trailTimer: 0,
     damageMultiplier: 1,
     bouncesLeft: 0,
+    rotation: 0
   })));
   
   const lastShot = useRef(0);
@@ -184,7 +185,7 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
             } else if (b.type === 'STORM') {
                 b.position.add(b.velocity.clone().multiplyScalar(delta));
                 b.rotation = (b.rotation || 0) + delta * 15; 
-            } else if (b.type === 'FIRE_TRAIL') {
+            } else if (b.type === ('FIRE_TRAIL' as ProjectileType)) {
                 // Stationary
             } else if (b.type === 'AXE') {
                 if (b.state === 0) {
@@ -269,7 +270,7 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
                         if (b.position.distanceTo(e.position) < hitRadius) {
                             
                              // Fire Trail Logic
-                             if (b.type === 'FIRE_TRAIL') {
+                             if (b.type === ('FIRE_TRAIL' as ProjectileType)) {
                                 e.burnTimer = 2.0;
                                 e.burnDamage = 5;
                                 e.health -= 2 * delta; 
@@ -292,13 +293,13 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
                             }
 
                             let dmgType = 'PHYSICAL';
-                            if (b.type === 'FIREBALL' || b.type === 'BURNING_ARROW' || b.type === 'FIRE_TRAIL') dmgType = 'FIRE';
+                            if (b.type === 'FIREBALL' || b.type === 'BURNING_ARROW' || b.type === ('FIRE_TRAIL' as ProjectileType)) dmgType = 'FIRE';
                             else if (b.type === 'FREEZING_ARROW' || b.type === 'ICE') dmgType = 'ICE';
                             else if (b.type === 'MAGIC') dmgType = 'MAGIC';
                             else if (b.type === 'STORM') dmgType = 'MAGIC';
 
                             // AOE Logic
-                            if (b.type === 'MAGIC' || b.type === 'FIREBALL' || b.type === 'BURNING_ARROW' || b.type === 'FREEZING_ARROW') {
+                            if (b.type === 'MAGIC' || b.type === 'FIREBALL' || b.type === 'BURNING_ARROW' || b.type === 'FREEZING_ARROW' || b.type === ('FIRE_TRAIL' as ProjectileType)) {
                                 // For AOE, we can re-query grid or check neighbors of current target
                                 // Simple: Check neighbors of 'e'
                                 const aoeRange = b.type === 'MAGIC' ? 4.0 : 5.0;

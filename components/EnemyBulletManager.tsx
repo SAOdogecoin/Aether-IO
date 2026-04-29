@@ -17,13 +17,15 @@ export const EnemyBulletManager: React.FC<EnemyBulletManagerProps> = ({ enemyBul
   const { status, earthwall, obstacles, playerPosition, takeDamage, isInvincible } = useGameStore();
   
   // Local storage
-  const bullets = useRef(new Array(MAX_ENEMY_BULLETS).fill(0).map((_, i) => ({
+  const bullets = useRef<BulletData[]>(new Array(MAX_ENEMY_BULLETS).fill(0).map((_, i) => ({
     id: i,
     active: false,
     position: new Vector3(),
     velocity: new Vector3(),
     lifetime: 0,
-    damage: 0
+    damage: 0,
+    type: 'MAGIC',
+    hitIds: []
   })));
 
   // Sync ref

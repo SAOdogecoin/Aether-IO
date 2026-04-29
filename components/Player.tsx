@@ -30,7 +30,7 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
   const isMovingRef = useRef(false);
   const isAttackingRef = useRef(false);
 
-  const { stats, status, setPlayerPosition, skills, triggerSkillCooldown, tickCooldowns, takeDamage, equipment, useMana, triggerInvincibility, obstacles, crates, isInvincible, toggleInventory, breakCrate, hero, levelUpVisualTimer, health, mana, level, activeAbilityQ, activateRage, rageMode, skillLevels, activateEarthwall, activateWarVitality, activateSprint, reviveAnimTimer, dashCharges, getManaCost, addNotification, revivingCountdown, isInventoryOpen, isShopOpen, isCharacterSheetOpen, piercingShotBoostTimer, set: setState } = useGameStore();
+  const { stats, status, setPlayerPosition, playerPosition, skills, triggerSkillCooldown, tickCooldowns, takeDamage, equipment, useMana, triggerInvincibility, obstacles, crates, isInvincible, toggleInventory, breakCrate, hero, levelUpVisualTimer, health, mana, level, activeAbilityQ, activateRage, rageMode, skillLevels, activateEarthwall, activateWarVitality, activateSprint, reviveAnimTimer, dashCharges, getManaCost, addNotification, revivingCountdown, isInventoryOpen, isShopOpen, isCharacterSheetOpen, piercingShotBoostTimer, setPiercingShotBoostTimer } = useGameStore();
   const { camera, scene, raycaster, pointer } = useThree();
   
   const [pos] = useState(new Vector3(0, 0, 0));
@@ -122,7 +122,7 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
               activateRage();
           } else if (ability === 'PIERCING_SHOT') {
               // Archer Q: 3x attack speed + max multishot for 2.5s
-              setState({ piercingShotBoostTimer: 2.5 });
+              setPiercingShotBoostTimer(2.5);
           } else if (ability === 'GRAVITY_SPELL') {
               const limit = 8 + (skillLevels.gravity * 1);
               spawnBullet('BLACKHOLE', 0, 5.0, { pierce: 99, lifetime: 2.6, trailTimer: 0.1, maxPullCount: limit });

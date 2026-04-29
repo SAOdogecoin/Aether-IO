@@ -12,6 +12,8 @@ export const GameStatus = {
   SHOP: 'SHOP',
 } as const;
 
+export type GameStatus = typeof GameStatus[keyof typeof GameStatus];
+
 export type HeroClass = 'ARCHER' | 'WIZARD' | 'BARBARIAN';
 
 export type UpgradeType = 
@@ -146,6 +148,7 @@ export interface BulletData {
   damageMultiplier?: number;
   knockback?: number; 
   trailTimer?: number; 
+  rotation?: number;
   
   // Added Damage Amount for Enemy Bullets (Collision Check)
   damage?: number;

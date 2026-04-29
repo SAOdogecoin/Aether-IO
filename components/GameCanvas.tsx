@@ -19,7 +19,7 @@ export const GameCanvas: React.FC = () => {
         <World />
       </Suspense>
 
-      <EffectComposer disableNormalPass>
+      <EffectComposer enableNormalPass={false}>
         {/* Adjusted Bloom for daylight visibility */}
         <Bloom 
           luminanceThreshold={0.9} 

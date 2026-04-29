@@ -60,7 +60,8 @@ const ShopBuilding: React.FC<{
                     outlineColor="black"
                     anchorX="center"
                     anchorY="middle"
-                    billboard
+                    // @ts-ignore
+                    billboard={true}
                 >
                     {icon}
                 </Text>
@@ -72,7 +73,8 @@ const ShopBuilding: React.FC<{
                     outlineColor="black"
                     anchorX="center"
                     anchorY="middle"
-                    billboard
+                    // @ts-ignore
+                    billboard={true}
                 >
                     {label}
                 </Text>

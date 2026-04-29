@@ -108,7 +108,8 @@ const ItemDrop: React.FC<ItemDropProps> = ({ id, item, position }) => {
                 outlineColor="black"
                 anchorX="center"
                 anchorY="middle"
-                billboard
+                // @ts-ignore
+                billboard={true}
                 renderOrder={999} 
                 depthTest={false} // Ensures text is drawn on top of 3D geometry if overlapping
             >
