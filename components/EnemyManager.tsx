@@ -34,7 +34,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
 
   const spawnTimer = useRef(0);
   const dotTicker = useRef(0);
-  const waveState = useRef({ wave: 1, bossSpawned: false, eliteSpawned: false, elitesSpawned: 0 });
+  const waveState = useRef({ wave: 1, bossSpawned: false, eliteSpawned: false, elitesSpawned: 0, eliteQuota: 1 });
   const bossActiveRef = useRef(false);
   const bossDefeatedTimer = useRef(0);
   const minimapThrottle = useRef(0);
@@ -100,6 +100,10 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
         waveState.current.bossSpawned = false;
         waveState.current.eliteSpawned = false;
         waveState.current.elitesSpawned = 0;
+        // Roll elite quota once per wave
+        waveState.current.eliteQuota = wave % 10 === 0 ? 0
+            : wave % 5 === 0 ? Math.floor(Math.random() * 3) + 5   // 5–7
+            : Math.floor(Math.random() * 3) + 1;                    // 1–3
         bossDefeatedTimer.current = 0;
     }
 
@@ -150,8 +154,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
             
             let isBoss = false;
             
-            // Elite quota: 1 per wave, 3 per every 5th wave (but not boss waves)
-            const eliteQuota = wave % 10 === 0 ? 0 : (wave % 5 === 0 ? 3 : 1);
+            const eliteQuota = waveState.current.eliteQuota;
 
             if (wave % 10 === 0 && !waveState.current.bossSpawned) {
                 isBoss = true;
@@ -435,25 +438,33 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                         }
                     }
                     else if (e.type === 6) {
-                        const bullet = enemyBulletsDataRef.current.find(b => !b.active);
-                        if (bullet) {
-                            bullet.active = true;
-                            bullet.lifetime = 6.0; 
-                            bullet.damage = 5; 
-                            bullet.position.copy(e.position).add(new Vector3(0, 1, 0));
-                            pushDir.subVectors(playerPosition, e.position).normalize();
-                            bullet.velocity.copy(pushDir).multiplyScalar(6); 
+                        // Slow shooter: 3 bullets, 50% faster
+                        const baseDir6 = new Vector3().subVectors(playerPosition, e.position).normalize();
+                        for (let k = -1; k <= 1; k++) {
+                            const bullet = enemyBulletsDataRef.current.find(b => !b.active);
+                            if (bullet) {
+                                bullet.active = true;
+                                bullet.lifetime = 6.0;
+                                bullet.damage = 5;
+                                bullet.position.copy(e.position).add(new Vector3(0, 1, 0));
+                                const dir6 = baseDir6.clone().applyAxisAngle(new Vector3(0, 1, 0), k * 0.25);
+                                bullet.velocity.copy(dir6).multiplyScalar(6 * 1.5);
+                            }
                         }
                     }
                     else {
-                        const bullet = enemyBulletsDataRef.current.find(b => !b.active);
-                        if (bullet) {
-                            bullet.active = true;
-                            bullet.lifetime = 3.0;
-                            bullet.damage = 10;
-                            bullet.position.copy(e.position).add(new Vector3(0, 1, 0));
-                            pushDir.subVectors(playerPosition, e.position).normalize();
-                            bullet.velocity.copy(pushDir).multiplyScalar(15);
+                        // Regular shooter (type 3): 3 bullets, 50% faster
+                        const baseDir3 = new Vector3().subVectors(playerPosition, e.position).normalize();
+                        for (let k = -1; k <= 1; k++) {
+                            const bullet = enemyBulletsDataRef.current.find(b => !b.active);
+                            if (bullet) {
+                                bullet.active = true;
+                                bullet.lifetime = 3.0;
+                                bullet.damage = 10;
+                                bullet.position.copy(e.position).add(new Vector3(0, 1, 0));
+                                const dir3 = baseDir3.clone().applyAxisAngle(new Vector3(0, 1, 0), k * 0.25);
+                                bullet.velocity.copy(dir3).multiplyScalar(15 * 1.5);
+                            }
                         }
                     }
                 }

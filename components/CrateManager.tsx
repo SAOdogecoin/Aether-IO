@@ -44,19 +44,24 @@ export const CrateManager: React.FC<CrateManagerProps> = ({ bulletsDataRef }) =>
 
                         if (crate.hp - stats.damage <= 0) {
                             damagedCrateIds.current.delete(crate.id);
-                            // 0.5% chance for magnet orb
+                            // 0.5% chance for magnet orb (overrides regular drops)
                             if (Math.random() < 0.005) {
                                 spawnDrop(crate.position.clone(), 'MAGNET', 0);
                             } else {
                                 const r = Math.random();
-                                if (r < 0.25) {
-                                    spawnDrop(crate.position.clone(), 'XP', 1, undefined, 5);
-                                } else if (r < 0.5) {
-                                    spawnDrop(crate.position.clone(), 'GOLD', 50);
-                                } else if (r < 0.75) {
-                                    spawnDrop(crate.position.clone(), 'ITEM', 0);
+                                if (r < 0.30) {
+                                    // 30% nothing
+                                } else if (r < 0.60) {
+                                    // 30% XP orb — 50 XP, 1 piece
+                                    spawnDrop(crate.position.clone(), 'XP', 50, undefined, 5);
+                                } else if (r < 0.90) {
+                                    // 30% gold orb — 100 gold, 1 piece
+                                    spawnDrop(crate.position.clone(), 'GOLD', 100);
+                                } else {
+                                    // 10% item: 80% common, 20% rare
+                                    const itemRarity = Math.random() < 0.2 ? 'RARE' : 'COMMON';
+                                    spawnDrop(crate.position.clone(), 'ITEM', 0, itemRarity);
                                 }
-                                // else nothing (25% chance)
                             }
                         }
 

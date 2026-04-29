@@ -725,12 +725,12 @@ export const GameUI: React.FC = () => {
                              WAVE {wave}
                          </div>
                          <div className="text-white/50 font-bold text-sm flex items-center gap-1">
-                             <Timer size={11}/> <span className="text-lg font-black text-white/70">{Math.floor(waveTimer)}</span>s
+                             <Timer size={11}/> <span className="text-lg font-black text-white/70">{Math.max(0, 30 - Math.floor(waveTimer))}</span>s
                          </div>
                          {waveTimer > 20 && (
                              <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                                 className="px-3 py-0.5 bg-red-500/80 text-white font-black text-xs rounded animate-pulse border border-red-400/60 rpg-text">
-                                 +{Math.max(0, 30 - waveTimer).toFixed(0)}s
+                                 NEXT WAVE
                              </motion.div>
                          )}
                      </div>
