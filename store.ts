@@ -1013,12 +1013,18 @@ export const useGameStore = create<GameState>((set, get) => ({
       if (drop.type === 'ITEM' && drop.item) {
           const item = drop.item;
           const isStackable = item.type === 'POTION' || item.type === 'CORE' || item.type === 'REVIVE';
+          const displayName = item.type === 'POTION' ? item.name.replace(' (x10)', '') : item.name;
           
           if (isStackable) {
-              const existingStack = state.inventory.find(i => i.name === item.name && (i.quantity || 1) < POTION_STACK_LIMIT);
+              const existingStack = state.inventory.find(i => {
+                  const matches = item.type === 'POTION'
+                      ? i.type === 'POTION' && i.restoreAmount === item.restoreAmount
+                      : i.name === item.name;
+                  return matches && (i.quantity || 1) < POTION_STACK_LIMIT;
+              });
               if (existingStack) {
                   existingStack.quantity = (existingStack.quantity || 1) + 1;
-                  addNotification(`Looted ${item.name} (x1)`, COLORS.rarityCommon, 'ITEM');
+                  addNotification(`Looted ${displayName} (x1)`, COLORS.rarityCommon, 'ITEM');
                   return { drops: newDrops, inventory: [...state.inventory] };
               }
           }

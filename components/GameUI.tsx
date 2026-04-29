@@ -103,9 +103,7 @@ const ItemIcon: React.FC<{ item: Item; size?: number }> = ({ item, size = 24 }) 
 };
 
 const NotificationItem: React.FC<{ note: GameNotification; onRemove: (id: string) => void }> = React.memo(({ note, onRemove }) => {
-    const isSticky = note.type === 'SYSTEM';
     useEffect(() => {
-        if (isSticky) return;
         const timer = setTimeout(() => onRemove(note.id), 3000);
         return () => clearTimeout(timer);
     }, []);
@@ -129,9 +127,6 @@ const NotificationItem: React.FC<{ note: GameNotification; onRemove: (id: string
                 >
                     {note.action.label}
                 </button>
-            )}
-            {isSticky && (
-                <button onClick={() => onRemove(note.id)} className="ml-1 text-white/40 hover:text-white/80 text-xs font-black leading-none">✕</button>
             )}
         </motion.div>
     );
@@ -157,6 +152,11 @@ const WarningNotification: React.FC<{ note: GameNotification; onRemove: (id: str
 });
 
 const CenterNotification: React.FC<{ note: GameNotification; onRemove: (id: string) => void }> = React.memo(({ note, onRemove }) => {
+    useEffect(() => {
+        const timer = setTimeout(() => onRemove(note.id), 3000);
+        return () => clearTimeout(timer);
+    }, []);
+
     return (
       <motion.div
         initial={{ opacity: 0, y: -20, scale: 0.95 }}
@@ -899,13 +899,13 @@ export const GameUI: React.FC = () => {
 
           {/* Toast notifications above minimap (right side) */}
           <AnimatePresence>
-              {notifications.filter(n => n.type === 'SYSTEM' && n.action).map((note) => (
+              {notifications.filter(n => n.type === 'SYSTEM').map((note) => (
                   <CenterNotification key={note.id} note={note} onRemove={removeNotification} />
               ))}
           </AnimatePresence>
           <div className="absolute right-6 bottom-48 flex flex-col-reverse gap-1.5 items-end pointer-events-none z-30 w-72">
               <AnimatePresence>
-                  {notifications.filter(n => n.type !== 'WARNING' && !n.action).map((note) => (
+                  {notifications.filter(n => n.type !== 'WARNING' && n.type !== 'SYSTEM' && !n.action).map((note) => (
                       <NotificationItem key={note.id} note={note} onRemove={removeNotification} />
                   ))}
               </AnimatePresence>

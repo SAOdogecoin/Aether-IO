@@ -107,27 +107,20 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
         bossDefeatedTimer.current = 0;
     }
 
-    const bossJustStarted = bossData.active && !bossActiveRef.current;
-    if (bossJustStarted) {
-        // Remove any existing regular enemies and clear their bullets when boss fight begins.
-        enemies.current.forEach(e => {
-            if (e.active && e.type !== 2) e.active = false;
-        });
-        enemyBulletsDataRef.current.forEach(b => { if (b.active) b.active = false; });
-    }
-
     bossActiveRef.current = bossData.active;
 
     spawnTimer.current += delta;
-    // Lower base = more enemies initially. Increased wave scaling (+70%) for more enemy spawning per wave.
-    const spawnRate = Math.max(0.1, 1.07 - (level * 0.04) - (wave * 0.0425));
+    // Lower base = more enemies initially. Spawn rate no longer scales directly with wave.
+    const spawnRate = Math.max(0.1, 1.07 - (level * 0.04));
+    const spawnCount = wave > 1 ? 2 : 1;
 
     // Only spawn enemies if waveTimer is less than 30 seconds
     if (waveTimer < 30 && !bossData.active && spawnTimer.current > spawnRate) {
         spawnTimer.current = 0;
         if (Math.random() < 0.5) return;
-        const enemy = enemies.current.find(e => !e.active);
-        if (enemy) {
+        for (let i = 0; i < spawnCount; i++) {
+            const enemy = enemies.current.find(e => !e.active);
+            if (!enemy) break;
             enemy.active = true;
             enemy.burnTimer = 0;
             enemy.poisonTimer = 0;
@@ -208,6 +201,9 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                 enemy.scale = 1.0;
             }
             enemy.maxHealth = enemy.health;
+            if (spawnCount > 1 && i < spawnCount - 1) {
+                continue;
+            }
         }
     }
 

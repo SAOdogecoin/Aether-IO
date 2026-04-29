@@ -86,7 +86,7 @@ export const EnemyBulletManager: React.FC<EnemyBulletManagerProps> = ({ enemyBul
             } else {
                 dummy.position.copy(b.position);
                 dummy.lookAt(b.position.clone().add(b.velocity));
-                dummy.scale.set(1, 1, 1);
+                dummy.scale.set(1.4, 1.4, 1.4);
             }
             activeCount++;
         } else {
@@ -103,7 +103,7 @@ export const EnemyBulletManager: React.FC<EnemyBulletManagerProps> = ({ enemyBul
 
   return (
     <instancedMesh ref={meshRef} args={[undefined, undefined, MAX_ENEMY_BULLETS]} frustumCulled={false}>
-      <sphereGeometry args={[0.3, 8, 8]} />
+      <sphereGeometry args={[0.35, 8, 8]} />
       <meshStandardMaterial color={COLORS.bulletEnemy} emissive={COLORS.bulletEnemy} emissiveIntensity={2} />
     </instancedMesh>
   );
