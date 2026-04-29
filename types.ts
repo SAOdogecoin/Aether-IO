@@ -238,6 +238,7 @@ export interface GameNotification {
     message: string;
     color: string;
     type: 'ITEM' | 'BOSS' | 'SYSTEM' | 'WARNING';
+    persistent?: boolean;
     action?: {
         label: string;
         onClick: () => void;
