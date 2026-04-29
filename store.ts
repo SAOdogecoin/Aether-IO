@@ -686,10 +686,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   addGems: (amount) => set((state) => ({ gems: state.gems + amount })),
 
   addExperience: (amount) => {
-    const { experience, experienceToNextLevel, level } = get();
-    const finalAmount = (level >= 10 ? amount * 2 : amount) * 2; 
+    const { experience, experienceToNextLevel, level, hero, skillLevels, addNotification } = get();
+    const finalAmount = (level >= 10 ? amount * 2 : amount) * 2;
     let newExp = experience + finalAmount;
-    
+
     if (newExp >= experienceToNextLevel) {
       const multiplier = level < 10 ? 1.35 : 1.10;
       const nextReq = Math.floor(experienceToNextLevel * multiplier);
@@ -701,17 +701,37 @@ export const useGameStore = create<GameState>((set, get) => ({
           damage: currentBase.damage + 1.2,
           defense: currentBase.defense + 0.5
       };
-      
+
+      const newLevel = level + 1;
+      let newSkillLevels = { ...skillLevels };
+      let unlockedSkill = '';
+
+      // Auto-unlock skills every 5 levels (QER and passives)
+      if (newLevel % 5 === 0) {
+        const skillUnlockMap: Record<HeroClass, Record<number, keyof SkillLevels>> = {
+          ARCHER: { 5: 'piercing', 10: 'burning', 15: 'freezing', 20: 'special' },
+          WIZARD: { 5: 'gravity', 10: 'thunder', 15: 'freezeSpell', 20: 'special' },
+          BARBARIAN: { 5: 'rage', 10: 'orbital', 15: 'stamp', 20: 'special' }
+        };
+        const skillToUnlock = skillUnlockMap[hero][newLevel];
+        if (skillToUnlock && newSkillLevels[skillToUnlock] === 0) {
+          newSkillLevels[skillToUnlock] = 1;
+          unlockedSkill = skillToUnlock;
+          addNotification(`Unlocked: ${skillToUnlock.toUpperCase()}`, '#60a5fa', 'ITEM');
+        }
+      }
+
       set({
         experience: newExp - experienceToNextLevel,
         experienceToNextLevel: nextReq,
-        level: level + 1,
+        level: newLevel,
         skillPoints: get().skillPoints + 1,
         baseStats: newBase,
         stats: calculateStats(newBase, get().equipment, get().rageMode, get().sprintTimer > 0),
-        health: get().health, 
-        mana: get().mana, 
-        levelUpVisualTimer: 1.0 
+        health: get().health,
+        mana: get().mana,
+        levelUpVisualTimer: 1.0,
+        skillLevels: newSkillLevels
       });
     } else {
       set({ experience: newExp });
@@ -1636,8 +1656,6 @@ export const useGameStore = create<GameState>((set, get) => ({
               activeAbilityQ: newActiveQ
           });
           get().addNotification("Auto Equipped Best Items", COLORS.uiAccent, 'SYSTEM');
-      } else {
-          get().addNotification("No better items found", "white", 'SYSTEM');
       }
   },
 

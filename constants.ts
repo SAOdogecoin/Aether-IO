@@ -215,11 +215,8 @@ export const PETS_POOL: Item[] = [
 // ITEMS POOL: Stats follow 1 (Common) -> 2 (Rare) -> 3 (Epic) -> 4 (Legend) -> 5 (Mythic)
 export const ITEMS_POOL: Item[] = [
   // --- CONSUMABLES ---
-  { id: 'potion_hp', name: 'Health Potion', type: 'POTION', stats: {}, restoreAmount: 50, rarity: 'COMMON', price: 50, level: 1, description: 'Restores 50 HP.' },
-  { id: 'potion_mana', name: 'Mana Potion', type: 'POTION', stats: {}, restoreAmount: 50, rarity: 'COMMON', price: 50, level: 1, description: 'Restores 50 Mana.' },
-  // BIG POTIONS
-  { id: 'potion_hp_big', name: 'Big Health Potion', type: 'POTION', stats: {}, restoreAmount: 75, rarity: 'RARE', price: 150, level: 25, description: 'Restores 75 HP. Req Lvl 25.' },
-  { id: 'potion_mana_big', name: 'Big Mana Potion', type: 'POTION', stats: {}, restoreAmount: 75, rarity: 'RARE', price: 150, level: 25, description: 'Restores 75 Mana. Req Lvl 25.' },
+  { id: 'potion_hp', name: 'Health Potions (x10)', type: 'POTION', stats: {}, restoreAmount: 50, rarity: 'COMMON', price: 500, level: 1, description: 'Restores 50 HP. (Bundle of 10)' },
+  { id: 'potion_mana', name: 'Mana Potions (x10)', type: 'POTION', stats: {}, restoreAmount: 50, rarity: 'COMMON', price: 500, level: 1, description: 'Restores 50 Mana. (Bundle of 10)' },
   
   { id: 'upgrade_core', name: 'Upgrade Core', type: 'CORE', stats: {}, rarity: 'RARE', price: 500, level: 1, description: 'Used for upgrades.' },
   { id: 'revive_ankh', name: 'Ankh of Life', type: 'REVIVE', stats: {}, rarity: 'EPIC', price: 2000, level: 1, description: 'Auto-revive on death.' },

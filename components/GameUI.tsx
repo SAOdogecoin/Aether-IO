@@ -530,8 +530,8 @@ export const GameUI: React.FC = () => {
 
   const hasAlerts = skillPoints > 0 || hasBetterItem;
 
-  const hpPotion = inventory.find(i => i.type === 'POTION' && (i.name === 'Health Potion' || i.name === 'Big Health Potion'));
-  const manaPotion = inventory.find(i => i.type === 'POTION' && (i.name === 'Mana Potion' || i.name === 'Big Mana Potion'));
+  const hpPotion = inventory.find(i => i.type === 'POTION' && i.name.includes('Health'));
+  const manaPotion = inventory.find(i => i.type === 'POTION' && i.name.includes('Mana'));
 
   let weaponAbilityDesc = "Basic Attack.";
   if (equipment.weapon?.ability === 'FIREBALL') weaponAbilityDesc = "Shoots a slow giant fireball.";
@@ -1091,6 +1091,17 @@ export const GameUI: React.FC = () => {
                             const locked = RARITY_LEVEL_REQ[item.rarity] > level;
                             const isSelected = selectedItem?.id === item.id;
                             const isHovered = hoveredItem?.id === item.id;
+
+                            // Check if this item is better than currently equipped
+                            let isBetterEquipped = false;
+                            if ((item.type === 'WEAPON' || item.type === 'ARMOR' || item.type === 'ACCESSORY') && !locked) {
+                              const slot = item.type.toLowerCase() as keyof typeof equipment;
+                              const currentEquip = equipment[slot];
+                              const newCP = calculateItemCP(item);
+                              const oldCP = currentEquip ? calculateItemCP(currentEquip) : 0;
+                              isBetterEquipped = newCP > oldCP;
+                            }
+
                             return (
                               <button key={item.id}
                                 onClick={() => { setSelectedItem(isSelected ? null : item); }}
@@ -1107,6 +1118,7 @@ export const GameUI: React.FC = () => {
                                 <ItemIcon item={item} size={30}/>
                                 {(item.quantity||1)>1 && <div className="absolute bottom-0 right-0 text-[9px] px-1.5 py-0.5 text-white font-black rounded-tl" style={{background:'rgba(0,0,0,0.8)'}}>{item.quantity}</div>}
                                 {locked && <Lock size={10} className="absolute top-0.5 left-0.5 text-red-500"/>}
+                                {isBetterEquipped && <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500 shadow-lg" style={{boxShadow:'0 0 6px rgba(239,68,68,0.8)'}}/>}
                               </button>
                             );
                           })}
