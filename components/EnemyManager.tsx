@@ -112,7 +112,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
     spawnTimer.current += delta;
     // Lower base = more enemies initially. Spawn rate no longer scales directly with wave.
     const spawnRate = Math.max(0.1, 1.07 - (level * 0.04));
-    const spawnCount = wave > 1 ? 2 : 1;
+    const spawnCount = wave > 1 ? 3 : 1;
 
     // Only spawn enemies if waveTimer is less than 30 seconds
     if (waveTimer < 30 && !bossData.active && spawnTimer.current > spawnRate) {
@@ -232,7 +232,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
             if (e.burnTimer && e.burnTimer > 0) {
                 e.burnTimer -= delta;
                 if (shouldTickDoT) {
-                    const dmg = (e.burnDamage || 5) * 0.5;
+                    const dmg = (e.burnDamage || 5) * 1.5;
                     e.health -= dmg;
                     window.dispatchEvent(new CustomEvent('damage', { detail: { position: e.position, damage: dmg, isDoT: true, damageType: 'FIRE' } }));
                 }
@@ -373,7 +373,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                         if (bullet) {
                             bullet.active = true;
                             bullet.lifetime = 4.0;
-                            bullet.damage = 10;
+                            bullet.damage = 30;
                             bullet.position.copy(e.position).add(new Vector3(0, 1.5, 0));
                             bullet.velocity.set(Math.cos(e.bossAngle), 0, Math.sin(e.bossAngle)).multiplyScalar(10 * 1.7);
                         }
@@ -387,7 +387,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                             if (bullet) {
                                 bullet.active = true;
                                 bullet.lifetime = 4.0;
-                                bullet.damage = 10;
+                                bullet.damage = 30;
                                 bullet.position.copy(e.position).add(new Vector3(0, 1.5, 0));
                                 const a = (Math.PI * 2 * k) / 12;
                                 bullet.velocity.set(Math.cos(a), 0, Math.sin(a)).multiplyScalar(8 * 1.7);
@@ -402,7 +402,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                         if (bullet) {
                             bullet.active = true;
                             bullet.lifetime = 4.0;
-                            bullet.damage = 10;
+                            bullet.damage = 30;
                             bullet.position.copy(e.position).add(new Vector3(0, 1.5, 0));
 
                             tempVec.subVectors(playerPosition, e.position).normalize();
@@ -426,7 +426,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                              if (bullet) {
                                 bullet.active = true;
                                 bullet.lifetime = 3.0;
-                                bullet.damage = 10;
+                                bullet.damage = 30;
                                 bullet.position.copy(e.position).add(new Vector3(0, 1, 0));
                                 const dir = baseDir.clone().applyAxisAngle(new Vector3(0,1,0), k * 0.3);
                                 bullet.velocity.copy(dir).multiplyScalar(12);
@@ -441,7 +441,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                             if (bullet) {
                                 bullet.active = true;
                                 bullet.lifetime = 6.0;
-                                bullet.damage = 5;
+                                bullet.damage = 15;
                                 bullet.position.copy(e.position).add(new Vector3(0, 1, 0));
                                 const dir6 = baseDir6.clone().applyAxisAngle(new Vector3(0, 1, 0), k * 0.25);
                                 bullet.velocity.copy(dir6).multiplyScalar(6 * 1.5);
@@ -456,7 +456,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                             if (bullet) {
                                 bullet.active = true;
                                 bullet.lifetime = 3.0;
-                                bullet.damage = 10;
+                                bullet.damage = 30;
                                 bullet.position.copy(e.position).add(new Vector3(0, 1, 0));
                                 const dir3 = baseDir3.clone().applyAxisAngle(new Vector3(0, 1, 0), k * 0.25);
                                 bullet.velocity.copy(dir3).multiplyScalar(15 * 1.5);
