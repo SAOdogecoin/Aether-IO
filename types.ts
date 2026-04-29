@@ -186,7 +186,7 @@ export interface DropData {
   id: number;
   position: Vector3;
   item: Item | null;
-  type: 'ITEM' | 'GOLD' | 'XP' | 'GEM' | 'HEALTH';
+  type: 'ITEM' | 'GOLD' | 'XP' | 'GEM' | 'HEALTH' | 'MAGNET';
   active: boolean;
   value: number;
   rotation: number;

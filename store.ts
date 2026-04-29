@@ -142,7 +142,7 @@ interface GameState {
   upgradeItem: (item: Item) => { success: boolean, msg: string, newItem?: Item };
   resetGame: () => void;
   
-  spawnDrop: (position: Vector3, type: 'ITEM' | 'XP' | 'GOLD' | 'GEM' | 'HEALTH', value: number, rarityOverride?: Rarity, orbMultiplier?: 5 | 10) => void;
+  spawnDrop: (position: Vector3, type: 'ITEM' | 'XP' | 'GOLD' | 'GEM' | 'HEALTH' | 'MAGNET', value: number, rarityOverride?: Rarity, orbMultiplier?: 5 | 10) => void;
   collectDrop: (id: number) => void;
   triggerSkillCooldown: (skill: 'dash' | 'q' | 'r' | 'e') => void;
   activateRage: () => void;
@@ -309,6 +309,8 @@ const calculateStats = (base: PlayerStats, equipment: GameState['equipment'], ra
           final.attackRange *= 0.88; // Archer: ~22 units
       } else if (equipment.weapon.projectileType === 'MAGIC') {
           final.attackRange *= 0.572; // Wizard: ~14.3 units
+      } else if (equipment.weapon.projectileType === 'AXE') {
+          final.attackRange -= 4.0; // Barbarian: melee range minus orbital blade radius (4.0)
       }
   }
 
@@ -351,18 +353,23 @@ const generateObstacles = (): Obstacle[] => {
 };
 
 const generateCrates = (): CrateData[] => {
-    return new Array(25).fill(0).map((_, i) => ({
-        id: i,
-        active: true,
-        position: new Vector3(
-            (Math.random() - 0.5) * ARENA_SIZE * 0.8, 
-            1, 
-            (Math.random() - 0.5) * ARENA_SIZE * 0.8
-        ),
-        rotation: Math.random() * Math.PI,
-        hp: 30,
-        maxHp: 30
-    })).filter(c => c.position.length() > 20);
+    const crates: CrateData[] = [];
+    const minDist = 18; // minimum distance between crates
+    let attempts = 0;
+    while (crates.length < 25 && attempts < 500) {
+        attempts++;
+        // Use polar coords to spread across the full arena, excluding center
+        const angle = Math.random() * Math.PI * 2;
+        const r = 22 + Math.random() * (ARENA_SIZE * 0.42 - 22); // 22..~42 units from center
+        const x = Math.cos(angle) * r;
+        const z = Math.sin(angle) * r;
+        const pos = new Vector3(x, 1, z);
+        // Ensure no two crates are too close together
+        if (crates.every(c => c.position.distanceTo(pos) >= minDist)) {
+            crates.push({ id: crates.length, active: true, position: pos, rotation: Math.random() * Math.PI, hp: 30, maxHp: 30 });
+        }
+    }
+    return crates;
 };
 
 const getSkillCardDetails = (key: string, level: number, stats: PlayerStats) => {
@@ -1026,6 +1033,14 @@ export const useGameStore = create<GameState>((set, get) => ({
       else if (drop.type === 'HEALTH') {
           const healAmt = Math.floor(state.stats.maxHealth * 0.1);
           return { drops: newDrops, health: Math.min(state.stats.maxHealth, state.health + healAmt) };
+      }
+      else if (drop.type === 'MAGNET') {
+          // Pull all other drops directly to the player position so they get picked up
+          newDrops.forEach(d => { if (d.type !== 'ITEM') d.position.copy(state.playerPosition); });
+          window.dispatchEvent(new CustomEvent('loot-text', {
+              detail: { position: state.playerPosition.clone().add(new Vector3(0, 3.5, 0)), text: '⚡ MAGNET!', color: '#c084fc' }
+          }));
+          return { drops: newDrops };
       }
 
       return { drops: newDrops };

@@ -321,28 +321,14 @@ export const SkillManager: React.FC<SkillManagerProps> = ({ enemyBulletsDataRef,
             if (orbitalTimer.current > 4.0) {
                 orbitalState.current = 1;
                 orbitalTimer.current = 0;
-                
-                const enemies = enemiesDataRef ? enemiesDataRef.current : [];
-                
-                for(let i=0; i<count; i++) {
-                    let target = null;
-                    let minDist = 50;
-                    
-                    for(const e of enemies) {
-                         if (!e.active) continue;
-                         const d = e.position.distanceTo(playerPosition);
-                         if (d < minDist) {
-                             minDist = d;
-                             target = e.position;
-                         }
-                    }
 
-                    const dir = new Vector3();
-                    if (target) {
-                        dir.subVectors(target, orbitalBlades.current[i].pos).normalize();
-                    } else {
-                        dir.subVectors(orbitalBlades.current[i].pos, playerPosition).normalize();
-                    }
+                // Launch blades toward mouse cursor direction (no auto-aim)
+                const mouseDir = new Vector3().subVectors(targetPosRef.current, playerPosition).normalize();
+                if (mouseDir.lengthSq() < 0.01) mouseDir.set(1, 0, 0);
+                for(let i=0; i<count; i++) {
+                    // Spread blades in a cone around the mouse direction
+                    const spreadAngle = count > 1 ? ((i - (count - 1) / 2) / (count - 1)) * 0.6 : 0;
+                    const dir = mouseDir.clone().applyAxisAngle(new Vector3(0, 1, 0), spreadAngle);
                     orbitalBlades.current[i].vel.copy(dir).multiplyScalar(20);
                 }
             }

@@ -159,7 +159,10 @@ export const DropManager: React.FC = () => {
         dummy.position.y = 1 + Math.sin(state.clock.elapsedTime * 3 + drop.id) * 0.3;
         dummy.rotation.set(0, drop.rotation, 0);
 
-        if (drop.type === 'GOLD') {
+        if (drop.type === 'MAGNET') {
+            dummy.scale.set(0.5, 0.5, 0.5);
+            tempColor.set('#c084fc');
+        } else if (drop.type === 'GOLD') {
             dummy.scale.set(0.4, 0.4, 0.4);
             tempColor.set('#fbbf24');
         } else if (drop.type === 'HEALTH') {

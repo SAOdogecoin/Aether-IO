@@ -34,7 +34,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
 
   const spawnTimer = useRef(0);
   const dotTicker = useRef(0);
-  const waveState = useRef({ wave: 1, bossSpawned: false, eliteSpawned: false });
+  const waveState = useRef({ wave: 1, bossSpawned: false, eliteSpawned: false, elitesSpawned: 0 });
   const bossActiveRef = useRef(false);
   const minimapThrottle = useRef(0);
   const [stunnedEnemies, setStunnedEnemies] = useState<Array<{id: number; x: number; y: number; z: number}>>([]);
@@ -88,6 +88,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
         waveState.current.wave = wave;
         waveState.current.bossSpawned = false;
         waveState.current.eliteSpawned = false;
+        waveState.current.elitesSpawned = 0;
     }
 
     const bossJustStarted = bossData.active && !bossActiveRef.current;
@@ -137,6 +138,9 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
             
             let isBoss = false;
             
+            // Elite quota: 1 per wave, 3 per every 5th wave (but not boss waves)
+            const eliteQuota = wave % 10 === 0 ? 0 : (wave % 5 === 0 ? 3 : 1);
+
             if (wave % 10 === 0 && !waveState.current.bossSpawned) {
                 isBoss = true;
                 waveState.current.bossSpawned = true;
@@ -145,28 +149,37 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                 setBossData({ active: true, name: bossName, hp: 1, maxHp: 1 });
 
                 enemy.type = 2;
-                enemy.health = (2000 + (level * 250) + (wave * 100)) * hpMult * globalHpReduction * 0.5;
+                enemy.health = (2000 + (level * 250) + (wave * 100)) * hpMult * globalHpReduction * 0.5 * 1.2;
                 enemy.speed = (2.5 + (level * 0.1)) * speedMult;
                 enemy.radius = 2.5;
                 enemy.scale = 3.0;
                 setBossData({ hp: enemy.health, maxHp: enemy.health });
+            } else if (wave >= 2 && waveState.current.elitesSpawned < eliteQuota) {
+                // Spawn elite (type 1)
+                waveState.current.elitesSpawned++;
+                enemy.type = 1;
+                const isLargeElite = Math.random() > 0.5;
+                enemy.health = (40 + (level * 10)) * hpMult * globalHpReduction * 1.3 * (isLargeElite ? 2 : 1);
+                enemy.speed = (3.0 + (level * 0.1)) * speedMult;
+                enemy.radius = isLargeElite ? 1.2 : 0.9;
+                enemy.scale = isLargeElite ? 1.8 : 1.3;
             } else if (wave >= 3 && r > 0.925) {
                 if (Math.random() > 0.5) {
                     enemy.type = 3;
-                    enemy.health = (15 + (level * 5)) * hpMult * globalHpReduction;
+                    enemy.health = (15 + (level * 5)) * hpMult * globalHpReduction * 1.3;
                     enemy.speed = 3.0 * speedMult;
                     enemy.radius = 0.8;
                     enemy.scale = 1.0;
                 } else {
                     enemy.type = 6;
-                    enemy.health = (20 + (level * 6)) * hpMult * globalHpReduction;
+                    enemy.health = (20 + (level * 6)) * hpMult * globalHpReduction * 1.3;
                     enemy.speed = 2.0 * speedMult;
                     enemy.radius = 0.8;
                     enemy.scale = 1.1;
                 }
             } else if (wave >= 2 && r > 0.85) {
                 enemy.type = 4;
-                const baseHp = (10 + (level * 4)) * hpMult * globalHpReduction;
+                const baseHp = (10 + (level * 4)) * hpMult * globalHpReduction * 1.3;
                 enemy.health = baseHp * 0.5;
                 const baseSpeed = (4 + (level * 0.15)) * speedMult;
                 enemy.speed = baseSpeed * 2.0;
@@ -174,7 +187,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                 enemy.scale = 0.8;
             } else {
                 enemy.type = 0;
-                enemy.health = (10 + (level * 4)) * hpMult * globalHpReduction;
+                enemy.health = (10 + (level * 4)) * hpMult * globalHpReduction * 1.3;
                 enemy.speed = (4 + (level * 0.15)) * speedMult;
                 enemy.radius = 0.6;
                 enemy.scale = 1.0;
@@ -471,6 +484,10 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                 // 5% chance to drop a health orb
                 if (Math.random() < 0.05) {
                     spawnDrop(e.position.clone(), 'HEALTH', 0);
+                }
+                // 0.5% chance to drop a magnet orb (pulls all map drops)
+                if (Math.random() < 0.005) {
+                    spawnDrop(e.position.clone(), 'MAGNET', 0);
                 }
                 dummy.position.set(0, -100, 0);
                 if (stunIconsRef.current) stunIconsRef.current.setMatrixAt(i, dummy.matrix);
