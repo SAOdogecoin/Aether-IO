@@ -513,21 +513,21 @@ export const GameUI: React.FC = () => {
   useEffect(() => {
       if (hasUpgradableSkills && status === GameStatus.PLAYING && !panelOpen) {
           const existingSpNotif = notifications.find(n => n.message.includes('Skill Points') || n.message.includes('Spend'));
-          if (!existingSpNotif) {
-              addNotification('Spend Unused Skill Points', '#ec4899', 'SYSTEM', { label: 'UPGRADE', onClick: () => { setPanelTab('SKILLS'); openSpecificShop('SKILLS'); } });
+          if (existingSpNotif) {
+              removeNotification(existingSpNotif.id);
           }
       }
-  }, [hasUpgradableSkills, status, panelOpen, notifications, addNotification]);
+  }, [hasUpgradableSkills, status, panelOpen, notifications, removeNotification]);
 
   // Better equipment persistent notification
   useEffect(() => {
       if (hasBetterItem && status === GameStatus.PLAYING && !panelOpen) {
           const existingItemNotif = notifications.find(n => n.message.includes('Better Equipment'));
-          if (!existingItemNotif) {
-              addNotification('Better Equipment Available', '#3b82f6', 'SYSTEM', { label: 'EQUIP', onClick: () => { setPanelTab('INVENTORY'); openSpecificShop('INVENTORY'); } });
+          if (existingItemNotif) {
+              removeNotification(existingItemNotif.id);
           }
       }
-  }, [hasBetterItem, status, panelOpen, notifications, addNotification]);
+  }, [hasBetterItem, status, panelOpen, notifications, removeNotification]);
 
   const onInventoryItemClick = (item: Item) => {
       if (isShopOpen) {
@@ -774,6 +774,34 @@ export const GameUI: React.FC = () => {
                  )}
              </div>
 
+             {/* Top bar notifications */}
+             <div className="flex items-center gap-2">
+                 {hasUpgradableSkills && (
+                     <motion.button
+                         initial={{ scale: 0.8, opacity: 0 }}
+                         animate={{ scale: 1, opacity: 1 }}
+                         exit={{ scale: 0.8, opacity: 0 }}
+                         onClick={() => { setPanelTab('SKILLS'); openSpecificShop('SKILLS'); }}
+                         className="px-3 py-1.5 bg-pink-500/90 text-white font-black text-xs rounded-md border border-pink-400/60 hover:bg-pink-500 transition-all pointer-events-auto"
+                         style={{ boxShadow: '0 2px 8px rgba(236,72,153,0.4)' }}
+                     >
+                         UPGRADE SKILLS
+                     </motion.button>
+                 )}
+                 {hasBetterItem && (
+                     <motion.button
+                         initial={{ scale: 0.8, opacity: 0 }}
+                         animate={{ scale: 1, opacity: 1 }}
+                         exit={{ scale: 0.8, opacity: 0 }}
+                         onClick={() => { setPanelTab('INVENTORY'); toggleInventory(); }}
+                         className="px-3 py-1.5 bg-blue-500/90 text-white font-black text-xs rounded-md border border-blue-400/60 hover:bg-blue-500 transition-all pointer-events-auto"
+                         style={{ boxShadow: '0 2px 8px rgba(59,130,246,0.4)' }}
+                     >
+                         BETTER GEAR
+                     </motion.button>
+                 )}
+             </div>
+
              {/* RIGHT: Coins only */}
              <div className="flex items-center gap-2">
                  <Coins size={20} className="text-yellow-400" style={{ filter: 'drop-shadow(0 0 6px #fbbf24)' }}/>
@@ -914,7 +942,7 @@ export const GameUI: React.FC = () => {
 
           {/* Toast notifications above minimap (right side) */}
           <AnimatePresence>
-              {notifications.filter(n => n.type === 'SYSTEM').map((note) => (
+              {notifications.filter(n => n.type === 'SYSTEM' && !n.message.includes('Spend Unused') && !n.message.includes('Better Equipment')).map((note) => (
                   <CenterNotification key={note.id} note={note} onRemove={removeNotification} />
               ))}
           </AnimatePresence>
