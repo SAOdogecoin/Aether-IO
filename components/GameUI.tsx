@@ -663,13 +663,43 @@ export const GameUI: React.FC = () => {
           {/* Top Bar */}
           <div className="flex justify-between items-start pointer-events-auto w-full z-20">
 
-             {/* Level Indicator & Spacer for layout */}
-             <div className="flex items-center gap-2">
-               <div className="px-2.5 py-1.5 rounded-md flex items-center justify-center" style={{background:'rgba(12,12,18,0.92)',border:'1px solid rgba(180,150,70,0.2)',boxShadow:'0 2px 10px rgba(0,0,0,0.5)'}}>
-                 <span className="text-xs font-black text-white rpg-text">LV</span>
-                 <span className="ml-1 text-sm font-black text-yellow-400 rpg-text">{level}</span>
+             {/* LEFT: Character portrait + HP/MP/XP bars */}
+             <div className="flex items-center" style={{ minWidth: 320 }}>
+               {/* Circle portrait */}
+               <div className="relative shrink-0 z-10" style={{
+                 width: 64, height: 64, borderRadius: '50%',
+                 background: `radial-gradient(circle at 35% 35%, ${CLASS_COLOR[hero] ?? '#6366f1'}cc, #0a0a12)`,
+                 border: `3px solid ${CLASS_COLOR[hero] ?? '#6366f1'}`,
+                 boxShadow: `0 0 18px ${CLASS_COLOR[hero] ?? '#6366f1'}88, inset 0 2px 8px rgba(0,0,0,0.7)`,
+                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+               }}>
+                 <span className="text-[9px] font-black text-white/70 uppercase tracking-widest">{hero.slice(0,3)}</span>
+                 <span className="text-sm font-black text-white rpg-text">LV{level}</span>
                </div>
-               <div className="w-60 shrink-0"/>
+               {/* Bars */}
+               <div className="flex flex-col gap-1.5 -ml-3" style={{ width: 260 }}>
+                 {/* HP */}
+                 <div className="relative h-5 rounded-r-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.75)', border: '1px solid rgba(220,40,40,0.4)', boxShadow: '0 0 8px rgba(220,40,40,0.3)', paddingLeft: 12 }}>
+                   <div className="absolute inset-y-0 left-3 right-0 rounded-r-full overflow-hidden">
+                     <div style={{ width: `${hpPercent}%`, height: '100%', background: 'linear-gradient(90deg,#b91c1c,#ef4444,#ff6b6b)', transition: 'width 0.15s', boxShadow: '2px 0 8px #ef444488' }} />
+                   </div>
+                   <span className="absolute inset-0 flex items-center justify-center text-[9px] font-black text-white drop-shadow z-10" style={{ paddingLeft: 12 }}>{Math.ceil(health)}/{stats.maxHealth}</span>
+                 </div>
+                 {/* MP */}
+                 <div className="relative h-4 rounded-r-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.75)', border: '1px solid rgba(59,130,246,0.4)', boxShadow: '0 0 8px rgba(59,130,246,0.3)', paddingLeft: 12 }}>
+                   <div className="absolute inset-y-0 left-3 right-0 rounded-r-full overflow-hidden">
+                     <div style={{ width: `${manaPercent}%`, height: '100%', background: 'linear-gradient(90deg,#1d4ed8,#3b82f6,#60a5fa)', transition: 'width 0.15s', boxShadow: '2px 0 8px #3b82f688' }} />
+                   </div>
+                   <span className="absolute inset-0 flex items-center justify-center text-[9px] font-black text-white drop-shadow z-10" style={{ paddingLeft: 12 }}>{Math.ceil(mana)}/{stats.maxMana}</span>
+                 </div>
+                 {/* XP */}
+                 <div className="relative h-2.5 rounded-r-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.75)', border: '1px solid rgba(34,197,94,0.4)', paddingLeft: 12 }}>
+                   <div className="absolute inset-y-0 left-3 right-0 rounded-r-full overflow-hidden">
+                     <div style={{ width: `${xpPercent}%`, height: '100%', background: 'linear-gradient(90deg,#15803d,#22c55e)', transition: 'width 0.3s' }} />
+                   </div>
+                 </div>
+                 <span className="text-[9px] font-bold uppercase tracking-widest -mt-0.5" style={{ color: CLASS_COLOR[hero] ?? '#6366f1', paddingLeft: 14 }}>{hero} · LV{level}</span>
+               </div>
              </div>
 
              {/* Center: Wave + Boss */}
@@ -702,18 +732,10 @@ export const GameUI: React.FC = () => {
                  )}
              </div>
 
-             {/* Currency & Stats */}
-             <div className="flex gap-6 items-center">
-                 <div className="flex items-center gap-2">
-                    <Coins size={16} className="text-yellow-400"/>
-                    <span className="font-black text-white text-lg rpg-text">{score.toLocaleString()}</span>
-                 </div>
-                 <div className="flex items-center gap-4 text-xs">
-                    <div className="flex items-center gap-1"><span style={{color: CLASS_COLOR[hero] ?? '#6366f1'}} className="font-black uppercase">{hero}</span></div>
-                    <div className="flex items-center gap-1"><span className="text-yellow-400 font-black">LV{level}</span></div>
-                    <div className="flex items-center gap-1"><span className="text-red-400 font-bold">{Math.ceil(health)}/{stats.maxHealth}</span><Heart size={12} className="text-red-400"/></div>
-                    <div className="flex items-center gap-1"><span className="text-blue-400 font-bold">{Math.ceil(mana)}/{stats.maxMana}</span><Zap size={12} className="text-blue-400"/></div>
-                 </div>
+             {/* RIGHT: Coins only */}
+             <div className="flex items-center gap-2">
+                 <Coins size={20} className="text-yellow-400" style={{ filter: 'drop-shadow(0 0 6px #fbbf24)' }}/>
+                 <span className="font-black text-yellow-300 text-2xl rpg-text" style={{ textShadow: '0 0 12px #fbbf2488, 0 2px 4px rgba(0,0,0,0.9)' }}>{score.toLocaleString()}</span>
              </div>
           </div>
 

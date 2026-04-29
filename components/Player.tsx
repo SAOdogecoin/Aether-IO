@@ -388,12 +388,25 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
         {/* Floating HP/MP bars — hidden during menus/reward/revive */}
         {status !== GameStatus.LEVEL_UP && !isInventoryOpen && !isShopOpen && !isCharacterSheetOpen && revivingCountdown <= 0 && (
         <Html position={[0, 3.4, 0]} center zIndexRange={[50, 0]} style={{ pointerEvents: 'none' }}>
-            <div style={{ width: 80, display: 'flex', flexDirection: 'column', gap: 3 }}>
-                <div style={{ height: 8, background: 'rgba(0,0,0,0.7)', borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.8)', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.8)' }}>
-                    <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, (health / stats.maxHealth) * 100))}%`, background: 'linear-gradient(90deg,#b91c1c,#ef4444)', borderRadius: 3, transition: 'width 0.1s' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                {/* Level circle */}
+                <div style={{
+                    width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
+                    background: 'radial-gradient(circle at 35% 35%, #1e293b, #0a0a12)',
+                    border: '2px solid rgba(250,204,21,0.8)',
+                    boxShadow: '0 0 8px rgba(250,204,21,0.5)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                    <span style={{ fontSize: 9, fontWeight: 900, color: '#fde047', lineHeight: 1 }}>{level}</span>
                 </div>
-                <div style={{ height: 6, background: 'rgba(0,0,0,0.7)', borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.8)', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.8)' }}>
-                    <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, (mana / stats.maxMana) * 100))}%`, background: 'linear-gradient(90deg,#1d4ed8,#3b82f6)', borderRadius: 3, transition: 'width 0.1s' }} />
+                {/* Bars */}
+                <div style={{ width: 72, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <div style={{ height: 8, background: 'rgba(0,0,0,0.7)', borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.8)', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.8)' }}>
+                        <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, (health / stats.maxHealth) * 100))}%`, background: 'linear-gradient(90deg,#b91c1c,#ef4444)', borderRadius: 3, transition: 'width 0.1s' }} />
+                    </div>
+                    <div style={{ height: 6, background: 'rgba(0,0,0,0.7)', borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.8)', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.8)' }}>
+                        <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, (mana / stats.maxMana) * 100))}%`, background: 'linear-gradient(90deg,#1d4ed8,#3b82f6)', borderRadius: 3, transition: 'width 0.1s' }} />
+                    </div>
                 </div>
             </div>
         </Html>
