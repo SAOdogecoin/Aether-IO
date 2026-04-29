@@ -164,7 +164,8 @@ const CenterNotification: React.FC<{ note: GameNotification; onRemove: (id: stri
         exit={{ opacity: 0, y: -20, scale: 0.95 }}
         className="absolute left-1/2 top-1/3 -translate-x-1/2 w-full max-w-lg pointer-events-auto z-[110]"
       >
-        <div className="rounded-3xl p-5 bg-slate-950/95 border border-slate-500/40 shadow-2xl backdrop-blur-xl text-center">
+        <div className="rounded-3xl p-5 bg-slate-950/95 border border-slate-500/40 shadow-2xl backdrop-blur-xl text-center relative">
+            <button onClick={() => onRemove(note.id)} className="absolute top-2 right-2 text-white/40 hover:text-white/80 text-lg font-black leading-none">✕</button>
             <div className="text-sm font-black text-white uppercase tracking-[0.22em] mb-2">{note.message}</div>
             {note.action && (
               <button
@@ -464,6 +465,20 @@ export const GameUI: React.FC = () => {
     });
   }, [inventory, equipment, level, hero]);
 
+  // Check if there are skills that can be upgraded
+  const hasUpgradableSkills = useMemo(() => {
+    return Object.entries(SKILLS_INFO).some(([key, info]) => {
+      if ((info as any).classType && (info as any).classType !== hero) return false;
+      const sk = key as keyof SkillLevels;
+      const lvl = skillLevels[sk];
+      if (lvl >= 5) return false; // Max level
+      let cost = lvl + 1;
+      if (key === 'special') cost = 5;
+      if (key === 'dash' || key === 'barrier') cost = lvl + 2;
+      return skillPoints >= cost;
+    });
+  }, [skillLevels, skillPoints, hero]);
+
   useEffect(() => {
       const handleMouseMove = (e: MouseEvent) => {
           setMousePos({ x: e.clientX, y: e.clientY });
@@ -496,13 +511,13 @@ export const GameUI: React.FC = () => {
 
   // Skill points persistent notification
   useEffect(() => {
-      if (skillPoints > 0 && status === GameStatus.PLAYING && !panelOpen) {
-          const existingSpNotif = notifications.find(n => n.message.includes('Skill Points'));
+      if (hasUpgradableSkills && status === GameStatus.PLAYING && !panelOpen) {
+          const existingSpNotif = notifications.find(n => n.message.includes('Skill Points') || n.message.includes('Spend'));
           if (!existingSpNotif) {
-              addNotification(`${skillPoints} Unused Skill Points`, '#ec4899', 'SYSTEM', { label: 'SPEND', onClick: () => { setPanelTab('SKILLS'); openSpecificShop('SKILLS'); } });
+              addNotification('Spend Unused Skill Points', '#ec4899', 'SYSTEM', { label: 'UPGRADE', onClick: () => { setPanelTab('SKILLS'); openSpecificShop('SKILLS'); } });
           }
       }
-  }, [skillPoints, status, panelOpen, notifications, addNotification]);
+  }, [hasUpgradableSkills, status, panelOpen, notifications, addNotification]);
 
   // Better equipment persistent notification
   useEffect(() => {
@@ -550,7 +565,7 @@ export const GameUI: React.FC = () => {
   const xpPercent = (experience / experienceToNextLevel) * 100;
   const currentCP = calculateTotalCP(stats);
 
-  const hasAlerts = skillPoints > 0 || hasBetterItem;
+  const hasAlerts = hasUpgradableSkills || hasBetterItem;
 
   const hpPotion = inventory.find(i => i.type === 'POTION' && i.name.includes('Health'));
   const manaPotion = inventory.find(i => i.type === 'POTION' && i.name.includes('Mana'));
@@ -1032,7 +1047,7 @@ export const GameUI: React.FC = () => {
                   {/* Tab bar */}
                   <div className="flex items-center shrink-0" style={{ borderBottom: '1px solid rgba(180,150,70,0.18)', background: 'rgba(0,0,0,0.3)' }}>
                     {(['INVENTORY','CRAFTING','SKILLS','SHOP','CHARACTER'] as const).map(tab => {
-                      const showDot = (tab === 'SKILLS' && skillPoints > 0) || (tab === 'INVENTORY' && hasBetterItem);
+                      const showDot = (tab === 'SKILLS' && hasUpgradableSkills) || (tab === 'INVENTORY' && hasBetterItem);
                       return (
                       <button key={tab} onClick={() => {
                         setPanelTab(tab);
