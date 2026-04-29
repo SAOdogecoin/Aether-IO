@@ -157,7 +157,7 @@ interface GameState {
   advanceWave: () => void;
   setBossData: (data: Partial<BossData>) => void;
   
-  addNotification: (message: string, color?: string, type?: 'ITEM' | 'BOSS' | 'SYSTEM' | 'WARNING', action?: { label: string, onClick: () => void }) => void;
+  addNotification: (message: string, color?: string, type?: 'ITEM' | 'BOSS' | 'SYSTEM' | 'WARNING', action?: { label: string, onClick: () => void }, persistent?: boolean) => void;
   removeNotification: (id: string) => void;
   handleInventoryFull: () => void;
 }
@@ -849,7 +849,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     newCrates[index] = { ...crate, active: false };
     set({ crates: newCrates });
     
-    spawnDrop(crate.position, 'XP', 50);
+    spawnDrop(crate.position, 'XP', 20 + (get().wave - 1) * 5);
     const r = Math.random();
     if (r > 0.85) {
         spawnDrop(crate.position.clone().add(new Vector3(1,0,0)), 'ITEM', 0);
@@ -1448,7 +1448,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     };
     set(initialState);
   },
-  addNotification: (message, color = 'white', type = 'ITEM', action) => set(state => ({ notifications: [...state.notifications, { id: Math.random().toString(), message, color, type, action }] })),
+  addNotification: (message, color = 'white', type = 'ITEM', action, persistent = false) => set(state => ({ notifications: [...state.notifications, { id: Math.random().toString(), message, color, type, action, persistent }] })),
   removeNotification: (id) => set(state => ({ notifications: state.notifications.filter(n => n.id !== id) })),
   
   upgradeSkill: (skill) => {
