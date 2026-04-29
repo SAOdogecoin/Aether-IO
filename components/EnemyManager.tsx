@@ -36,6 +36,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
   const dotTicker = useRef(0);
   const waveState = useRef({ wave: 1, bossSpawned: false, eliteSpawned: false, elitesSpawned: 0 });
   const bossActiveRef = useRef(false);
+  const bossDefeatedTimer = useRef(0);
   const minimapThrottle = useRef(0);
   const [stunnedEnemies, setStunnedEnemies] = useState<Array<{id: number; x: number; y: number; z: number}>>([]);
   const stunnedUpdateTimer = useRef(0); 
@@ -83,12 +84,23 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
     if (waveTimer > 30 && !bossData.active) {
         advanceWave();
     }
-    
+
+    // Boss defeat countdown: 5 seconds before next wave
+    if (bossActiveRef.current && !bossData.active) {
+        // Boss just died
+        bossDefeatedTimer.current += delta;
+        if (bossDefeatedTimer.current >= 5.0) {
+            bossDefeatedTimer.current = 0;
+            advanceWave();
+        }
+    }
+
     if (wave !== waveState.current.wave) {
         waveState.current.wave = wave;
         waveState.current.bossSpawned = false;
         waveState.current.eliteSpawned = false;
         waveState.current.elitesSpawned = 0;
+        bossDefeatedTimer.current = 0;
     }
 
     const bossJustStarted = bossData.active && !bossActiveRef.current;
@@ -340,6 +352,12 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
             e.stateTimer = (e.stateTimer || 0) + delta;
 
             if (e.type === 2 && canMove) {
+                // Melee attack when player is close (like normal enemies)
+                if (distToPlayer < e.radius + 0.5) {
+                    const dmg = 30 * (1 + wave * 0.1);
+                    takeDamage(dmg * delta);
+                }
+
                 e.bossTimer = (e.bossTimer || 0) + delta;
                 if (e.bossTimer > 5.0) {
                     e.bossTimer = 0;
@@ -349,19 +367,19 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                 const pattern = e.bossPattern || 0;
 
                 if (pattern === 0) {
-                    if (e.stateTimer > 0.05) { 
+                    if (e.stateTimer > 0.05) {
                         e.stateTimer = 0;
                         e.bossAngle = (e.bossAngle || 0) + 0.3;
                         const bullet = enemyBulletsDataRef.current.find(b => !b.active);
                         if (bullet) {
                             bullet.active = true;
                             bullet.lifetime = 4.0;
-                            bullet.damage = 0; 
+                            bullet.damage = 10;
                             bullet.position.copy(e.position).add(new Vector3(0, 1.5, 0));
-                            bullet.velocity.set(Math.cos(e.bossAngle), 0, Math.sin(e.bossAngle)).multiplyScalar(10);
+                            bullet.velocity.set(Math.cos(e.bossAngle), 0, Math.sin(e.bossAngle)).multiplyScalar(10 * 1.7);
                         }
                     }
-                } 
+                }
                 else if (pattern === 1) {
                      if (e.stateTimer > 0.8) {
                         e.stateTimer = 0;
@@ -370,10 +388,10 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                             if (bullet) {
                                 bullet.active = true;
                                 bullet.lifetime = 4.0;
-                                bullet.damage = 0;
+                                bullet.damage = 10;
                                 bullet.position.copy(e.position).add(new Vector3(0, 1.5, 0));
                                 const a = (Math.PI * 2 * k) / 12;
-                                bullet.velocity.set(Math.cos(a), 0, Math.sin(a)).multiplyScalar(8);
+                                bullet.velocity.set(Math.cos(a), 0, Math.sin(a)).multiplyScalar(8 * 1.7);
                             }
                         }
                      }
@@ -385,13 +403,13 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                         if (bullet) {
                             bullet.active = true;
                             bullet.lifetime = 4.0;
-                            bullet.damage = 0;
+                            bullet.damage = 10;
                             bullet.position.copy(e.position).add(new Vector3(0, 1.5, 0));
 
                             tempVec.subVectors(playerPosition, e.position).normalize();
                             const spread = (Math.random() - 0.5) * 0.3;
                             tempVec.applyAxisAngle(new Vector3(0,1,0), spread);
-                            bullet.velocity.copy(tempVec).multiplyScalar(14);
+                            bullet.velocity.copy(tempVec).multiplyScalar(14 * 1.7);
                         }
                     }
                 }
