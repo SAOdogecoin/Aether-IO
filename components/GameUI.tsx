@@ -579,15 +579,91 @@ export const GameUI: React.FC = () => {
   const hpPotion = inventory.find(i => i.type === 'POTION' && i.name.includes('Health'));
   const manaPotion = inventory.find(i => i.type === 'POTION' && i.name.includes('Mana'));
 
+  const f = (n: number) => Number(n.toFixed(1));
+  const getSkillDesc = (skillKey: string, level: number): string => {
+    const dmg = stats.damage;
+    const nextLvl = level + 1;
+
+    if (skillKey === 'piercing') {
+      const d = f(dmg * 3.0);
+      const nextD = f(dmg * 3.2);
+      if (level === 0) return `Unlock: Giant piercing arrow. Base: ${d} dmg.`;
+      return `Arrow Damage: ${d} -> ${nextD}. Pierce: ${level + 2} enemies.`;
+    }
+    if (skillKey === 'gravity') {
+      const d = f(dmg * 10.0);
+      const nextD = f(dmg * 10.5);
+      const pullLimit = 8 + level;
+      if (level === 0) return `Unlock: Summon blackhole. ${d} dmg. Pull ${pullLimit} enemies.`;
+      return `Damage: ${d} -> ${nextD}. Pull Limit: ${pullLimit}.`;
+    }
+    if (skillKey === 'rage') {
+      if (level === 0) return `Unlock: Double attack speed for 4s. CD: 7.0s.`;
+      return `Enhanced stats during Rage. CD: 7.0s.`;
+    }
+    if (skillKey === 'orbital') {
+      const count = 2 + level;
+      const d = f(dmg * 1.5 * (1 + level * 0.1));
+      if (level === 0) return `Unlock: Summons 2 blades dealing ${f(dmg*1.5)} dmg/hit.`;
+      return `Blades: ${count}. Dmg/tick: ${d}.`;
+    }
+    if (skillKey === 'thunder') {
+      const d = f(dmg * 0.75 * (1 + level * 0.1));
+      if (level === 0) return `Unlock: Strikes 1 enemy for ${f(dmg*0.75)} dmg every 7s.`;
+      return `Targets: ${level}. Dmg: ${d}. CD: 7s.`;
+    }
+    if (skillKey === 'barrier') {
+      const dur = f(1.0 + level * 0.2);
+      const cd = f(Math.max(20, 48 - (level * 4)));
+      if (level === 0) return `Unlock: Invulnerability shield. Duration: 1.2s. CD: 48s.`;
+      return `Duration: ${dur}s. CD: ${cd}s.`;
+    }
+    if (skillKey === 'burning') {
+      const maxCd = f(Math.max(2.0, 8.0 - (level * 0.5)));
+      const d = f(dmg * 0.525 * stats.skillDamage);
+      if (level === 0) return `Unlock: Fire arrows every ${maxCd}s. Dmg: ${d}.`;
+      return `Fire Rate: ${maxCd}s. Dmg: ${d}.`;
+    }
+    if (skillKey === 'freezing') {
+      const maxCd = f(Math.max(2.0, 7.0 - (level * 0.5)));
+      if (level === 0) return `Unlock: Freezing arrows every ${maxCd}s. Freeze: 1.5s.`;
+      return `Fire Rate: ${maxCd}s. Freeze Duration: 1.5s.`;
+    }
+    if (skillKey === 'freezeSpell') {
+      const maxCd = f(Math.max(7.0, 14.0 - (level * 0.2)));
+      const d = f(dmg * 0.75 * stats.skillDamage);
+      if (level === 0) return `Unlock: Blizzard every ${maxCd}s. Range: 27. Dmg: ${d}.`;
+      return `CD: ${maxCd}s. Dmg: ${d}. Freeze: 5.1s.`;
+    }
+    if (skillKey === 'storm') {
+      const maxCd = f(Math.max(5.0, 15.0 - (level * 0.2)));
+      const d = f(dmg * 1.5 * stats.skillDamage);
+      if (level === 0) return `Unlock: Bouncing typhoon every ${maxCd}s. Dmg: ${d}.`;
+      return `CD: ${maxCd}s. Dmg: ${d}. Bounces: 6.`;
+    }
+    if (skillKey === 'stamp') {
+      const maxCd = f(Math.max(4.0, 12.0 - (level * 0.5)));
+      const d = f(dmg * 1.5 * stats.skillDamage);
+      if (level === 0) return `Unlock: Stomp every ${maxCd}s. Range: 8. Dmg: ${d}.`;
+      return `CD: ${maxCd}s. Dmg: ${d}. Stun: 2s.`;
+    }
+    if (skillKey === 'weapon') {
+      const cdReduction = f(level * 0.05);
+      if (level === 0) return `Unlock: Reduces weapon ability cooldown by 5%.`;
+      return `CD Reduction: ${f(cdReduction*100)}%.`;
+    }
+    return "Improves skill stats.";
+  };
+
   let weaponAbilityDesc = "Basic Attack.";
-  if (equipment.weapon?.ability === 'FIREBALL') weaponAbilityDesc = "Shoots a slow giant fireball.";
-  else if (equipment.weapon?.ability === 'ARROW_RAIN') weaponAbilityDesc = "Fires waves of arrows.";
-  else if (equipment.weapon?.ability === 'AXE_SPIN') weaponAbilityDesc = "Spinning blade barrier.";
-  
+  if (equipment.weapon?.ability === 'FIREBALL') weaponAbilityDesc = `Fireball: ${f(dmg * 4.0 * 0.63 * stats.skillDamage * 2.0)} dmg. Burn effect.`;
+  else if (equipment.weapon?.ability === 'ARROW_RAIN') weaponAbilityDesc = `Arrow Rain: ${f(dmg * 1.5 * 0.63 * stats.skillDamage * 2.0)} per arrow. 6 waves.`;
+  else if (equipment.weapon?.ability === 'AXE_SPIN') weaponAbilityDesc = `Axe Spin: ${f(dmg * 5 * stats.skillDamage * 2.0 * 0.63)} dmg. Range: 6.0.`;
+
   let qAbilityDesc = "Locked.";
-  if (activeAbilityQ === 'PIERCING_SHOT') qAbilityDesc = "Massive piercing arrow.";
-  else if (activeAbilityQ === 'GRAVITY_SPELL') qAbilityDesc = "Summons blackhole.";
-  else if (activeAbilityQ === 'RAGE') qAbilityDesc = "Doubles Attack Speed.";
+  if (activeAbilityQ === 'PIERCING_SHOT') qAbilityDesc = getSkillDesc('piercing', skillLevels.piercing);
+  else if (activeAbilityQ === 'GRAVITY_SPELL') qAbilityDesc = getSkillDesc('gravity', skillLevels.gravity);
+  else if (activeAbilityQ === 'RAGE') qAbilityDesc = getSkillDesc('rage', skillLevels.rage);
 
   let eAbilityDesc = "Locked. (Requires 5 SP)";
   let eAbilityIcon = <div className="text-slate-400 text-xs font-bold">LOCKED</div>;
@@ -925,27 +1001,27 @@ export const GameUI: React.FC = () => {
 
                 {/* Passive Skills */}
                 {(hero === 'WIZARD' || !SKILLS_INFO.thunder.classType) && (
-                    <UniversalSkillSlot icon={fi(Zap, 22)} level={skillLevels.thunder} cooldown={passiveSkillState.thunderCooldown} maxCooldown={passiveSkillState.thunderMaxCooldown} desc="Thunder" active={skillLevels.thunder > 0} manaCost={getManaCost('thunder')} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
+                    <UniversalSkillSlot icon={fi(Zap, 22)} level={skillLevels.thunder} cooldown={passiveSkillState.thunderCooldown} maxCooldown={passiveSkillState.thunderMaxCooldown} desc={getSkillDesc('thunder', skillLevels.thunder)} active={skillLevels.thunder > 0} manaCost={getManaCost('thunder')} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
                 )}
                 {(hero === 'BARBARIAN' || !SKILLS_INFO.orbital.classType) && (
-                    <UniversalSkillSlot icon={fi(Activity, 22)} level={skillLevels.orbital} cooldown={passiveSkillState.orbitalCooldown} maxCooldown={passiveSkillState.orbitalMaxCooldown} desc="Orbital" active={skillLevels.orbital > 0} manaCost={0} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
+                    <UniversalSkillSlot icon={fi(Activity, 22)} level={skillLevels.orbital} cooldown={passiveSkillState.orbitalCooldown} maxCooldown={passiveSkillState.orbitalMaxCooldown} desc={getSkillDesc('orbital', skillLevels.orbital)} active={skillLevels.orbital > 0} manaCost={0} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
                 )}
                 {(hero === 'WIZARD' || !SKILLS_INFO.storm.classType) && (
-                    <UniversalSkillSlot icon={fi(Tornado, 22)} level={skillLevels.storm} cooldown={passiveSkillState.stormCooldown} maxCooldown={passiveSkillState.stormMaxCooldown} desc="Storm" active={skillLevels.storm > 0} manaCost={0} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
+                    <UniversalSkillSlot icon={fi(Tornado, 22)} level={skillLevels.storm} cooldown={passiveSkillState.stormCooldown} maxCooldown={passiveSkillState.stormMaxCooldown} desc={getSkillDesc('storm', skillLevels.storm)} active={skillLevels.storm > 0} manaCost={0} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
                 )}
                 {(hero === 'ARCHER' || !SKILLS_INFO.burning.classType) && (
-                    <UniversalSkillSlot icon={fi(Flame, 22)} level={skillLevels.burning} cooldown={passiveSkillState.burningCooldown} maxCooldown={passiveSkillState.burningMaxCooldown} desc="Burning" active={skillLevels.burning > 0} manaCost={getManaCost('burning')} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
+                    <UniversalSkillSlot icon={fi(Flame, 22)} level={skillLevels.burning} cooldown={passiveSkillState.burningCooldown} maxCooldown={passiveSkillState.burningMaxCooldown} desc={getSkillDesc('burning', skillLevels.burning)} active={skillLevels.burning > 0} manaCost={getManaCost('burning')} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
                 )}
                 {(hero === 'ARCHER' || !SKILLS_INFO.freezing.classType) && (
-                    <UniversalSkillSlot icon={fiC(Gem, '#67e8f9', 22)} level={skillLevels.freezing} cooldown={passiveSkillState.freezingCooldown} maxCooldown={passiveSkillState.freezingMaxCooldown} desc="Freeze" active={skillLevels.freezing > 0} manaCost={getManaCost('freezing')} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
+                    <UniversalSkillSlot icon={fiC(Gem, '#67e8f9', 22)} level={skillLevels.freezing} cooldown={passiveSkillState.freezingCooldown} maxCooldown={passiveSkillState.freezingMaxCooldown} desc={getSkillDesc('freezing', skillLevels.freezing)} active={skillLevels.freezing > 0} manaCost={getManaCost('freezing')} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
                 )}
                 {(hero === 'WIZARD' || !SKILLS_INFO.freezeSpell.classType) && (
-                    <UniversalSkillSlot icon={fi(Zap, 22)} level={skillLevels.freezeSpell} cooldown={passiveSkillState.blizzardCooldown} maxCooldown={passiveSkillState.blizzardMaxCooldown} desc="Blizzard" active={skillLevels.freezeSpell > 0} manaCost={getManaCost('freezeSpell')} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
+                    <UniversalSkillSlot icon={fi(Zap, 22)} level={skillLevels.freezeSpell} cooldown={passiveSkillState.blizzardCooldown} maxCooldown={passiveSkillState.blizzardMaxCooldown} desc={getSkillDesc('freezeSpell', skillLevels.freezeSpell)} active={skillLevels.freezeSpell > 0} manaCost={getManaCost('freezeSpell')} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
                 )}
                 {(hero === 'BARBARIAN' || !SKILLS_INFO.stamp.classType) && (
-                    <UniversalSkillSlot icon={fi(Hammer, 22)} level={skillLevels.stamp} cooldown={passiveSkillState.stampCooldown} maxCooldown={passiveSkillState.stampMaxCooldown} desc="Stamp" active={skillLevels.stamp > 0} manaCost={getManaCost('stamp')} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
+                    <UniversalSkillSlot icon={fi(Hammer, 22)} level={skillLevels.stamp} cooldown={passiveSkillState.stampCooldown} maxCooldown={passiveSkillState.stampMaxCooldown} desc={getSkillDesc('stamp', skillLevels.stamp)} active={skillLevels.stamp > 0} manaCost={getManaCost('stamp')} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
                 )}
-                <UniversalSkillSlot icon={fiC(ShieldCheck, '#fb923c', 22)} level={skillLevels.barrier} desc="Shield" cooldown={barrierCooldown} maxCooldown={Math.max(10, 48-(skillLevels.barrier * 4))} charges={shieldCharges} maxCharges={maxShieldCharges} active={skillLevels.barrier > 0} manaCost={0} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
+                <UniversalSkillSlot icon={fiC(ShieldCheck, '#fb923c', 22)} level={skillLevels.barrier} desc={getSkillDesc('barrier', skillLevels.barrier)} cooldown={barrierCooldown} maxCooldown={Math.max(10, 48-(skillLevels.barrier * 4))} charges={shieldCharges} maxCharges={maxShieldCharges} active={skillLevels.barrier > 0} manaCost={0} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
 
                 <div className="w-px h-12 bg-white/15 self-center mx-0.5" />
 

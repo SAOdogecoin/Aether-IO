@@ -397,13 +397,34 @@ const getSkillCardDetails = (key: string, level: number, stats: PlayerStats) => 
     const dmg = stats.damage;
     const nextLvl = level + 1;
 
+    // Active Q Skills
+    if (key === 'piercing') {
+        const d = f(dmg * 3.0);
+        const nextD = f(dmg * 3.2);
+        if (level === 0) return `Unlock: Giant piercing arrow. Base: ${d} dmg.`;
+        return `Arrow Damage: ${d} -> ${nextD}. Pierce: ${level + 2} enemies.`;
+    }
+    if (key === 'gravity') {
+        const d = f(dmg * 10.0);
+        const nextD = f(dmg * 10.5);
+        const pullLimit = 8 + level;
+        const nextPullLimit = 8 + nextLvl;
+        if (level === 0) return `Unlock: Summon blackhole. Base: ${d} dmg. Pull ${pullLimit} enemies.`;
+        return `Damage: ${d} -> ${nextD}. Pull Limit: ${pullLimit} -> ${nextPullLimit}.`;
+    }
+    if (key === 'rage') {
+        if (level === 0) return `Unlock: Double attack speed for 4s. CD: 7.0s.`;
+        return `Level ${level}: Enhanced stats during Rage. CD: 7.0s.`;
+    }
+
+    // Passive Skills
     if (key === 'orbital') {
-        const count = 2 + level; 
+        const count = 2 + level;
         const nextCount = 2 + nextLvl;
         const d = f(dmg * 1.5 * (1 + level * 0.1));
         const nextD = f(dmg * 1.5 * (1 + nextLvl * 0.1));
         if (level === 0) return `Unlock: Summons 2 blades dealing ${f(dmg*1.5)} dmg/hit.`;
-        return `Blades: ${count} -> ${nextCount}. Dmg: ${d} -> ${nextD}.`;
+        return `Blades: ${count} -> ${nextCount}. Dmg/tick: ${d} -> ${nextD}.`;
     }
     if (key === 'thunder') {
         const t = level;
@@ -411,7 +432,13 @@ const getSkillCardDetails = (key: string, level: number, stats: PlayerStats) => 
         const d = f(dmg * 0.75 * (1 + level * 0.1));
         const nd = f(dmg * 0.75 * (1 + nextLvl * 0.1));
         if (level === 0) return `Unlock: Strikes 1 enemy for ${f(dmg*0.75)} dmg every 7s.`;
-        return `Targets: ${t} -> ${nt}. Dmg: ${d} -> ${nd}.`;
+        return `Targets: ${t} -> ${nt}. Dmg/strike: ${d} -> ${nd}. CD: 7s.`;
+    }
+    if (key === 'weapon') {
+        const cdReduction = f(level * 0.05);
+        const nextCdReduction = f(nextLvl * 0.05);
+        if (level === 0) return `Unlock: Reduces weapon ability cooldown by 5%.`;
+        return `CD Reduction: ${f(cdReduction*100)}% -> ${f(nextCdReduction*100)}%.`;
     }
     if (key === 'barrier') {
         const dur = f(1.0 + level * 0.2);
@@ -420,20 +447,59 @@ const getSkillCardDetails = (key: string, level: number, stats: PlayerStats) => 
         const ncd = f(Math.max(20, 48 - (nextLvl * 4)));
         const charges = level >= 5 ? 2 : 1;
         const ncharges = nextLvl >= 5 ? 2 : 1;
-        
-        if (level === 0) return `Unlock: Grants invulnerability shield (1.2s, 1 Charge, 48s CD).`;
+
+        if (level === 0) return `Unlock: Invulnerability shield (1.2s, 1 Charge, 48s CD).`;
         if (ncharges > charges) return `LEVEL ${nextLvl} UNLOCK: MAX CHARGES +1 (Total 2)!`;
-        return `Invuln: ${dur}s -> ${ndur}s. CD: ${cd}s -> ${ncd}s.`;
+        return `Duration: ${dur}s -> ${ndur}s. CD: ${cd}s -> ${ncd}s.`;
+    }
+    if (key === 'burning') {
+        const maxCd = f(Math.max(2.0, 8.0 - (level * 0.5)));
+        const nextMaxCd = f(Math.max(2.0, 8.0 - (nextLvl * 0.5)));
+        const d = f(dmg * 0.525 * stats.skillDamage);
+        const nextD = f(dmg * 0.525 * stats.skillDamage * 1.1);
+        if (level === 0) return `Unlock: Fire arrows every ${maxCd}s. Dmg: ${d}.`;
+        return `Fire Rate: ${maxCd}s -> ${nextMaxCd}s. Dmg: ${d} -> ${nextD}.`;
+    }
+    if (key === 'freezing') {
+        const maxCd = f(Math.max(2.0, 7.0 - (level * 0.5)));
+        const nextMaxCd = f(Math.max(2.0, 7.0 - (nextLvl * 0.5)));
+        if (level === 0) return `Unlock: Freezing arrows every ${maxCd}s. Freeze: 1.5s.`;
+        return `Fire Rate: ${maxCd}s -> ${nextMaxCd}s. Freeze Duration: 1.5s.`;
+    }
+    if (key === 'freezeSpell') {
+        const maxCd = f(Math.max(7.0, 14.0 - (level * 0.2)));
+        const nextMaxCd = f(Math.max(7.0, 14.0 - (nextLvl * 0.2)));
+        const d = f(dmg * 0.75 * stats.skillDamage);
+        const nextD = f(dmg * 0.75 * stats.skillDamage * 1.05);
+        if (level === 0) return `Unlock: Blizzard every ${maxCd}s. Range: 27. Dmg: ${d}.`;
+        return `CD: ${maxCd}s -> ${nextMaxCd}s. Dmg: ${d} -> ${nextD}. Freeze: 5.1s.`;
+    }
+    if (key === 'storm') {
+        const maxCd = f(Math.max(5.0, 15.0 - (level * 0.2)));
+        const nextMaxCd = f(Math.max(5.0, 15.0 - (nextLvl * 0.2)));
+        const d = f(dmg * 1.5 * stats.skillDamage);
+        const nextD = f(dmg * 1.5 * stats.skillDamage * 1.05);
+        if (level === 0) return `Unlock: Bouncing typhoon every ${maxCd}s. Dmg: ${d}.`;
+        return `CD: ${maxCd}s -> ${nextMaxCd}s. Dmg/tick: ${d} -> ${nextD}. Bounces: 6.`;
+    }
+    if (key === 'stamp') {
+        const maxCd = f(Math.max(4.0, 12.0 - (level * 0.5)));
+        const nextMaxCd = f(Math.max(4.0, 12.0 - (nextLvl * 0.5)));
+        const d = f(dmg * 1.5 * stats.skillDamage);
+        const nextD = f(dmg * 1.5 * stats.skillDamage * 1.1);
+        if (level === 0) return `Unlock: Stomp every ${maxCd}s. Range: 8. Dmg: ${d}.`;
+        return `CD: ${maxCd}s -> ${nextMaxCd}s. Dmg: ${d} -> ${nextD}. Stun: 2s.`;
     }
     if (key === 'dash') {
         const charges = level >= 5 ? 2 : 1;
         const ncharges = nextLvl >= 5 ? 2 : 1;
-        if (level === 0) return `Unlock: Reduces Dash cooldown.`;
+        if (level === 0) return `Unlock: Dash with cooldown reduction.`;
         if (ncharges > charges) return `LEVEL ${nextLvl} UNLOCK: MAX CHARGES +1 (Total 2)!`;
-        return `Cooldown further reduced.`;
+        return `Cooldown further reduced. CD: 2.0s.`;
     }
+
     if (level === 0) return "Unlocks this skill.";
-    return "Improves skill stats & mana cost.";
+    return "Improves skill stats.";
 };
 
 const generateUpgradeOptions = (heroClass: HeroClass, skillLevels: SkillLevels): Upgrade[] => {
