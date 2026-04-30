@@ -390,7 +390,7 @@ export const GameUI: React.FC = () => {
     status, health, stats, score, gems, level, experience, experienceToNextLevel, skillPoints,
     inventory, maxInventorySlots, materials, equipment, setStatus, skills, skillMaxCooldowns, skillLevels, passiveSkillState,
     startGame, resetGame, applyUpgrade, selectUpgrade, upgradeOptions, equipItem, unequipItem, buyItem, upgradeItem, sellItem, sellItems, autoEquip, selectHero, hero, hpPotionCooldown,
-    wave, waveTimer, recentRuns, bossData, gameStats,
+    wave, waveTimer, recentRuns, bossData, gameStats, portalActive, portalPosition, activatePortal, advanceWave,
     isInventoryOpen, isShopOpen, toggleInventory, activeShopTab, closeAllUI, openSpecificShop,
     notifications, removeNotification, addNotification, upgradeSkill, toggleCharacterSheet, isCharacterSheetOpen, baseStats, activeAbilityQ, activeAbilityR,
     recycleItem, massRecycle, combineMaterials, craftItem, buyInventorySlots, actionResult, clearActionResult, massSell,
@@ -835,11 +835,80 @@ export const GameUI: React.FC = () => {
       {/* GAME UI */}
       {(status === GameStatus.PLAYING || status === GameStatus.PAUSED || status === GameStatus.INVENTORY || status === GameStatus.SHOP || status === GameStatus.LEVEL_UP) && (
         <div className="absolute inset-0 flex flex-col justify-between p-4 md:p-6 pointer-events-none">
-          {/* Top Bar - Genshin Impact Style */}
+          {/* Top Bar - Left: Stats, Center: Wave, Right: Menu */}
           <div className="flex justify-between items-start pointer-events-auto w-full z-20">
 
-             {/* LEFT: Coins + Menu Icons */}
-             <div className="flex items-center gap-4">
+             {/* LEFT: Character Stats */}
+             <div className="flex flex-col gap-2">
+               <div className="flex items-center gap-2">
+                 <div className="relative shrink-0" style={{
+                   width: 48, height: 48, borderRadius: '8px',
+                   background: `linear-gradient(135deg, ${CLASS_COLOR[hero] ?? '#6366f1'}66, ${CLASS_COLOR[hero] ?? '#6366f1'}33)`,
+                   border: `2px solid ${CLASS_COLOR[hero] ?? '#6366f1'}`,
+                   boxShadow: `0 0 12px ${CLASS_COLOR[hero] ?? '#6366f1'}88, inset 0 2px 8px rgba(0,0,0,0.5)`,
+                   display: 'flex', alignItems: 'center', justifyContent: 'center'
+                 }}>
+                   <span className="text-lg font-black text-white rpg-text">{hero.charAt(0)}</span>
+                 </div>
+                 <div>
+                   <div className="text-xs font-bold uppercase tracking-widest text-white/70">{hero}</div>
+                   <div className="text-sm font-black text-white">Lv. {level}</div>
+                 </div>
+               </div>
+               {/* HP Bar */}
+               <div className="flex flex-col gap-1" style={{ minWidth: 180 }}>
+                 <div className="relative h-4 rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(220,40,40,0.5)', boxShadow: '0 0 8px rgba(220,40,40,0.2), inset 0 1px 3px rgba(0,0,0,0.4)' }}>
+                   <div className="absolute inset-y-0 left-0 rounded-full overflow-hidden">
+                     <div style={{ width: `${hpPercent}%`, height: '100%', background: 'linear-gradient(90deg,#dc2626,#ef4444,#f87171)', transition: 'width 0.2s ease-out', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2)' }} />
+                   </div>
+                   <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white drop-shadow z-10">{Math.ceil(health)}/{stats.maxHealth}</span>
+                 </div>
+               </div>
+             </div>
+
+             {/* CENTER: Wave + Boss + Portal */}
+             <div className="flex flex-col items-center flex-1 mx-4 relative">
+                 {bossData.active ? (
+                     <div className="w-full max-w-sm rounded-lg p-3 shadow-xl" style={{background:'rgba(12,12,18,0.92)',border:'2px solid rgba(239,68,68,0.4)'}}>
+                         <div className="flex justify-between text-xs font-black text-red-400 mb-2 px-2 uppercase rpg-text">
+                             <span>{bossData.name}</span>
+                             <span>{Math.ceil(bossData.hp).toLocaleString()}</span>
+                         </div>
+                         <div className="h-2.5 rounded-full overflow-hidden" style={{background:'rgba(255,255,255,0.08)', border:'1px solid rgba(239,68,68,0.3)'}}>
+                             <motion.div className="h-full" animate={{ width: `${Math.max(0, (bossData.hp / bossData.maxHp) * 100)}%` }} style={{ background: 'linear-gradient(90deg,#b91c1c,#ef4444)', boxShadow: '0 0 8px rgba(239,68,68,0.5)' }}/>
+                         </div>
+                     </div>
+                 ) : portalActive ? (
+                     <motion.div
+                         initial={{ scale: 0, rotate: -180 }}
+                         animate={{ scale: 1, rotate: 0 }}
+                         className="flex flex-col items-center gap-3 cursor-pointer"
+                         onClick={() => advanceWave()}
+                     >
+                         <div className="text-lg font-black text-white rpg-text" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)', WebkitTextStroke: '0.5px rgba(0,0,0,0.7)' }}>
+                             PORTAL
+                         </div>
+                         <div
+                             className="w-24 h-24 rounded-full flex items-center justify-center animate-pulse"
+                             style={{
+                                 background: 'radial-gradient(circle, rgba(147, 51, 234, 0.8) 0%, rgba(99, 102, 241, 0.4) 100%)',
+                                 border: '3px solid rgba(168, 85, 247, 0.6)',
+                                 boxShadow: '0 0 30px rgba(168, 85, 247, 0.8), inset 0 0 20px rgba(168, 85, 247, 0.3)'
+                             }}
+                         >
+                             <span className="text-xl font-black text-purple-300" style={{ textShadow: '0 0 20px rgba(168, 85, 247, 1)' }}>⚡</span>
+                         </div>
+                         <div className="text-sm text-white/70 font-bold">Click to enter</div>
+                     </motion.div>
+                 ) : (
+                     <div className="text-2xl font-black text-white rpg-text" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)', WebkitTextStroke: '0.5px rgba(0,0,0,0.7)' }}>
+                         WAVE {wave}
+                     </div>
+                 )}
+             </div>
+
+             {/* RIGHT: Coins + Menu Icons */}
+             <div className="flex flex-col items-end gap-3">
                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)' }}>
                     <Coins size={18} className="text-yellow-400" />
                     <span className="font-black text-yellow-300 text-lg rpg-text">{score.toLocaleString()}</span>
@@ -878,64 +947,6 @@ export const GameUI: React.FC = () => {
                         </button>
                     ))}
                  </div>
-             </div>
-
-             {/* CENTER: Wave + Boss */}
-             <div className="flex flex-col items-center flex-1 mx-4 relative">
-                 {bossData.active ? (
-                     <div className="w-full max-w-sm rounded-lg p-3 shadow-xl" style={{background:'rgba(12,12,18,0.92)',border:'2px solid rgba(239,68,68,0.4)'}}>
-                         <div className="flex justify-between text-xs font-black text-red-400 mb-2 px-2 uppercase rpg-text">
-                             <span>{bossData.name}</span>
-                             <span>{Math.ceil(bossData.hp).toLocaleString()}</span>
-                         </div>
-                         <div className="h-2.5 rounded-full overflow-hidden" style={{background:'rgba(255,255,255,0.08)', border:'1px solid rgba(239,68,68,0.3)'}}>
-                             <motion.div className="h-full" animate={{ width: `${Math.max(0, (bossData.hp / bossData.maxHp) * 100)}%` }} style={{ background: 'linear-gradient(90deg,#b91c1c,#ef4444)', boxShadow: '0 0 8px rgba(239,68,68,0.5)' }}/>
-                         </div>
-                     </div>
-                 ) : (
-                     <div className="flex items-center gap-3">
-                         <div className="text-2xl font-black text-white rpg-text" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)', WebkitTextStroke: '0.5px rgba(0,0,0,0.7)' }}>
-                             WAVE {wave}
-                         </div>
-                         <div className="text-white/50 font-bold text-xs flex items-center gap-1">
-                             <Timer size={10}/> <span className="text-base font-black text-white/70">{Math.max(0, 30 - Math.floor(waveTimer))}</span>s
-                         </div>
-                         {waveTimer > 20 && (
-                             <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                                className="px-3 py-1 bg-red-500/80 text-white font-black text-xs rounded-lg animate-pulse border border-red-400/60 rpg-text">
-                                 NEXT WAVE
-                             </motion.div>
-                         )}
-                     </div>
-                 )}
-             </div>
-
-             {/* RIGHT: Character HP Bar - Genshin Impact Style */}
-             <div className="flex flex-col items-end gap-2">
-               <div className="flex items-center gap-2">
-                 <div className="text-right">
-                   <div className="text-xs font-bold uppercase tracking-widest text-white/70">{hero}</div>
-                   <div className="text-sm font-black text-white">Lv. {level}</div>
-                 </div>
-                 <div className="relative shrink-0" style={{
-                   width: 56, height: 56, borderRadius: '8px',
-                   background: `linear-gradient(135deg, ${CLASS_COLOR[hero] ?? '#6366f1'}66, ${CLASS_COLOR[hero] ?? '#6366f1'}33)`,
-                   border: `2px solid ${CLASS_COLOR[hero] ?? '#6366f1'}`,
-                   boxShadow: `0 0 12px ${CLASS_COLOR[hero] ?? '#6366f1'}88, inset 0 2px 8px rgba(0,0,0,0.5)`,
-                   display: 'flex', alignItems: 'center', justifyContent: 'center'
-                 }}>
-                   <span className="text-2xl font-black text-white rpg-text">{hero.charAt(0)}</span>
-                 </div>
-               </div>
-               {/* HP Bar */}
-               <div className="flex flex-col gap-1" style={{ minWidth: 200 }}>
-                 <div className="relative h-4 rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(220,40,40,0.5)', boxShadow: '0 0 8px rgba(220,40,40,0.2), inset 0 1px 3px rgba(0,0,0,0.4)' }}>
-                   <div className="absolute inset-y-0 left-0 rounded-full overflow-hidden">
-                     <div style={{ width: `${hpPercent}%`, height: '100%', background: 'linear-gradient(90deg,#dc2626,#ef4444,#f87171)', transition: 'width 0.2s ease-out', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2)' }} />
-                   </div>
-                   <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white drop-shadow z-10">{Math.ceil(health)}/{stats.maxHealth}</span>
-                 </div>
-               </div>
              </div>
           </div>
 

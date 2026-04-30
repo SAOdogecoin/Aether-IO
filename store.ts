@@ -18,10 +18,13 @@ interface GameState {
   playerPosition: Vector3;
   stats: PlayerStats;
   baseStats: PlayerStats;
-  
+
   wave: number;
   waveTimer: number;
+  portalActive: boolean;
+  portalPosition: Vector3;
   recentRuns: number[];
+
   
   gameStats: GameStatistics;
 
@@ -150,6 +153,7 @@ interface GameState {
   activateSprint: () => void;
 
   advanceWave: () => void;
+  activatePortal: (position: Vector3) => void;
   setBossData: (data: Partial<BossData>) => void;
   
   addNotification: (message: string, color?: string, type?: 'ITEM' | 'BOSS' | 'SYSTEM' | 'WARNING', action?: { label: string, onClick: () => void }, persistent?: boolean) => void;
@@ -546,6 +550,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   
   wave: 1,
   waveTimer: 0,
+  portalActive: false,
+  portalPosition: INITIAL_PLAYER_POS(),
   recentRuns: [],
   
   gameStats: INITIAL_GAME_STATS,
@@ -728,6 +734,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         crates: generateCrates(),
         wave: 1,
         waveTimer: 0,
+        portalActive: false,
+        portalPosition: new Vector3(0, 0, 0),
         accumulatedWaveGold: 0,
         isInventoryOpen: false,
         isShopOpen: false,
@@ -1132,10 +1140,14 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   updatePassiveCooldowns: (partial) => set((state) => ({ passiveSkillState: { ...state.passiveSkillState, ...partial } })),
 
+  activatePortal: (position: Vector3) => {
+      set({ portalActive: true, portalPosition: position });
+  },
+
   advanceWave: () => {
       const state = get();
       const options = generateUpgradeOptions(state.hero, state.skillLevels);
-      
+
       options.forEach(opt => {
           if (opt.type.startsWith('SKILL_')) {
               let skillKey: keyof SkillLevels | null = null;
@@ -1165,9 +1177,10 @@ export const useGameStore = create<GameState>((set, get) => ({
           }
       });
 
-      set((state) => ({ 
-          wave: state.wave + 1, 
+      set((state) => ({
+          wave: state.wave + 1,
           waveTimer: 0,
+          portalActive: false,
           accumulatedWaveGold: state.accumulatedWaveGold + 100,
           status: GameStatusEnum.LEVEL_UP,
           upgradeOptions: options
@@ -1324,7 +1337,6 @@ export const useGameStore = create<GameState>((set, get) => ({
           hpPotionCooldown: newHpCD,
           barrierCooldown: newBarrierCooldown,
           inventory: inventory,
-          waveTimer: state.waveTimer + delta,
           invincibilityTimer: newInvincibilityTimer,
           isInvincible: newIsInvincible,
           levelUpVisualTimer: newLevelUpTimer,
@@ -1420,6 +1432,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       baseStats: { ...INITIAL_STATS },
       wave: 1,
       waveTimer: 0,
+      portalActive: false,
+      portalPosition: new Vector3(0, 0, 0),
       skillLevels: {
           orbital: 0, thunder: 0, regen: 0, magnet: 1, dash: 1, weapon: 1, barrier: 1, storm: 0, special: 0,
           piercing: 0, burning: 0, freezing: 0, freezeSpell: 0, gravity: 0, stamp: 0, rage: 0
