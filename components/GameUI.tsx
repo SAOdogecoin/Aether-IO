@@ -370,13 +370,26 @@ const Minimap: React.FC = () => {
         minimapEnemies.forEach(e => {
             if (e.type === 2) ctx.fillStyle = '#ef4444'; // Boss
             else if (e.type === 5) ctx.fillStyle = '#a855f7'; // Elite
-            else ctx.fillStyle = '#ef4444'; 
-            
+            else ctx.fillStyle = '#ef4444';
+
             ctx.beginPath();
             ctx.fillRect(mapX(e.x)-1, mapZ(e.z)-1, 2, 2);
         });
-        
-    }, [minimapEnemies, playerPosition]);
+
+        // Portal
+        if (portalActive) {
+            const px = mapX(portalPosition.x);
+            const pz = mapZ(portalPosition.z);
+            ctx.fillStyle = '#a78bfa';
+            ctx.beginPath();
+            ctx.arc(px, pz, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#d946ef';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+    }, [minimapEnemies, playerPosition, portalActive, portalPosition]);
 
     return (
         <div className="absolute right-6 bottom-6 w-[150px] h-[150px] overflow-hidden shadow-xl pointer-events-auto" style={{ background: 'rgba(8,8,16,0.88)', border: '1px solid rgba(180,150,70,0.25)', borderRadius: 6 }}>
@@ -816,23 +829,28 @@ export const GameUI: React.FC = () => {
                      <motion.div
                          initial={{ scale: 0, rotate: -180 }}
                          animate={{ scale: 1, rotate: 0 }}
-                         className="flex flex-col items-center gap-3 cursor-pointer"
+                         transition={{ duration: 0.6 }}
+                         className="flex flex-col items-center gap-4 cursor-pointer"
                          onClick={() => advanceWave()}
                      >
-                         <div className="text-lg font-black text-white rpg-text" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)', WebkitTextStroke: '0.5px rgba(0,0,0,0.7)' }}>
-                             PORTAL
+                         <div className="text-3xl font-black text-white rpg-text animate-bounce" style={{ textShadow: '0 3px 6px rgba(0,0,0,0.9)', WebkitTextStroke: '1px rgba(0,0,0,0.7)' }}>
+                             ⚡ PORTAL ⚡
                          </div>
-                         <div
-                             className="w-24 h-24 rounded-full flex items-center justify-center animate-pulse"
+                         <motion.div
+                             animate={{ scale: [1, 1.15, 1], rotate: 360 }}
+                             transition={{ duration: 2, repeat: Infinity }}
+                             className="w-40 h-40 rounded-full flex items-center justify-center"
                              style={{
-                                 background: 'radial-gradient(circle, rgba(147, 51, 234, 0.8) 0%, rgba(99, 102, 241, 0.4) 100%)',
-                                 border: '3px solid rgba(168, 85, 247, 0.6)',
-                                 boxShadow: '0 0 30px rgba(168, 85, 247, 0.8), inset 0 0 20px rgba(168, 85, 247, 0.3)'
+                                 background: 'radial-gradient(circle, rgba(168, 85, 247, 1) 0%, rgba(99, 102, 241, 0.6) 50%, rgba(147, 51, 234, 0.2) 100%)',
+                                 border: '4px solid rgba(168, 85, 247, 0.9)',
+                                 boxShadow: '0 0 60px rgba(168, 85, 247, 1), inset 0 0 40px rgba(168, 85, 247, 0.6), 0 0 100px rgba(147, 51, 234, 0.8)'
                              }}
                          >
-                             <span className="text-xl font-black text-purple-300" style={{ textShadow: '0 0 20px rgba(168, 85, 247, 1)' }}>⚡</span>
+                             <span className="text-5xl animate-pulse" style={{ textShadow: '0 0 30px rgba(168, 85, 247, 1)' }}>⚡</span>
+                         </motion.div>
+                         <div className="text-lg text-white font-black animate-bounce" style={{ textShadow: '0 0 10px rgba(168, 85, 247, 1)', color: '#a78bfa' }}>
+                             CLICK TO ENTER NEXT WAVE
                          </div>
-                         <div className="text-sm text-white/70 font-bold">Click to enter</div>
                      </motion.div>
                  ) : (
                      <div className="flex flex-col items-center gap-1">
