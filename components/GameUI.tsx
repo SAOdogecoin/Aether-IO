@@ -342,7 +342,7 @@ const EquipmentSlot: React.FC<{
 };
 
 const Minimap: React.FC = () => {
-    const { minimapEnemies, playerPosition } = useGameStore();
+    const { minimapEnemies, playerPosition, portalActive, portalPosition } = useGameStore();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     
     useEffect(() => {
