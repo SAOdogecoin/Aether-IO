@@ -30,7 +30,7 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
   const isMovingRef = useRef(false);
   const isAttackingRef = useRef(false);
 
-  const { stats, status, setPlayerPosition, playerPosition, skills, triggerSkillCooldown, tickCooldowns, takeDamage, equipment, useMana, triggerInvincibility, obstacles, crates, isInvincible, toggleInventory, breakCrate, hero, levelUpVisualTimer, health, mana, level, activeAbilityQ, activateRage, rageMode, skillLevels, activateEarthwall, activateWarVitality, activateSprint, reviveAnimTimer, dashCharges, getManaCost, addNotification, revivingCountdown, isInventoryOpen, isShopOpen, isCharacterSheetOpen, piercingShotBoostTimer, setPiercingShotBoostTimer } = useGameStore();
+  const { stats, status, setPlayerPosition, playerPosition, skills, triggerSkillCooldown, tickCooldowns, takeDamage, equipment, triggerInvincibility, obstacles, crates, isInvincible, toggleInventory, breakCrate, hero, levelUpVisualTimer, health, level, activeAbilityQ, activateRage, rageMode, skillLevels, activateEarthwall, activateWarVitality, activateSprint, reviveAnimTimer, dashCharges, addNotification, revivingCountdown, isInventoryOpen, isShopOpen, isCharacterSheetOpen, piercingShotBoostTimer, setPiercingShotBoostTimer } = useGameStore();
   const { camera, scene, raycaster, pointer } = useThree();
   
   const [pos] = useState(new Vector3(0, 0, 0));
@@ -114,36 +114,28 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
   };
 
   const handleAbility = (ability: string, isQ: boolean) => {
-      const cost = isQ ? getManaCost('q') : getManaCost('r');
-      if (useMana(cost)) {
-          triggerSkillCooldown(isQ ? 'q' : 'r');
+      triggerSkillCooldown(isQ ? 'q' : 'r');
 
-          if (ability === 'RAGE') {
-              activateRage();
-          } else if (ability === 'PIERCING_SHOT') {
-              // Archer Q: 3x attack speed + max multishot for 2.5s
-              setPiercingShotBoostTimer(2.5);
-          } else if (ability === 'GRAVITY_SPELL') {
-              const limit = 8 + (skillLevels.gravity * 1);
-              spawnBullet('BLACKHOLE', 0, 10.0, { pierce: 99, lifetime: 2.6, trailTimer: 0.1, maxPullCount: limit });
-          } else if (ability === 'ARROW_RAIN') {
-              arrowRainState.current.active = true;
-              arrowRainState.current.wavesLeft = 6;
-              arrowRainState.current.timer = 0;
-          } else if (ability === 'FIREBALL') {
-              // Wizard Q: Slightly longer range and 2x burn damage
-              spawnBullet('FIREBALL', 5, 4.0 * 0.63, {
-                  pierce: 100,
-                  lifetime: 4.0,
-                  effect: { type: 'BURN', duration: 5, value: stats.damage * 0.6 }
-              });
-          } else if (ability === 'AXE_SPIN') {
-              axeSpinTime.current = 3.0;
-              axeDamageTimer.current = 0.2;
-          }
-      } else {
-          addNotification('Insufficient Mana', '#60a5fa', 'WARNING');
-          window.dispatchEvent(new CustomEvent('skill-error', { detail: { position: pos.clone().add(new Vector3(0, 1, 0)), text: 'INSUFFICIENT MANA' } }));
+      if (ability === 'RAGE') {
+          activateRage();
+      } else if (ability === 'PIERCING_SHOT') {
+          setPiercingShotBoostTimer(2.5);
+      } else if (ability === 'GRAVITY_SPELL') {
+          const limit = 8 + (skillLevels.gravity * 1);
+          spawnBullet('BLACKHOLE', 0, 10.0, { pierce: 99, lifetime: 2.6, trailTimer: 0.1, maxPullCount: limit });
+      } else if (ability === 'ARROW_RAIN') {
+          arrowRainState.current.active = true;
+          arrowRainState.current.wavesLeft = 6;
+          arrowRainState.current.timer = 0;
+      } else if (ability === 'FIREBALL') {
+          spawnBullet('FIREBALL', 5, 4.0 * 0.63, {
+              pierce: 100,
+              lifetime: 4.0,
+              effect: { type: 'BURN', duration: 5, value: stats.damage * 0.6 }
+          });
+      } else if (ability === 'AXE_SPIN') {
+          axeSpinTime.current = 3.0;
+          axeDamageTimer.current = 0.2;
       }
   };
 
@@ -154,19 +146,13 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
           return;
       }
 
-      const manaCost = getManaCost('e');
-      if (useMana(manaCost)) {
-          triggerSkillCooldown('e');
-          if (hero === 'BARBARIAN') {
-              activateWarVitality();
-          } else if (hero === 'WIZARD') {
-              activateEarthwall(pos.clone());
-          } else if (hero === 'ARCHER') {
-              activateSprint();
-          }
-      } else {
-          addNotification('Insufficient Mana', '#60a5fa', 'WARNING');
-          window.dispatchEvent(new CustomEvent('skill-error', { detail: { position: pos.clone().add(new Vector3(0, 1, 0)), text: 'INSUFFICIENT MANA' } }));
+      triggerSkillCooldown('e');
+      if (hero === 'BARBARIAN') {
+          activateWarVitality();
+      } else if (hero === 'WIZARD') {
+          activateEarthwall(pos.clone());
+      } else if (hero === 'ARCHER') {
+          activateSprint();
       }
   };
 
@@ -288,14 +274,12 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
     if (keys['Space']) {
         if (dashDebounce.current <= 0) {
             if (dashCharges > 0) {
-                if (useMana(getManaCost('dash'))) {
-                    triggerSkillCooldown('dash'); // Consumes Charge
-                    dashTime.current = 0.2; 
-                    dashDebounce.current = 0.3; // Small lockout
-                    dashVelocity.current.copy(moveDir.length() > 0 ? moveDir.normalize() : new Vector3(0, 0, -1).applyQuaternion(meshRef.current.quaternion));
-                    dashVelocity.current.multiplyScalar(40); 
-                    triggerInvincibility(0.2);
-                }
+                triggerSkillCooldown('dash');
+                dashTime.current = 0.2;
+                dashDebounce.current = 0.3;
+                dashVelocity.current.copy(moveDir.length() > 0 ? moveDir.normalize() : new Vector3(0, 0, -1).applyQuaternion(meshRef.current.quaternion));
+                dashVelocity.current.multiplyScalar(40);
+                triggerInvincibility(0.2);
             } else {
                 notifyCooldown("Dash");
             }
@@ -419,13 +403,6 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
                             <span style={{ fontSize: 10, fontWeight: 700, color: '#ef4444' }}>HP</span>
                             <div style={{ width: 60, height: 10, background: 'rgba(0,0,0,0.7)', borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.8)' }}>
                                 <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, (health / stats.maxHealth) * 100))}%`, background: 'linear-gradient(90deg,#b91c1c,#ef4444)', borderRadius: 3, transition: 'width 0.1s' }} />
-                            </div>
-                        </div>
-                        {/* MP Bar */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-start' }}>
-                            <span style={{ fontSize: 10, fontWeight: 700, color: '#3b82f6' }}>MP</span>
-                            <div style={{ width: 60, height: 10, background: 'rgba(0,0,0,0.7)', borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.8)' }}>
-                                <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, (mana / stats.maxMana) * 100))}%`, background: 'linear-gradient(90deg,#1d4ed8,#3b82f6)', borderRadius: 3, transition: 'width 0.1s' }} />
                             </div>
                         </div>
                     </div>

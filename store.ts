@@ -15,7 +15,6 @@ interface GameState {
   experienceToNextLevel: number;
   skillPoints: number;
   health: number;
-  mana: number;
   playerPosition: Vector3;
   stats: PlayerStats;
   baseStats: PlayerStats;
@@ -77,7 +76,6 @@ interface GameState {
   rageTimer: number;
 
   hpPotionCooldown: number;
-  mpPotionCooldown: number;
   barrierCooldown: number;
   isInvincible: boolean;
   invincibilityTimer: number;
@@ -116,10 +114,7 @@ interface GameState {
   takeDamage: (amount: number) => void;
   breakCrate: (id: number) => void;
   damageCrate: (id: number, amount: number) => void;
-  useMana: (amount: number) => boolean;
-  getManaCost: (skill: keyof SkillLevels | 'r' | 'q' | 'e') => number; 
   heal: (amount: number) => void;
-  restoreMana: (amount: number) => void;
   setPlayerPosition: (pos: Vector3) => void;
   triggerInvincibility: (duration: number) => void;
   setInvincible: (invincible: boolean) => void;
@@ -165,9 +160,7 @@ interface GameState {
 
 const INITIAL_STATS: PlayerStats = {
   maxHealth: 100,
-  maxMana: 100,
   regen: 0.5,
-  manaRegen: 0.5,
   moveSpeed: 10,
   damage: 15,
   fireRate: 2.0,
@@ -211,7 +204,6 @@ export const calculateItemCP = (item: Item): number => {
     if (s.moveSpeed) cp += s.moveSpeed * 500;
     if (s.fireRate) cp += s.fireRate * 100;
     if (s.regen) cp += s.regen * 50;
-    if (s.manaRegen) cp += s.manaRegen * 50;
     if (s.critRate) cp += s.critRate * 500;
     if (s.critDamage) cp += s.critDamage * 100;
     if (s.cooldownReduction) cp += s.cooldownReduction * 500;
@@ -235,10 +227,9 @@ export const calculateTotalCP = (stats: PlayerStats): number => {
     cp += stats.damage * 10;
     cp += stats.maxHealth * 1;
     cp += stats.defense * 8;
-    cp += stats.moveSpeed * 50; 
+    cp += stats.moveSpeed * 50;
     cp += stats.fireRate * 50;
     cp += stats.regen * 50;
-    cp += stats.manaRegen * 50;
     cp += stats.critRate * 500;
     cp += stats.critDamage * 100;
     cp += stats.cooldownReduction * 500;
@@ -549,7 +540,6 @@ export const useGameStore = create<GameState>((set, get) => ({
   experienceToNextLevel: 250,
   skillPoints: 0,
   health: 100,
-  mana: 100,
   playerPosition: INITIAL_PLAYER_POS(),
   stats: { ...INITIAL_STATS },
   baseStats: { ...INITIAL_STATS },
@@ -604,7 +594,6 @@ export const useGameStore = create<GameState>((set, get) => ({
   rageTimer: 0,
 
   hpPotionCooldown: 0,
-  mpPotionCooldown: 0,
   barrierCooldown: 0,
   isInvincible: false,
   invincibilityTimer: 0,
@@ -715,9 +704,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         level: 1,
         experience: 0,
         experienceToNextLevel: 250,
-        skillPoints: 0, 
-        health: startStats.maxHealth, 
-        mana: startStats.maxMana,
+        skillPoints: 0,
+        health: startStats.maxHealth,
         baseStats: startStats,
         stats: calculateStats(startStats, finalEquipment),
         skillLevels: { 
@@ -746,7 +734,6 @@ export const useGameStore = create<GameState>((set, get) => ({
         isCharacterSheetOpen: false,
         isCodexOpen: false,
         hpPotionCooldown: 0,
-        mpPotionCooldown: 0,
         barrierCooldown: 0,
         isInvincible: false,
         invincibilityTimer: 0,
@@ -783,7 +770,6 @@ export const useGameStore = create<GameState>((set, get) => ({
       const newBase = {
           ...currentBase,
           maxHealth: currentBase.maxHealth + 5,
-          maxMana: currentBase.maxMana + 5,
           damage: currentBase.damage + 1.2,
           defense: currentBase.defense + 0.5
       };
@@ -822,7 +808,6 @@ export const useGameStore = create<GameState>((set, get) => ({
         baseStats: newBase,
         stats: calculateStats(newBase, get().equipment, get().rageMode, get().sprintTimer > 0),
         health: get().health,
-        mana: get().mana,
         levelUpVisualTimer: 1.0,
         skillLevels: newSkillLevels
       });
@@ -963,60 +948,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
   },
 
-  getManaCost: (skill) => {
-      const state = get();
-      let base = 0;
-      let level = 0;
-
-      if (skill === 'r') {
-          return Math.ceil(60 * 0.75);
-      }
-
-      if (skill === 'q') {
-          base = 30;
-          if (state.activeAbilityQ === 'PIERCING_SHOT') level = state.skillLevels.piercing;
-          if (state.activeAbilityQ === 'GRAVITY_SPELL') level = state.skillLevels.gravity;
-          if (state.activeAbilityQ === 'RAGE') level = state.skillLevels.rage;
-          return Math.ceil((base + (level * 5)) * 0.75);
-      }
-
-      if (skill === 'e') {
-          base = 20;
-          level = state.skillLevels.special;
-          return Math.ceil((base + (level * 5)) * 0.75);
-      }
-
-      if (skill === 'dash') {
-          base = 5;
-          level = state.skillLevels.dash;
-          return Math.ceil((base + (level * 2)) * 0.5);
-      }
-
-      level = state.skillLevels[skill as keyof SkillLevels] || 0;
-      if (skill === 'thunder') return Math.ceil((5 + level) * 0.75);
-      if (skill === 'burning' || skill === 'freezing') return Math.ceil((5 + level) * 0.75);
-      if (skill === 'freezeSpell') return Math.ceil((15 + (level * 2)) * 0.75);
-      if (skill === 'stamp') return Math.ceil((15 + (level * 2)) * 0.75);
-
-      return 0;
-  },
-
-  useMana: (amount) => {
-      const { mana, hero } = get();
-      const actualCost = hero === 'WIZARD' ? Math.ceil(amount * 1.3) : amount;
-      if (mana >= actualCost) {
-          set({ mana: mana - actualCost });
-          return true;
-      }
-      return false;
-  },
-
-  heal: (amount) => set((state) => ({ 
-    health: Math.min(state.health + amount, state.stats.maxHealth) 
-  })),
-
-  restoreMana: (amount) => set((state) => ({ 
-    mana: Math.min(state.mana + amount, state.stats.maxMana) 
+  heal: (amount) => set((state) => ({
+    health: Math.min(state.health + amount, state.stats.maxHealth)
   })),
 
   setPlayerPosition: (pos) => set({ playerPosition: pos }),
@@ -1355,18 +1288,13 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
       
       const regenAmount = (state.stats.regen + (state.skillLevels.regen * 0.5)) * delta;
-      const manaRegenAmount = state.stats.manaRegen * delta;
       const newHealth = Math.min(state.stats.maxHealth, state.health + regenAmount);
-      const newMana = Math.min(state.stats.maxMana, state.mana + manaRegenAmount);
-      
+
       let newHpCD = Math.max(0, state.hpPotionCooldown - delta);
-      let newMpCD = Math.max(0, state.mpPotionCooldown - delta);
       let newHealthAfterPot = newHealth;
-      let newManaAfterPot = newMana;
       let inventory = state.inventory;
 
       const hpThreshold = state.stats.maxHealth * 0.7;
-      const manaThreshold = state.stats.maxMana * 0.7;
 
       if (newHpCD <= 0 && newHealthAfterPot < hpThreshold) {
           const hpPotIndex = inventory.findIndex(i => i.type === 'POTION' && i.name.includes('Health'));
@@ -1380,18 +1308,6 @@ export const useGameStore = create<GameState>((set, get) => ({
           }
       }
 
-      if (newMpCD <= 0 && newManaAfterPot < manaThreshold) {
-           const manaPotIndex = inventory.findIndex(i => i.type === 'POTION' && i.name.includes('Mana'));
-           if (manaPotIndex !== -1) {
-              const pot = inventory[manaPotIndex];
-              newManaAfterPot = Math.min(state.stats.maxMana, newManaAfterPot + (pot.restoreAmount || 50));
-              newMpCD = 10;
-              inventory = [...inventory];
-              if ((pot.quantity || 1) > 1) { inventory[manaPotIndex] = { ...pot, quantity: (pot.quantity || 1) - 1 }; }
-              else { inventory.splice(manaPotIndex, 1); }
-           }
-      }
-
       let newPiercingShotBoost = Math.max(0, state.piercingShotBoostTimer - delta);
 
       set({
@@ -1399,7 +1315,6 @@ export const useGameStore = create<GameState>((set, get) => ({
           dashCharges: newDashCharges,
           shieldCharges: newShieldCharges,
           health: newHealthAfterPot,
-          mana: newManaAfterPot,
           stats: stats,
           rageMode: rageMode,
           rageTimer: rageTimer,
@@ -1407,7 +1322,6 @@ export const useGameStore = create<GameState>((set, get) => ({
           earthwall: earthwall,
           warVitalityTimer: Math.max(0, warVitalityTimer),
           hpPotionCooldown: newHpCD,
-          mpPotionCooldown: newMpCD,
           barrierCooldown: newBarrierCooldown,
           inventory: inventory,
           waveTimer: state.waveTimer + delta,
@@ -1501,7 +1415,6 @@ export const useGameStore = create<GameState>((set, get) => ({
       experienceToNextLevel: 250,
       skillPoints: 0,
       health: 100,
-      mana: 100,
       playerPosition: new Vector3(0, 0, 0),
       stats: { ...INITIAL_STATS },
       baseStats: { ...INITIAL_STATS },
@@ -1594,7 +1507,6 @@ export const useGameStore = create<GameState>((set, get) => ({
     } else {
         switch(upgrade.type) {
             case 'HEALTH': newStats.maxHealth += upgrade.value; break;
-            case 'MAX_MANA': newStats.maxMana += upgrade.value; break;
             case 'DAMAGE': newStats.damage += newStats.damage * upgrade.value; break;
             case 'SPEED': newStats.moveSpeed += newStats.moveSpeed * upgrade.value; break;
             case 'FIRE_RATE': newStats.fireRate += newStats.fireRate * upgrade.value; break;

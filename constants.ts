@@ -88,9 +88,9 @@ export const HERO_STATS: Record<HeroClass, { stats: Partial<PlayerStats>, weapon
         description: 'High Speed & Attack Rate. Low Health.'
     },
     WIZARD: {
-        stats: { moveSpeed: 10, maxMana: 200, damage: 25, maxHealth: 70, manaRegen: 3.0, knockback: 0.5, skillDamage: 1.5 },
+        stats: { moveSpeed: 10, damage: 25, maxHealth: 70, knockback: 0.5, skillDamage: 1.5 },
         weaponId: 'staff_1',
-        description: 'High Mana Regen & Skill Damage. Squishy.'
+        description: 'High Skill Damage. Squishy.'
     },
     BARBARIAN: {
         stats: { maxHealth: 200, defense: 15, moveSpeed: 11, damage: 12, fireRate: 1.5, knockback: 1.5, regen: 2.0 },
@@ -167,10 +167,10 @@ export const PETS_POOL: Item[] = [
         stats: { damage: 5 }, // 1 Stat
         description: 'Collects distant items.', petSkill: 'COLLECT' 
     },
-    { 
-        id: 'pet_fairy', name: 'Light Fairy', type: 'PET', rarity: 'RARE', price: 1500, level: 1, 
-        stats: { manaRegen: 0.5, regen: 0.5 }, // 2 Stats
-        description: 'Heals 20 HP every 8s.', petSkill: 'HEAL', petValue: 20, petCooldown: 8 
+    {
+        id: 'pet_fairy', name: 'Light Fairy', type: 'PET', rarity: 'RARE', price: 1500, level: 1,
+        stats: { regen: 0.5 },
+        description: 'Heals 20 HP every 8s.', petSkill: 'HEAL', petValue: 20, petCooldown: 8
     },
     { 
         id: 'pet_wolf', name: 'Spirit Wolf', type: 'PET', rarity: 'EPIC', price: 3000, level: 1, 
@@ -222,8 +222,8 @@ export const ITEMS_POOL: Item[] = [
     stats: { damage: 18 }, description: 'Basic axe.' },
   
   // RARE (2 Stats)
-  { id: 'staff_rare', name: 'Adept Staff', classType: 'WIZARD', type: 'WEAPON', rarity: 'RARE', price: 600, level: 1, projectileType: 'MAGIC', ability: 'FIREBALL', 
-    stats: { damage: 25, manaRegen: 1.0 }, description: 'Balanced magic.' },
+  { id: 'staff_rare', name: 'Adept Staff', classType: 'WIZARD', type: 'WEAPON', rarity: 'RARE', price: 600, level: 1, projectileType: 'MAGIC', ability: 'FIREBALL',
+    stats: { damage: 25 }, description: 'Balanced magic.' },
   { id: 'bow_2', name: 'Elven Bow', classType: 'ARCHER', type: 'WEAPON', rarity: 'RARE', price: 600, level: 1, projectileType: 'ARROW', ability: 'ARROW_RAIN', 
     stats: { damage: 15, fireRate: 0.2 }, onHitEffect: { type: 'POISON', duration: 4, value: 3, chance: 1.0 }, description: 'Poison arrows.' },
   { id: 'axe_2', name: 'Viking Axe', classType: 'BARBARIAN', type: 'WEAPON', rarity: 'RARE', price: 600, level: 1, projectileType: 'AXE', ability: 'AXE_SPIN', 
@@ -240,8 +240,8 @@ export const ITEMS_POOL: Item[] = [
   // LEGENDARY (4 Stats)
   { id: 'bow_legend', name: 'Windforce', classType: 'ARCHER', type: 'WEAPON', rarity: 'LEGENDARY', price: 3000, level: 1, projectileType: 'ARROW', ability: 'ARROW_RAIN', 
     stats: { damage: 50, fireRate: 1.0, critRate: 0.2, knockback: 2.0 }, onHitEffect: { type: 'SLOW', duration: 3, value: 0.7, chance: 1.0 }, description: 'Knockback king.' },
-  { id: 'staff_legend', name: 'Archon Staff', classType: 'WIZARD', type: 'WEAPON', rarity: 'LEGENDARY', price: 3000, level: 1, projectileType: 'MAGIC', ability: 'FIREBALL', 
-    stats: { damage: 120, manaRegen: 3.0, skillDamage: 0.5, cooldownReduction: 0.1 }, description: 'Spell spam.' },
+  { id: 'staff_legend', name: 'Archon Staff', classType: 'WIZARD', type: 'WEAPON', rarity: 'LEGENDARY', price: 3000, level: 1, projectileType: 'MAGIC', ability: 'FIREBALL',
+    stats: { damage: 120, skillDamage: 0.5, cooldownReduction: 0.1 }, description: 'Spell spam.' },
   { id: 'axe_legend', name: 'World Breaker', classType: 'BARBARIAN', type: 'WEAPON', rarity: 'LEGENDARY', price: 3000, level: 1, projectileType: 'AXE', ability: 'AXE_SPIN', 
     stats: { damage: 150, defense: 30, maxHealth: 50, regen: 2.0 }, description: 'Unstoppable.' }, // HP Halved
 
@@ -279,11 +279,11 @@ export const ITEMS_POOL: Item[] = [
   
   { id: 'boots_1', name: 'Hermes Boots', type: 'ACCESSORY', rarity: 'RARE', price: 600, level: 1, 
     stats: { moveSpeed: 0.1, dodge: 0.05 } }, // dodge treated as defense visual or mechanic later, purely stat for now
-  { id: 'amulet_mana', name: 'Mana Amulet', type: 'ACCESSORY', rarity: 'RARE', price: 800, level: 1, 
-    stats: { manaRegen: 1.0, maxMana: 50 } },
+  { id: 'amulet_mana', name: 'Mystic Amulet', type: 'ACCESSORY', rarity: 'RARE', price: 800, level: 1,
+    stats: { skillDamage: 0.2, regen: 0.5 } },
 
-  { id: 'ring_wiz', name: 'Wizard Ring', type: 'ACCESSORY', rarity: 'EPIC', price: 1200, level: 1, 
-    stats: { skillDamage: 0.3, manaRegen: 1.5, maxMana: 100 } },
+  { id: 'ring_wiz', name: 'Wizard Ring', type: 'ACCESSORY', rarity: 'EPIC', price: 1200, level: 1,
+    stats: { skillDamage: 0.3, cooldownReduction: 0.1, critRate: 0.05 } },
   { id: 'focus_crystal', name: 'Focus Crystal', type: 'ACCESSORY', rarity: 'EPIC', price: 1200, level: 1, 
     stats: { cooldownReduction: 0.15, skillDamage: 0.2, critRate: 0.05 } },
 

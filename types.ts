@@ -44,9 +44,7 @@ export type PetSkillType = 'HEAL' | 'ATTACK_RANGED' | 'ATTACK_MELEE' | 'COLLECT'
 
 export interface PlayerStats {
   maxHealth: number;
-  maxMana: number;
   regen: number;
-  manaRegen: number;
   moveSpeed: number;
   damage: number;
   fireRate: number;

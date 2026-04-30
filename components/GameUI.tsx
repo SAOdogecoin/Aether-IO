@@ -83,8 +83,7 @@ const ItemIcon: React.FC<{ item: Item; size?: number }> = ({ item, size = 24 }) 
   const f = (color: string) => ({ fill: color, strokeWidth: 0, style: { color } });
 
   if (item.type === 'POTION') {
-    const c = item.name.toLowerCase().includes('mana') ? '#60a5fa' : '#f87171';
-    return <FlaskConical size={size} {...f(c)} />;
+    return <FlaskConical size={size} {...f('#f87171')} />;
   }
   if (item.type === 'CORE') return <Hexagon size={size} {...f('#818cf8')} />;
   if (item.type === 'REVIVE') return <Heart size={size} {...f('#fbbf24')} />;
@@ -227,19 +226,12 @@ const UniversalSkillSlot: React.FC<{
     label?: string;
     desc: string;
     active: boolean;
-    manaCost?: number;
-    currentMana?: number;
     charges?: number;
     maxCharges?: number;
-    heroClass?: string;
     isPassive?: boolean;
     onClick?: () => void;
     onHover?: (desc: string | null) => void;
-}> = ({ icon, level, cooldown = 0, maxCooldown = 1, label, desc, active, manaCost = 0, currentMana = 999, charges, maxCharges, heroClass, isPassive, onClick, onHover }) => {
-
-    const actualCost = heroClass === 'WIZARD' ? Math.ceil(manaCost * 1.3) : manaCost;
-    const canAfford = currentMana >= actualCost;
-    const accent = heroClass ? (CLASS_COLOR[heroClass] ?? '#6366f1') : '#6366f1';
+}> = ({ icon, level, cooldown = 0, maxCooldown = 1, label, desc, active, charges, maxCharges, isPassive, onClick, onHover }) => {
 
     const isChargingType = maxCharges && maxCharges > 0;
     const showCooldownOverlay = cooldown > 0 && (!isChargingType || (charges !== undefined && charges < maxCharges));
@@ -261,13 +253,12 @@ const UniversalSkillSlot: React.FC<{
                     disabled={!onClick}
                     className={`${slotSize} rounded-lg flex items-center justify-center relative overflow-hidden transition-all
                         ${isDimmed ? 'opacity-35' : ''}
-                        ${!canAfford && active && (!isChargingType || charges! > 0) ? 'grayscale' : ''}
                         ${onClick && !isDimmed ? 'cursor-pointer active:scale-95' : 'cursor-default'}
                     `}
                     style={{
                         background: isDimmed ? 'rgba(18,18,24,0.9)' : 'rgba(22,22,30,0.95)',
-                        border: isDimmed ? '1px solid rgba(60,60,75,0.45)' : `1.5px solid ${accent}60`,
-                        boxShadow: !isDimmed ? `0 0 14px ${accent}28, inset 0 0 10px rgba(0,0,0,0.5)` : 'none',
+                        border: isDimmed ? '1px solid rgba(60,60,75,0.45)' : '1.5px solid rgba(100,180,255,0.4)',
+                        boxShadow: !isDimmed ? '0 0 14px rgba(100,180,255,0.25), inset 0 0 10px rgba(0,0,0,0.5)' : 'none',
                     }}
                 >
                     <div className="z-0 flex items-center justify-center">{icon}</div>
@@ -287,12 +278,6 @@ const UniversalSkillSlot: React.FC<{
                     {!active && (
                         <div className="absolute inset-0 flex items-center justify-center z-20">
                             <Lock size={14} className="text-gray-700" />
-                        </div>
-                    )}
-
-                    {!canAfford && active && (!isChargingType || charges! > 0) && manaCost > 0 && (
-                        <div className="absolute inset-0 bg-blue-950/50 flex items-center justify-center z-10">
-                            <span className="text-blue-300 text-[9px] font-black">MP</span>
                         </div>
                     )}
 
@@ -402,14 +387,14 @@ const Minimap: React.FC = () => {
 
 export const GameUI: React.FC = () => {
   const {
-    status, health, mana, stats, score, gems, level, experience, experienceToNextLevel, skillPoints,
+    status, health, stats, score, gems, level, experience, experienceToNextLevel, skillPoints,
     inventory, maxInventorySlots, materials, equipment, setStatus, skills, skillMaxCooldowns, skillLevels, passiveSkillState,
-    startGame, resetGame, applyUpgrade, selectUpgrade, upgradeOptions, equipItem, unequipItem, buyItem, upgradeItem, sellItem, sellItems, autoEquip, selectHero, hero, hpPotionCooldown, mpPotionCooldown,
+    startGame, resetGame, applyUpgrade, selectUpgrade, upgradeOptions, equipItem, unequipItem, buyItem, upgradeItem, sellItem, sellItems, autoEquip, selectHero, hero, hpPotionCooldown,
     wave, waveTimer, recentRuns, bossData, gameStats,
     isInventoryOpen, isShopOpen, toggleInventory, activeShopTab, closeAllUI, openSpecificShop,
     notifications, removeNotification, addNotification, upgradeSkill, toggleCharacterSheet, isCharacterSheetOpen, baseStats, activeAbilityQ, activeAbilityR,
     recycleItem, massRecycle, combineMaterials, craftItem, buyInventorySlots, actionResult, clearActionResult, massSell,
-    isCodexOpen, toggleCodex, dashCharges, maxDashCharges, barrierCooldown, shieldCharges, maxShieldCharges, getManaCost,
+    isCodexOpen, toggleCodex, dashCharges, maxDashCharges, barrierCooldown, shieldCharges, maxShieldCharges,
     revivingCountdown
   } = useGameStore();
 
@@ -570,14 +555,12 @@ export const GameUI: React.FC = () => {
   };
 
   const hpPercent = (health / stats.maxHealth) * 100;
-  const manaPercent = (mana / stats.maxMana) * 100;
   const xpPercent = (experience / experienceToNextLevel) * 100;
   const currentCP = calculateTotalCP(stats);
 
   const hasAlerts = hasUpgradableSkills || hasBetterItem;
 
   const hpPotion = inventory.find(i => i.type === 'POTION' && i.name.includes('Health'));
-  const manaPotion = inventory.find(i => i.type === 'POTION' && i.name.includes('Mana'));
 
   const f = (n: number) => Number(n.toFixed(1));
   const getSkillDesc = (skillKey: string, level: number): string => {
@@ -753,29 +736,6 @@ export const GameUI: React.FC = () => {
           </div>
 
           {/* MP Bar */}
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#60a5fa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Mana</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: '#a0a0a0' }}>{Math.ceil(mana)} / {stats.maxMana}</span>
-            </div>
-            <div style={{
-              width: '100%',
-              height: 16,
-              background: 'linear-gradient(90deg, rgba(0,0,0,0.6) 0%, rgba(30,30,40,0.6) 100%)',
-              borderRadius: 4,
-              overflow: 'hidden',
-              border: '1px solid rgba(50,80,150,0.5)',
-              boxShadow: 'inset 0 0 10px rgba(0,0,0,0.8)'
-            }}>
-              <div style={{
-                height: '100%',
-                width: `${Math.max(0, Math.min(100, (mana / stats.maxMana) * 100))}%`,
-                background: 'linear-gradient(90deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%)',
-                boxShadow: '0 0 10px rgba(59,130,246,0.6)',
-                transition: 'width 0.15s ease-out'
-              }} />
-            </div>
-          </div>
         </div>
       )}
 
@@ -875,85 +835,14 @@ export const GameUI: React.FC = () => {
       {/* GAME UI */}
       {(status === GameStatus.PLAYING || status === GameStatus.PAUSED || status === GameStatus.INVENTORY || status === GameStatus.SHOP || status === GameStatus.LEVEL_UP) && (
         <div className="absolute inset-0 flex flex-col justify-between p-4 md:p-6 pointer-events-none">
-          {/* Top Bar */}
+          {/* Top Bar - Genshin Impact Style */}
           <div className="flex justify-between items-start pointer-events-auto w-full z-20">
 
-             {/* LEFT: Character portrait + HP/MP/XP bars */}
-             <div className="flex items-center" style={{ minWidth: 320 }}>
-               {/* Circle portrait */}
-               <div className="relative shrink-0 z-10" style={{
-                 width: 64, height: 64, borderRadius: '50%',
-                 background: `radial-gradient(circle at 35% 35%, ${CLASS_COLOR[hero] ?? '#6366f1'}cc, #0a0a12)`,
-                 border: `3px solid ${CLASS_COLOR[hero] ?? '#6366f1'}`,
-                 boxShadow: `0 0 18px ${CLASS_COLOR[hero] ?? '#6366f1'}88, inset 0 2px 8px rgba(0,0,0,0.7)`,
-                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
-               }}>
-                 <span className="text-[9px] font-black text-white/70 uppercase tracking-widest">{hero.slice(0,3)}</span>
-                 <span className="text-sm font-black text-white rpg-text">LV{level}</span>
-               </div>
-               {/* Bars */}
-               <div className="flex flex-col gap-1.5 -ml-3" style={{ width: 260 }}>
-                 {/* HP */}
-                 <div className="relative h-5 rounded-r-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.75)', border: '1px solid rgba(220,40,40,0.4)', boxShadow: '0 0 8px rgba(220,40,40,0.3)', paddingLeft: 12 }}>
-                   <div className="absolute inset-y-0 left-3 right-0 rounded-r-full overflow-hidden">
-                     <div style={{ width: `${hpPercent}%`, height: '100%', background: 'linear-gradient(90deg,#b91c1c,#ef4444,#ff6b6b)', transition: 'width 0.15s', boxShadow: '2px 0 8px #ef444488' }} />
-                   </div>
-                   <span className="absolute inset-0 flex items-center justify-center text-[9px] font-black text-white drop-shadow z-10" style={{ paddingLeft: 12 }}>{Math.ceil(health)}/{stats.maxHealth}</span>
-                 </div>
-                 {/* MP */}
-                 <div className="relative h-4 rounded-r-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.75)', border: '1px solid rgba(59,130,246,0.4)', boxShadow: '0 0 8px rgba(59,130,246,0.3)', paddingLeft: 12 }}>
-                   <div className="absolute inset-y-0 left-3 right-0 rounded-r-full overflow-hidden">
-                     <div style={{ width: `${manaPercent}%`, height: '100%', background: 'linear-gradient(90deg,#1d4ed8,#3b82f6,#60a5fa)', transition: 'width 0.15s', boxShadow: '2px 0 8px #3b82f688' }} />
-                   </div>
-                   <span className="absolute inset-0 flex items-center justify-center text-[9px] font-black text-white drop-shadow z-10" style={{ paddingLeft: 12 }}>{Math.ceil(mana)}/{stats.maxMana}</span>
-                 </div>
-                 {/* XP */}
-                 <div className="relative h-2.5 rounded-r-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.75)', border: '1px solid rgba(34,197,94,0.4)', paddingLeft: 12 }}>
-                   <div className="absolute inset-y-0 left-3 right-0 rounded-r-full overflow-hidden">
-                     <div style={{ width: `${xpPercent}%`, height: '100%', background: 'linear-gradient(90deg,#15803d,#22c55e)', transition: 'width 0.3s' }} />
-                   </div>
-                 </div>
-                 <span className="text-[9px] font-bold uppercase tracking-widest -mt-0.5" style={{ color: CLASS_COLOR[hero] ?? '#6366f1', paddingLeft: 14 }}>{hero} · LV{level}</span>
-               </div>
-             </div>
-
-             {/* Center: Wave + Boss */}
-             <div className="flex flex-col items-center flex-1 mx-4 relative">
-                 {bossData.active ? (
-                     <div className="w-full max-w-md rounded-md p-2 shadow-xl" style={{background:'rgba(12,12,18,0.92)',border:'2px solid rgba(239,68,68,0.4)'}}>
-                         <div className="flex justify-between text-xs font-black text-red-400 mb-1.5 px-2 uppercase rpg-text">
-                             <span>{bossData.name}</span>
-                             <span>{Math.ceil(bossData.hp).toLocaleString()}</span>
-                         </div>
-                         <div className="h-3 rounded-sm overflow-hidden" style={{background:'rgba(255,255,255,0.08)'}}>
-                             <motion.div className="h-full" animate={{ width: `${Math.max(0, (bossData.hp / bossData.maxHp) * 100)}%` }} style={{ background: 'linear-gradient(90deg,#b91c1c,#ef4444)' }}/>
-                         </div>
-                     </div>
-                 ) : (
-                     <div className="flex items-center gap-3">
-                         <div className="text-3xl font-black text-white rpg-text" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)', WebkitTextStroke: '0.5px rgba(0,0,0,0.7)' }}>
-                             WAVE {wave}
-                         </div>
-                         <div className="text-white/50 font-bold text-sm flex items-center gap-1">
-                             <Timer size={11}/> <span className="text-lg font-black text-white/70">{Math.max(0, 30 - Math.floor(waveTimer))}</span>s
-                         </div>
-                         {waveTimer > 20 && (
-                             <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                                className="px-3 py-0.5 bg-red-500/80 text-white font-black text-xs rounded animate-pulse border border-red-400/60 rpg-text">
-                                 NEXT WAVE
-                             </motion.div>
-                         )}
-                     </div>
-                 )}
-             </div>
-
-             {/* Top bar notifications removed */}
-
-             {/* RIGHT: Coins + Menu Icons */}
-             <div className="flex items-center gap-6">
-                 <div className="flex items-center gap-2">
-                    <Coins size={20} className="text-yellow-400" style={{ filter: 'drop-shadow(0 0 6px #fbbf24)' }}/>
-                    <span className="font-black text-yellow-300 text-2xl rpg-text" style={{ textShadow: '0 0 12px #fbbf2488, 0 2px 4px rgba(0,0,0,0.9)' }}>{score.toLocaleString()}</span>
+             {/* LEFT: Coins + Menu Icons */}
+             <div className="flex items-center gap-4">
+                 <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <Coins size={18} className="text-yellow-400" />
+                    <span className="font-black text-yellow-300 text-lg rpg-text">{score.toLocaleString()}</span>
                  </div>
 
                  <div className="flex items-center gap-2">
@@ -974,7 +863,7 @@ export const GameUI: React.FC = () => {
                                     item.action();
                                 }
                             }}
-                            className="relative w-12 h-12 rounded-xl flex items-center justify-center transition-all hover:bg-white/10"
+                            className="relative w-10 h-10 rounded-lg flex items-center justify-center transition-all hover:bg-white/10"
                             style={{
                                 background: panelTab === item.id && panelOpen ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.4)',
                                 border: `1px solid ${panelTab === item.id && panelOpen ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)'}`,
@@ -982,24 +871,81 @@ export const GameUI: React.FC = () => {
                             }}
                             title={item.label}
                         >
-                            <item.icon size={24} />
+                            <item.icon size={20} />
                             {item.dot && (
-                                <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-slate-900 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)] z-10" />
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-slate-900 animate-pulse shadow-[0_0_6px_rgba(239,68,68,0.8)] z-10" />
                             )}
                         </button>
                     ))}
                  </div>
              </div>
+
+             {/* CENTER: Wave + Boss */}
+             <div className="flex flex-col items-center flex-1 mx-4 relative">
+                 {bossData.active ? (
+                     <div className="w-full max-w-sm rounded-lg p-3 shadow-xl" style={{background:'rgba(12,12,18,0.92)',border:'2px solid rgba(239,68,68,0.4)'}}>
+                         <div className="flex justify-between text-xs font-black text-red-400 mb-2 px-2 uppercase rpg-text">
+                             <span>{bossData.name}</span>
+                             <span>{Math.ceil(bossData.hp).toLocaleString()}</span>
+                         </div>
+                         <div className="h-2.5 rounded-full overflow-hidden" style={{background:'rgba(255,255,255,0.08)', border:'1px solid rgba(239,68,68,0.3)'}}>
+                             <motion.div className="h-full" animate={{ width: `${Math.max(0, (bossData.hp / bossData.maxHp) * 100)}%` }} style={{ background: 'linear-gradient(90deg,#b91c1c,#ef4444)', boxShadow: '0 0 8px rgba(239,68,68,0.5)' }}/>
+                         </div>
+                     </div>
+                 ) : (
+                     <div className="flex items-center gap-3">
+                         <div className="text-2xl font-black text-white rpg-text" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)', WebkitTextStroke: '0.5px rgba(0,0,0,0.7)' }}>
+                             WAVE {wave}
+                         </div>
+                         <div className="text-white/50 font-bold text-xs flex items-center gap-1">
+                             <Timer size={10}/> <span className="text-base font-black text-white/70">{Math.max(0, 30 - Math.floor(waveTimer))}</span>s
+                         </div>
+                         {waveTimer > 20 && (
+                             <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                                className="px-3 py-1 bg-red-500/80 text-white font-black text-xs rounded-lg animate-pulse border border-red-400/60 rpg-text">
+                                 NEXT WAVE
+                             </motion.div>
+                         )}
+                     </div>
+                 )}
+             </div>
+
+             {/* RIGHT: Character HP Bar - Genshin Impact Style */}
+             <div className="flex flex-col items-end gap-2">
+               <div className="flex items-center gap-2">
+                 <div className="text-right">
+                   <div className="text-xs font-bold uppercase tracking-widest text-white/70">{hero}</div>
+                   <div className="text-sm font-black text-white">Lv. {level}</div>
+                 </div>
+                 <div className="relative shrink-0" style={{
+                   width: 56, height: 56, borderRadius: '8px',
+                   background: `linear-gradient(135deg, ${CLASS_COLOR[hero] ?? '#6366f1'}66, ${CLASS_COLOR[hero] ?? '#6366f1'}33)`,
+                   border: `2px solid ${CLASS_COLOR[hero] ?? '#6366f1'}`,
+                   boxShadow: `0 0 12px ${CLASS_COLOR[hero] ?? '#6366f1'}88, inset 0 2px 8px rgba(0,0,0,0.5)`,
+                   display: 'flex', alignItems: 'center', justifyContent: 'center'
+                 }}>
+                   <span className="text-2xl font-black text-white rpg-text">{hero.charAt(0)}</span>
+                 </div>
+               </div>
+               {/* HP Bar */}
+               <div className="flex flex-col gap-1" style={{ minWidth: 200 }}>
+                 <div className="relative h-4 rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(220,40,40,0.5)', boxShadow: '0 0 8px rgba(220,40,40,0.2), inset 0 1px 3px rgba(0,0,0,0.4)' }}>
+                   <div className="absolute inset-y-0 left-0 rounded-full overflow-hidden">
+                     <div style={{ width: `${hpPercent}%`, height: '100%', background: 'linear-gradient(90deg,#dc2626,#ef4444,#f87171)', transition: 'width 0.2s ease-out', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2)' }} />
+                   </div>
+                   <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white drop-shadow z-10">{Math.ceil(health)}/{stats.maxHealth}</span>
+                 </div>
+               </div>
+             </div>
           </div>
 
-          {/* BOTTOM HOTBAR */}
+          {/* BOTTOM HOTBAR - Genshin Impact Style */}
           {(() => {
             const c = CLASS_COLOR[hero] ?? '#6366f1';
             const fireKey = (code: string) => {
               window.dispatchEvent(new KeyboardEvent('keydown', { code, bubbles: true }));
               setTimeout(() => window.dispatchEvent(new KeyboardEvent('keyup', { code, bubbles: true })), 120);
             };
-            // Fill icon helper — solid fill, no stroke
             const fi = (Icon: any, size = 28) => <Icon size={size} fill={c} strokeWidth={0} style={{ color: c }} />;
             const fiC = (Icon: any, color: string, size = 24) => <Icon size={size} fill={color} strokeWidth={0} style={{ color }} />;
 
@@ -1009,81 +955,68 @@ export const GameUI: React.FC = () => {
                           activeAbilityQ === 'GRAVITY_SPELL' ? fi(Hexagon) :
                           activeAbilityQ === 'RAGE'          ? fi(Flame) :
                           activeAbilityQ ? fi(Star) : <Lock size={22} className="text-gray-700"/>;
-            const eIcon = hero === 'BARBARIAN' ? fi(Heart) : hero === 'WIZARD' ? fi(ShieldCheck) : fi(Wind);
 
             return (
-            <div className="flex flex-col gap-3 w-full max-w-6xl mx-auto pb-4 items-center z-20 pointer-events-auto">
-              <div className="flex justify-center items-end gap-5">
-
+            <div className="flex flex-col gap-4 w-full max-w-6xl mx-auto pb-2 items-center z-20 pointer-events-auto">
+              <div className="flex justify-center items-end gap-3">
                 {/* Q = weapon ability */}
                 <UniversalSkillSlot
                     icon={weaponIcon}
                     level={skillLevels.weapon} cooldown={skills.r} maxCooldown={skillMaxCooldowns.r * (1 - stats.cooldownReduction)}
                     label="Q" desc={weaponAbilityDesc} active={true}
-                    manaCost={getManaCost('r')} currentMana={mana} heroClass={hero}
                     onClick={() => fireKey('KeyQ')}
                     onHover={(text) => setHoveredSkillText(text)}
                 />
 
-                {/* E = active skill (previous R) */}
+                {/* E = active skill */}
                 <UniversalSkillSlot
                     icon={qIcon}
                     level={1} cooldown={skills.q} maxCooldown={skillMaxCooldowns.q * (1 - stats.cooldownReduction)}
                     label="E" desc={qAbilityDesc} active={!!activeAbilityQ}
-                    manaCost={getManaCost('q')} currentMana={mana} heroClass={hero}
                     onClick={() => fireKey('KeyE')}
                     onHover={(text) => setHoveredSkillText(text)}
                 />
-
-                <div className="w-px h-12 bg-white/15 self-center mx-0.5" />
 
                 {/* SPACE = dash */}
                 <UniversalSkillSlot
                     icon={fi(Wind)}
                     level={skillLevels.dash} cooldown={skills.dash} maxCooldown={skillMaxCooldowns.dash * (1 - stats.cooldownReduction)}
                     label="SPC" desc="Dash" active={true}
-                    manaCost={getManaCost('dash')} currentMana={mana} heroClass={hero}
                     charges={dashCharges} maxCharges={maxDashCharges}
                     onClick={() => fireKey('Space')}
                     onHover={(text) => setHoveredSkillText(text)}
                 />
 
-                <div className="w-px h-12 bg-white/15 self-center mx-0.5" />
-
                 {/* Passive Skills */}
                 {(hero === 'WIZARD' || !SKILLS_INFO.thunder.classType) && (
-                    <UniversalSkillSlot icon={fi(Zap, 22)} level={skillLevels.thunder} cooldown={passiveSkillState.thunderCooldown} maxCooldown={passiveSkillState.thunderMaxCooldown} desc={getSkillDesc('thunder', skillLevels.thunder)} active={skillLevels.thunder > 0} manaCost={getManaCost('thunder')} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
+                    <UniversalSkillSlot icon={fi(Zap, 22)} level={skillLevels.thunder} cooldown={passiveSkillState.thunderCooldown} maxCooldown={passiveSkillState.thunderMaxCooldown} desc={getSkillDesc('thunder', skillLevels.thunder)} active={skillLevels.thunder > 0} isPassive onHover={(text) => setHoveredSkillText(text)} />
                 )}
                 {(hero === 'BARBARIAN' || !SKILLS_INFO.orbital.classType) && (
-                    <UniversalSkillSlot icon={fi(Activity, 22)} level={skillLevels.orbital} cooldown={passiveSkillState.orbitalCooldown} maxCooldown={passiveSkillState.orbitalMaxCooldown} desc={getSkillDesc('orbital', skillLevels.orbital)} active={skillLevels.orbital > 0} manaCost={0} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
+                    <UniversalSkillSlot icon={fi(Activity, 22)} level={skillLevels.orbital} cooldown={passiveSkillState.orbitalCooldown} maxCooldown={passiveSkillState.orbitalMaxCooldown} desc={getSkillDesc('orbital', skillLevels.orbital)} active={skillLevels.orbital > 0} isPassive onHover={(text) => setHoveredSkillText(text)} />
                 )}
                 {(hero === 'WIZARD' || !SKILLS_INFO.storm.classType) && (
-                    <UniversalSkillSlot icon={fi(Tornado, 22)} level={skillLevels.storm} cooldown={passiveSkillState.stormCooldown} maxCooldown={passiveSkillState.stormMaxCooldown} desc={getSkillDesc('storm', skillLevels.storm)} active={skillLevels.storm > 0} manaCost={0} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
+                    <UniversalSkillSlot icon={fi(Tornado, 22)} level={skillLevels.storm} cooldown={passiveSkillState.stormCooldown} maxCooldown={passiveSkillState.stormMaxCooldown} desc={getSkillDesc('storm', skillLevels.storm)} active={skillLevels.storm > 0} isPassive onHover={(text) => setHoveredSkillText(text)} />
                 )}
                 {(hero === 'ARCHER' || !SKILLS_INFO.burning.classType) && (
-                    <UniversalSkillSlot icon={fi(Flame, 22)} level={skillLevels.burning} cooldown={passiveSkillState.burningCooldown} maxCooldown={passiveSkillState.burningMaxCooldown} desc={getSkillDesc('burning', skillLevels.burning)} active={skillLevels.burning > 0} manaCost={getManaCost('burning')} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
+                    <UniversalSkillSlot icon={fi(Flame, 22)} level={skillLevels.burning} cooldown={passiveSkillState.burningCooldown} maxCooldown={passiveSkillState.burningMaxCooldown} desc={getSkillDesc('burning', skillLevels.burning)} active={skillLevels.burning > 0} isPassive onHover={(text) => setHoveredSkillText(text)} />
                 )}
                 {(hero === 'ARCHER' || !SKILLS_INFO.freezing.classType) && (
-                    <UniversalSkillSlot icon={fiC(Gem, '#67e8f9', 22)} level={skillLevels.freezing} cooldown={passiveSkillState.freezingCooldown} maxCooldown={passiveSkillState.freezingMaxCooldown} desc={getSkillDesc('freezing', skillLevels.freezing)} active={skillLevels.freezing > 0} manaCost={getManaCost('freezing')} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
+                    <UniversalSkillSlot icon={fiC(Gem, '#67e8f9', 22)} level={skillLevels.freezing} cooldown={passiveSkillState.freezingCooldown} maxCooldown={passiveSkillState.freezingMaxCooldown} desc={getSkillDesc('freezing', skillLevels.freezing)} active={skillLevels.freezing > 0} isPassive onHover={(text) => setHoveredSkillText(text)} />
                 )}
                 {(hero === 'WIZARD' || !SKILLS_INFO.freezeSpell.classType) && (
-                    <UniversalSkillSlot icon={fi(Zap, 22)} level={skillLevels.freezeSpell} cooldown={passiveSkillState.blizzardCooldown} maxCooldown={passiveSkillState.blizzardMaxCooldown} desc={getSkillDesc('freezeSpell', skillLevels.freezeSpell)} active={skillLevels.freezeSpell > 0} manaCost={getManaCost('freezeSpell')} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
+                    <UniversalSkillSlot icon={fi(Zap, 22)} level={skillLevels.freezeSpell} cooldown={passiveSkillState.blizzardCooldown} maxCooldown={passiveSkillState.blizzardMaxCooldown} desc={getSkillDesc('freezeSpell', skillLevels.freezeSpell)} active={skillLevels.freezeSpell > 0} isPassive onHover={(text) => setHoveredSkillText(text)} />
                 )}
                 {(hero === 'BARBARIAN' || !SKILLS_INFO.stamp.classType) && (
-                    <UniversalSkillSlot icon={fi(Hammer, 22)} level={skillLevels.stamp} cooldown={passiveSkillState.stampCooldown} maxCooldown={passiveSkillState.stampMaxCooldown} desc={getSkillDesc('stamp', skillLevels.stamp)} active={skillLevels.stamp > 0} manaCost={getManaCost('stamp')} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
+                    <UniversalSkillSlot icon={fi(Hammer, 22)} level={skillLevels.stamp} cooldown={passiveSkillState.stampCooldown} maxCooldown={passiveSkillState.stampMaxCooldown} desc={getSkillDesc('stamp', skillLevels.stamp)} active={skillLevels.stamp > 0} isPassive onHover={(text) => setHoveredSkillText(text)} />
                 )}
-                <UniversalSkillSlot icon={fiC(ShieldCheck, '#fb923c', 22)} level={skillLevels.barrier} desc={getSkillDesc('barrier', skillLevels.barrier)} cooldown={barrierCooldown} maxCooldown={Math.max(10, 48-(skillLevels.barrier * 4))} charges={shieldCharges} maxCharges={maxShieldCharges} active={skillLevels.barrier > 0} manaCost={0} currentMana={mana} isPassive onHover={(text) => setHoveredSkillText(text)} />
+                <UniversalSkillSlot icon={fiC(ShieldCheck, '#fb923c', 22)} level={skillLevels.barrier} desc={getSkillDesc('barrier', skillLevels.barrier)} cooldown={barrierCooldown} maxCooldown={Math.max(10, 48-(skillLevels.barrier * 4))} charges={shieldCharges} maxCharges={maxShieldCharges} active={skillLevels.barrier > 0} isPassive onHover={(text) => setHoveredSkillText(text)} />
 
-                <div className="w-px h-12 bg-white/15 self-center mx-0.5" />
-
-                {/* HP Potion - Clickable to use */}
+                {/* HP Potion */}
                 <UniversalSkillSlot
                   icon={<Heart size={20} />}
                   level={hpPotion?.quantity || 0}
                   desc={hpPotion?.quantity ? `Restore ${hpPotion.restoreAmount || 50} HP` : 'No potions'}
                   active={hpPotion && hpPotion.quantity > 0}
-                  manaCost={0}
-                  currentMana={mana}
                   onClick={() => {
                     if (hpPotion && hpPotion.quantity > 0) {
                       heal(hpPotion.restoreAmount || 50);
@@ -1094,28 +1027,9 @@ export const GameUI: React.FC = () => {
                   }}
                   onHover={() => {}}
                 />
-
-                {/* MP Potion - Clickable to use */}
-                <UniversalSkillSlot
-                  icon={<FlaskConical size={20} />}
-                  level={manaPotion?.quantity || 0}
-                  desc={manaPotion?.quantity ? `Restore ${manaPotion.restoreAmount || 50} MP` : 'No potions'}
-                  active={manaPotion && manaPotion.quantity > 0}
-                  manaCost={0}
-                  currentMana={mana}
-                  onClick={() => {
-                    if (manaPotion && manaPotion.quantity > 0) {
-                      useMana(-1 * (manaPotion.restoreAmount || 50));
-                      const updatedPotions = inventory.filter(i => i.id !== 'potion_mana');
-                      updatedPotions.push({ ...manaPotion, quantity: (manaPotion.quantity || 1) - 1 });
-                      setInventory(updatedPotions);
-                    }
-                  }}
-                  onHover={() => {}}
-                />
               </div>
               {hoveredSkillText && (
-                <div className="mt-2 text-xs text-slate-200 font-bold text-center max-w-5xl mx-auto px-2">{hoveredSkillText}</div>
+                <div className="text-xs text-slate-300 font-semibold text-center max-w-5xl mx-auto px-2">{hoveredSkillText}</div>
               )}
             </div>
             );
@@ -1574,7 +1488,7 @@ export const GameUI: React.FC = () => {
                         <div className="ml-auto text-right"><div className="text-[9px] text-slate-600 font-bold uppercase">Combat Power</div><div className="text-2xl font-black" style={{color:CLASS_COLOR[hero]??'#f0c040'}}>{currentCP.toLocaleString()}</div></div>
                       </div>
                       <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
-                        {([['Damage',Math.floor(stats.damage).toString()],['Health',`${Math.floor(health)} / ${stats.maxHealth}`],['Defense',stats.defense.toFixed(1)],['Mana',`${Math.floor(mana)} / ${stats.maxMana}`],['Move Speed',stats.moveSpeed.toFixed(1)],['Regen',`${stats.regen.toFixed(1)}/s`],['Crit Rate',`${(stats.critRate*100).toFixed(0)}%`],['Crit Dmg',`${(stats.critDamage*100).toFixed(0)}%`],['Atk Speed',stats.fireRate.toFixed(2)],['Cooldown',`-${(stats.cooldownReduction*100).toFixed(0)}%`]] as [string,string][]).map(([l,v]) => (
+                        {([['Damage',Math.floor(stats.damage).toString()],['Health',`${Math.floor(health)} / ${stats.maxHealth}`],['Defense',stats.defense.toFixed(1)],['Move Speed',stats.moveSpeed.toFixed(1)],['Regen',`${stats.regen.toFixed(1)}/s`],['Crit Rate',`${(stats.critRate*100).toFixed(0)}%`],['Crit Dmg',`${(stats.critDamage*100).toFixed(0)}%`],['Atk Speed',stats.fireRate.toFixed(2)],['Cooldown',`-${(stats.cooldownReduction*100).toFixed(0)}%`]] as [string,string][]).map(([l,v]) => (
                           <div key={l} className="flex justify-between items-center py-1.5 text-xs px-2 rounded-md" style={{background:'rgba(255,255,255,0.02)'}}>
                             <span className="text-slate-500 font-bold uppercase tracking-wider">{l}</span>
                             <span className="font-mono font-bold text-white">{v}</span>
