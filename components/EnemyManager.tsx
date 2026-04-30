@@ -98,9 +98,10 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
         meshRef.current.userData.enemies = enemies.current;
     }
 
-    // Portal appears when all enemies defeated (non-boss waves)
+    // Portal appears when all stage enemies defeated
     const activeEnemyCount = (enemies.current || []).filter(e => e && e.active).length;
-    if (activeEnemyCount === 0 && !bossData.active && !portalActive && waveTimer > 0.5) {
+    const allStageEnemiesKilled = stageEnemiesKilled >= stageTotalEnemies;
+    if (activeEnemyCount === 0 && allStageEnemiesKilled && !bossData.active && !portalActive && waveTimer > 0.5) {
         activatePortal(playerPosition);
     }
 
