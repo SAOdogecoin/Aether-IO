@@ -656,9 +656,9 @@ export const GameUI: React.FC = () => {
   };
 
   let weaponAbilityDesc = "Basic Attack.";
-  if (equipment.weapon?.ability === 'FIREBALL') weaponAbilityDesc = `Fireball: ${f(dmg * 4.0 * 0.63 * stats.skillDamage * 2.0)} dmg. Burn effect.`;
-  else if (equipment.weapon?.ability === 'ARROW_RAIN') weaponAbilityDesc = `Arrow Rain: ${f(dmg * 1.5 * 0.63 * stats.skillDamage * 2.0)} per arrow. 6 waves.`;
-  else if (equipment.weapon?.ability === 'AXE_SPIN') weaponAbilityDesc = `Axe Spin: ${f(dmg * 5 * stats.skillDamage * 2.0 * 0.63)} dmg. Range: 6.0.`;
+  if (equipment.weapon?.ability === 'FIREBALL') weaponAbilityDesc = `Fireball: ${f(stats.damage * 4.0 * 0.63 * stats.skillDamage * 2.0)} dmg. Burn effect.`;
+  else if (equipment.weapon?.ability === 'ARROW_RAIN') weaponAbilityDesc = `Arrow Rain: ${f(stats.damage * 1.5 * 0.63 * stats.skillDamage * 2.0)} per arrow. 6 waves.`;
+  else if (equipment.weapon?.ability === 'AXE_SPIN') weaponAbilityDesc = `Axe Spin: ${f(stats.damage * 5 * stats.skillDamage * 2.0 * 0.63)} dmg. Range: 6.0.`;
 
   let qAbilityDesc = "Locked.";
   if (activeAbilityQ === 'PIERCING_SHOT') qAbilityDesc = getSkillDesc('piercing', skillLevels.piercing);
