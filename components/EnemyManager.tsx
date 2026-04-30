@@ -114,32 +114,71 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
         }
     }
 
-    if (wave !== waveState.current.wave) {
-        waveState.current.wave = wave;
-        waveState.current.bossSpawned = false;
-        waveState.current.eliteSpawned = false;
-        waveState.current.elitesSpawned = 0;
-        // Roll elite quota once per wave
-        waveState.current.eliteQuota = wave % 10 === 0 ? 0
-            : wave % 5 === 0 ? Math.floor(Math.random() * 3) + 5   // 5–7
-            : Math.floor(Math.random() * 3) + 1;                    // 1–3
-        bossDefeatedTimer.current = 0;
+    // Initialize wave for new stage
+    if (stage !== waveState.current.stage || stageWaveIndex !== waveState.current.waveIndex) {
+        waveState.current.stage = stage;
+        waveState.current.waveIndex = stageWaveIndex;
+        waveState.current.normalSpawned = 0;
+        waveState.current.eliteSpawned = 0;
+        waveState.current.normalMageSpawned = 0;
+        waveState.current.eliteMageSpawned = 0;
+
+        // Get wave composition from store
+        const stageData = useGameStore.getState();
+        const stageSpec = stageData.stage === 1 ? {
+            totalWaves: 3,
+            waves: [
+                { normalEnemies: 4, eliteEnemies: 0, normalMages: 1, eliteMages: 0 },
+                { normalEnemies: 4, eliteEnemies: 0, normalMages: 1, eliteMages: 0 },
+                { normalEnemies: 4, eliteEnemies: 0, normalMages: 1, eliteMages: 0 },
+            ]
+        } : stageData.stage === 2 ? {
+            totalWaves: 4,
+            waves: [
+                { normalEnemies: 4, eliteEnemies: 1, normalMages: 1, eliteMages: 0 },
+                { normalEnemies: 3, eliteEnemies: 2, normalMages: 0, eliteMages: 1 },
+                { normalEnemies: 5, eliteEnemies: 0, normalMages: 1, eliteMages: 0 },
+                { normalEnemies: 2, eliteEnemies: 3, normalMages: 0, eliteMages: 1 },
+            ]
+        } : stageData.stage === 3 ? {
+            totalWaves: 4,
+            waves: [
+                { normalEnemies: 2, eliteEnemies: 3, normalMages: 0, eliteMages: 1 },
+                { normalEnemies: 0, eliteEnemies: 3, normalMages: 0, eliteMages: 1 },
+                { normalEnemies: 3, eliteEnemies: 2, normalMages: 1, eliteMages: 1 },
+                { normalEnemies: 1, eliteEnemies: 4, normalMages: 0, eliteMages: 1 },
+            ]
+        } : {
+            totalWaves: 4,
+            waves: [
+                { normalEnemies: 0, eliteEnemies: 4, normalMages: 1, eliteMages: 1 },
+                { normalEnemies: 1, eliteEnemies: 3, normalMages: 0, eliteMages: 2 },
+                { normalEnemies: 0, eliteEnemies: 5, normalMages: 1, eliteMages: 1 },
+                { normalEnemies: 0, eliteEnemies: 4, normalMages: 0, eliteMages: 2 },
+            ]
+        };
+
+        const waveComp = stageSpec.waves[stageWaveIndex] || stageSpec.waves[0];
+        waveState.current.normalTarget = waveComp.normalEnemies;
+        waveState.current.eliteTarget = waveComp.eliteEnemies;
+        waveState.current.normalMageTarget = waveComp.normalMages;
+        waveState.current.eliteMageTarget = waveComp.eliteMages;
     }
 
     bossActiveRef.current = bossData.active;
 
+    // Stage-based spawning
     spawnTimer.current += delta;
-    // Lower base = more enemies initially. Spawn rate no longer scales directly with wave.
-    const spawnRate = Math.max(0.1, 1.07 - (level * 0.04));
-    const spawnCount = wave > 1 ? 3 : 1;
+    const spawnRate = 0.4; // Spawn rate in seconds
+    const totalSpawned = waveState.current.normalSpawned + waveState.current.eliteSpawned +
+                        waveState.current.normalMageSpawned + waveState.current.eliteMageSpawned;
+    const totalTarget = waveState.current.normalTarget + waveState.current.eliteTarget +
+                       waveState.current.normalMageTarget + waveState.current.eliteMageTarget;
 
-    // Only spawn enemies if waveTimer is less than 30 seconds
-    if (waveTimer < 30 && !bossData.active && spawnTimer.current > spawnRate) {
+    if (totalSpawned < totalTarget && spawnTimer.current > spawnRate) {
         spawnTimer.current = 0;
-        if (Math.random() < 0.5) return;
-        for (let i = 0; i < spawnCount; i++) {
-            const enemy = enemies.current.find(e => !e.active);
-            if (!enemy) break;
+        const enemy = enemies.current.find(e => !e.active);
+        if (enemy) {
             enemy.active = true;
             enemy.burnTimer = 0;
             enemy.poisonTimer = 0;
@@ -158,71 +197,62 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
             } while (spawnPos.distanceTo(playerPosition) < 20);
 
             enemy.position.copy(spawnPos);
-            
-            const hpMult = 1 + (wave * 0.5) + (level * 0.1);
-            const speedMult = 1 + (wave * 0.025);
+
+            const stageMult = 1 + (stage * 0.3);
+            const hpMult = stageMult + (level * 0.1);
+            const speedMult = 1 + (stage * 0.05);
             const globalHpReduction = 0.4;
-            const r = Math.random();
-            
-            let isBoss = false;
-            
-            const eliteQuota = waveState.current.eliteQuota;
 
-            if (wave % 10 === 0 && !waveState.current.bossSpawned) {
-                isBoss = true;
-                waveState.current.bossSpawned = true;
-                const bossName = wave % 20 === 0 ? "VOID REAPER" : "ABYSS LORD";
-                addNotification(`⚠️ ${bossName} APPEARED ⚠️`, COLORS.enemyBoss, 'BOSS');
-                setBossData({ active: true, name: bossName, hp: 1, maxHp: 1 });
+            // Determine enemy type based on remaining targets
+            let enemyType = 0;
+            if (waveState.current.eliteMageSpawned < waveState.current.eliteMageTarget) {
+                enemyType = 8; // Elite Mage
+                waveState.current.eliteMageSpawned++;
+            } else if (waveState.current.normalMageSpawned < waveState.current.normalMageTarget) {
+                enemyType = 7; // Normal Mage
+                waveState.current.normalMageSpawned++;
+            } else if (waveState.current.eliteSpawned < waveState.current.eliteTarget) {
+                enemyType = 1; // Elite
+                waveState.current.eliteSpawned++;
+            } else if (waveState.current.normalSpawned < waveState.current.normalTarget) {
+                enemyType = 0; // Normal
+                waveState.current.normalSpawned++;
+            }
 
-                enemy.type = 2;
-                enemy.health = (2000 + (level * 250) + (wave * 100)) * hpMult * globalHpReduction * 0.5 * 1.2;
-                enemy.speed = (2.5 + (level * 0.1)) * speedMult;
-                enemy.radius = 2.5;
-                enemy.scale = 3.0;
-                setBossData({ hp: enemy.health, maxHp: enemy.health });
-            } else if (wave >= 2 && waveState.current.elitesSpawned < eliteQuota) {
-                // Spawn elite (type 1)
-                waveState.current.elitesSpawned++;
-                enemy.type = 1;
-                const isLargeElite = Math.random() > 0.5;
-                enemy.health = (40 + (level * 10)) * hpMult * globalHpReduction * 1.3 * (isLargeElite ? 2 : 1);
-                enemy.speed = (3.0 + (level * 0.1)) * speedMult;
-                enemy.radius = isLargeElite ? 1.2 : 0.9;
-                enemy.scale = isLargeElite ? 1.8 : 1.3;
-            } else if (wave >= 3 && r > 0.925) {
-                if (Math.random() > 0.5) {
-                    enemy.type = 3;
-                    enemy.health = (15 + (level * 5)) * hpMult * globalHpReduction * 1.3;
-                    enemy.speed = 3.0 * speedMult;
-                    enemy.radius = 0.8;
-                    enemy.scale = 1.0;
-                } else {
-                    enemy.type = 6;
-                    enemy.health = (20 + (level * 6)) * hpMult * globalHpReduction * 1.3;
-                    enemy.speed = 2.0 * speedMult;
-                    enemy.radius = 0.8;
-                    enemy.scale = 1.1;
-                }
-            } else if (wave >= 2 && r > 0.85) {
-                enemy.type = 4;
-                const baseHp = (10 + (level * 4)) * hpMult * globalHpReduction * 1.3;
-                enemy.health = baseHp * 0.5;
-                const baseSpeed = (4 + (level * 0.15)) * speedMult;
-                enemy.speed = baseSpeed * 2.0;
-                enemy.radius = 0.6;
-                enemy.scale = 0.8;
-            } else {
-                enemy.type = 0;
-                enemy.health = (10 + (level * 4)) * hpMult * globalHpReduction * 1.3;
+            enemy.type = enemyType;
+
+            if (enemyType === 0) {
+                // Normal Slime
+                enemy.health = (10 + (level * 4)) * hpMult * globalHpReduction;
                 enemy.speed = (4 + (level * 0.15)) * speedMult;
                 enemy.radius = 0.6;
                 enemy.scale = 1.0;
+            } else if (enemyType === 1) {
+                // Elite
+                const isLargeElite = Math.random() > 0.5;
+                enemy.health = (40 + (level * 10)) * hpMult * globalHpReduction * (isLargeElite ? 2 : 1);
+                enemy.speed = (3.0 + (level * 0.1)) * speedMult;
+                enemy.radius = isLargeElite ? 1.2 : 0.9;
+                enemy.scale = isLargeElite ? 1.8 : 1.3;
+            } else if (enemyType === 7) {
+                // Normal Mage - shoots 1 projectile slowly
+                enemy.health = (15 + (level * 5)) * hpMult * globalHpReduction;
+                enemy.speed = (2.5 + (level * 0.1)) * speedMult;
+                enemy.radius = 0.7;
+                enemy.scale = 1.1;
+                enemy.state = 'SHOOT';
+                enemy.stateTimer = 0;
+            } else if (enemyType === 8) {
+                // Elite Mage - shoots 3 projectiles faster
+                enemy.health = (30 + (level * 8)) * hpMult * globalHpReduction * 1.5;
+                enemy.speed = (2.0 + (level * 0.1)) * speedMult;
+                enemy.radius = 0.8;
+                enemy.scale = 1.3;
+                enemy.state = 'SHOOT';
+                enemy.stateTimer = 0;
             }
+
             enemy.maxHealth = enemy.health;
-            if (spawnCount > 1 && i < spawnCount - 1) {
-                continue;
-            }
         }
     }
 
@@ -293,9 +323,11 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
             else {
                 if (e.type === 2) tempColor.set(COLORS.enemyBoss);
                 else if (e.type === 3) tempColor.set(COLORS.enemyShooter);
-                else if (e.type === 4) tempColor.set(COLORS.enemySpeedy); 
-                else if (e.type === 5) tempColor.set(COLORS.enemyEliteShooter); 
-                else if (e.type === 6) tempColor.set(COLORS.enemySlowShooter); 
+                else if (e.type === 4) tempColor.set(COLORS.enemySpeedy);
+                else if (e.type === 5) tempColor.set(COLORS.enemyEliteShooter);
+                else if (e.type === 6) tempColor.set(COLORS.enemySlowShooter);
+                else if (e.type === 7) tempColor.set('#8b5cf6'); // Normal Mage - Purple
+                else if (e.type === 8) tempColor.set('#d946ef'); // Elite Mage - Magenta
                 else if (e.type === 1) {
                      if (e.scale > 1.4) tempColor.set(COLORS.enemyElite);
                      else tempColor.set(COLORS.enemyOrc);
@@ -334,13 +366,13 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
 
                 if (!moved) {
                     const nextPos = e.position.clone();
-                    if ((e.type === 3 || e.type === 5 || e.type === 6) && distToPlayer > 15) { 
+                    if ((e.type === 3 || e.type === 5 || e.type === 6 || e.type === 7 || e.type === 8) && distToPlayer > 15) {
                          tempVec.subVectors(playerPosition, e.position).normalize();
                          nextPos.add(tempVec.multiplyScalar(currentSpeed * delta));
-                    } else if (e.type === 2 && distToPlayer > 10) { 
+                    } else if (e.type === 2 && distToPlayer > 10) {
                          tempVec.subVectors(playerPosition, e.position).normalize();
                          nextPos.add(tempVec.multiplyScalar(currentSpeed * delta));
-                    } else if (e.type !== 3 && e.type !== 5 && e.type !== 6 && e.type !== 2) {
+                    } else if (e.type !== 3 && e.type !== 5 && e.type !== 6 && e.type !== 7 && e.type !== 8 && e.type !== 2) {
                          tempVec.subVectors(playerPosition, e.position).normalize();
                          nextPos.add(tempVec.multiplyScalar(currentSpeed * delta));
                     }
@@ -484,9 +516,44 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                     }
                 }
             }
-            
-            if (e.type !== 3 && e.type !== 5 && e.type !== 6 && distToPlayer < e.radius + 0.5 && canMove) {
-                const dmg = (e.type === 2 ? 30 : 10) * (1 + wave * 0.1); 
+            else if ((e.type === 7 || e.type === 8) && canMove) {
+                // Mage shooting
+                const fireRate = e.type === 7 ? 3.0 : 1.5; // Normal mage slower, elite faster
+
+                if (e.stateTimer > fireRate && distToPlayer < 30) {
+                    e.stateTimer = 0;
+
+                    if (e.type === 7) {
+                        // Normal mage: 1 projectile
+                        const bullet = enemyBulletsDataRef.current.find(b => !b.active);
+                        if (bullet) {
+                            bullet.active = true;
+                            bullet.lifetime = 4.0;
+                            bullet.damage = 20;
+                            bullet.position.copy(e.position).add(new Vector3(0, 1, 0));
+                            const dir = new Vector3().subVectors(playerPosition, e.position).normalize();
+                            bullet.velocity.copy(dir).multiplyScalar(12);
+                        }
+                    } else if (e.type === 8) {
+                        // Elite mage: 3 projectiles
+                        const baseDir = new Vector3().subVectors(playerPosition, e.position).normalize();
+                        for (let k = -1; k <= 1; k++) {
+                            const bullet = enemyBulletsDataRef.current.find(b => !b.active);
+                            if (bullet) {
+                                bullet.active = true;
+                                bullet.lifetime = 4.0;
+                                bullet.damage = 25;
+                                bullet.position.copy(e.position).add(new Vector3(0, 1, 0));
+                                const dir = baseDir.clone().applyAxisAngle(new Vector3(0, 1, 0), k * 0.35);
+                                bullet.velocity.copy(dir).multiplyScalar(14);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (e.type !== 3 && e.type !== 5 && e.type !== 6 && e.type !== 7 && e.type !== 8 && distToPlayer < e.radius + 0.5 && canMove) {
+                const dmg = (e.type === 2 ? 30 : 10) * (1 + stage * 0.15);
                 takeDamage(dmg * delta);
             }
 
