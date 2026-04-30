@@ -380,36 +380,6 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
 
       <group ref={meshRef} position={[0, 1, 0]}>
         
-        {/* Floating HP/MP bars above character */}
-        {status !== GameStatus.LEVEL_UP && !isInventoryOpen && !isShopOpen && !isCharacterSheetOpen && revivingCountdown <= 0 && (
-        <Html position={[0, 3.4, 0]} center zIndexRange={[50, 0]} style={{ pointerEvents: 'none' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,0,0,0.4)', padding: '8px 12px', borderRadius: '8px' }}>
-                {/* Level square */}
-                <div style={{
-                    width: 32, height: 32, borderRadius: '6px', flexShrink: 0,
-                    background: 'radial-gradient(circle at 35% 35%, #1e293b, #0a0a12)',
-                    border: '2px solid rgba(250,204,21,0.8)',
-                    boxShadow: '0 0 8px rgba(250,204,21,0.5)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}>
-                    <span style={{ fontSize: 18, fontWeight: 900, color: '#fde047', lineHeight: 1 }}>{level}</span>
-                </div>
-                {/* Hero name and stats */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <div style={{ fontSize: 14, fontWeight: 900, color: '#ffffff', lineHeight: 1 }}>{hero}</div>
-                    <div style={{ display: 'flex', gap: 12 }}>
-                        {/* HP Bar */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-start' }}>
-                            <span style={{ fontSize: 10, fontWeight: 700, color: '#ef4444' }}>HP</span>
-                            <div style={{ width: 60, height: 10, background: 'rgba(0,0,0,0.7)', borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.8)' }}>
-                                <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, (health / stats.maxHealth) * 100))}%`, background: 'linear-gradient(90deg,#b91c1c,#ef4444)', borderRadius: 3, transition: 'width 0.1s' }} />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </Html>
-        )}
 
         {levelUpVisualTimer > 0 && (
             <>
