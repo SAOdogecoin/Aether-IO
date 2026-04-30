@@ -28,7 +28,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
   const meshRef = useRef<InstancedMesh>(null);
   const stunIconsRef = useRef<InstancedMesh>(null);
   const playerPositionRef = useRef<{ x: number; z: number }>({ x: 0, z: 0 });
-  const { playerPosition, addScore, takeDamage, status, level, stats, spawnDrop, wave, waveTimer, advanceWave, addNotification, setBossData, earthwall, updateMinimapEnemies, obstacles, bossData } = useGameStore();
+  const { playerPosition, addScore, takeDamage, status, level, stats, spawnDrop, wave, waveTimer, advanceWave, addNotification, setBossData, earthwall, updateMinimapEnemies, obstacles, bossData, activatePortal, portalActive } = useGameStore();
 
   const enemies = enemiesDataRef;
 
@@ -86,9 +86,10 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
         meshRef.current.userData.enemies = enemies.current;
     }
 
-    // Wave ends at 30s (paused if boss is active)
-    if (waveTimer > 30 && !bossData.active) {
-        advanceWave();
+    // Portal appears when all enemies defeated (non-boss waves)
+    const activeEnemyCount = (enemies.current || []).filter(e => e && e.active).length;
+    if (activeEnemyCount === 0 && !bossData.active && !portalActive && waveTimer > 0.5) {
+        activatePortal(playerPosition);
     }
 
     // Boss defeat countdown: 5 seconds before next wave
