@@ -1026,7 +1026,13 @@ export const GameUI: React.FC = () => {
                 <div className="w-px h-12 bg-white/15 self-center mx-0.5" />
 
                 {/* HP Potion - Clickable to use */}
-                <button
+                <UniversalSkillSlot
+                  icon={<Heart size={20} />}
+                  level={hpPotion?.quantity || 0}
+                  desc={hpPotion?.quantity ? `Restore ${hpPotion.restoreAmount || 50} HP` : 'No potions'}
+                  active={hpPotion && hpPotion.quantity > 0}
+                  manaCost={0}
+                  currentMana={mana}
                   onClick={() => {
                     if (hpPotion && hpPotion.quantity > 0) {
                       heal(hpPotion.restoreAmount || 50);
@@ -1035,22 +1041,17 @@ export const GameUI: React.FC = () => {
                       setInventory(updatedPotions);
                     }
                   }}
-                  disabled={!hpPotion || hpPotion.quantity === 0}
-                  className="w-20 h-20 rounded-lg flex items-center justify-center flex-col gap-1 transition-all active:scale-95 disabled:opacity-35"
-                  style={{
-                    background: 'rgba(239,68,68,0.1)',
-                    border: '1.5px solid rgba(239,68,68,0.6)',
-                    boxShadow: '0 0 14px rgba(239,68,68,0.28), inset 0 0 10px rgba(0,0,0,0.5)',
-                  }}
-                  onMouseEnter={() => setHoveredSkillText('HP Potion: Use to restore health')}
-                  onMouseLeave={() => setHoveredSkillText(null)}
-                >
-                  <Heart size={24} color="#f87171" />
-                  <span style={{ fontSize: 10, color: '#f87171', fontWeight: 'bold' }}>{hpPotion?.quantity || 0}</span>
-                </button>
+                  onHover={() => {}}
+                />
 
                 {/* MP Potion - Clickable to use */}
-                <button
+                <UniversalSkillSlot
+                  icon={<FlaskConical size={20} />}
+                  level={manaPotion?.quantity || 0}
+                  desc={manaPotion?.quantity ? `Restore ${manaPotion.restoreAmount || 50} MP` : 'No potions'}
+                  active={manaPotion && manaPotion.quantity > 0}
+                  manaCost={0}
+                  currentMana={mana}
                   onClick={() => {
                     if (manaPotion && manaPotion.quantity > 0) {
                       useMana(-1 * (manaPotion.restoreAmount || 50));
@@ -1059,19 +1060,8 @@ export const GameUI: React.FC = () => {
                       setInventory(updatedPotions);
                     }
                   }}
-                  disabled={!manaPotion || manaPotion.quantity === 0}
-                  className="w-20 h-20 rounded-lg flex items-center justify-center flex-col gap-1 transition-all active:scale-95 disabled:opacity-35"
-                  style={{
-                    background: 'rgba(96,165,250,0.1)',
-                    border: '1.5px solid rgba(96,165,250,0.6)',
-                    boxShadow: '0 0 14px rgba(96,165,250,0.28), inset 0 0 10px rgba(0,0,0,0.5)',
-                  }}
-                  onMouseEnter={() => setHoveredSkillText('MP Potion: Use to restore mana')}
-                  onMouseLeave={() => setHoveredSkillText(null)}
-                >
-                  <FlaskConical size={24} color="#60a5fa" />
-                  <span style={{ fontSize: 10, color: '#60a5fa', fontWeight: 'bold' }}>{manaPotion?.quantity || 0}</span>
-                </button>
+                  onHover={() => {}}
+                />
               </div>
               {hoveredSkillText && (
                 <div className="mt-2 text-xs text-slate-200 font-bold text-center max-w-5xl mx-auto px-2">{hoveredSkillText}</div>
