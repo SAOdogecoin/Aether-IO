@@ -504,7 +504,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   minimapEnemies: [],
   
   skills: { dash: 0, q: 0, r: 0, e: 0 },
-  skillMaxCooldowns: { dash: 2.0, q: 3.5, r: 7.5, e: 10.0 },
+  skillMaxCooldowns: { dash: 2.0, q: 7.0, r: 7.5, e: 10.0 },
   dashCharges: 1,
   maxDashCharges: 1,
   
@@ -646,7 +646,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         equipment: finalEquipment,
         drops: [],
         skills: { dash: 0, q: 0, r: 0, e: 0 },
-        skillMaxCooldowns: { dash: 2.0, q: 3.5, r: 7.5, e: 10.0 },
+        skillMaxCooldowns: { dash: 2.0, q: 7.0, r: 7.5, e: 10.0 },
         dashCharges: 1,
         maxDashCharges: 1,
         shieldCharges: 1,

@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useMemo, useRef, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { useGLTF, PresentationControls } from '@react-three/drei';
+import { Vector3 } from 'three';
 import { useGameStore, calculateItemCP, calculateTotalCP } from '../store';
 import { GameStatus, Upgrade, Item, Rarity, GameNotification, HeroClass, SkillLevels, ActionResult, PlayerStats } from '../types';
 import { UPGRADES_POOL, ITEMS_POOL, HERO_STATS, PETS_POOL, SKILLS_INFO, ARENA_SIZE, SHOP_POSITIONS, RECYCLE_YIELDS, CRAFTING_COSTS, MATERIAL_COMBINE_COST, RARITY_LEVEL_REQ } from '../constants';
@@ -926,6 +927,24 @@ export const GameUI: React.FC = () => {
               {hoveredSkillText && (
                 <div className="mt-2 text-xs text-slate-200 font-bold text-center max-w-5xl mx-auto px-2">{hoveredSkillText}</div>
               )}
+
+              {/* Shop Position Shortcuts */}
+              <div className="flex justify-center items-center gap-2 mt-3">
+                {SHOP_POSITIONS.map((pos) => (
+                  <button
+                    key={pos.type}
+                    onClick={() => setPlayerPosition(new Vector3(pos.position[0], 0, pos.position[2]))}
+                    className="px-3 py-1 text-xs font-bold rounded-lg border-2 transition-all active:translate-y-0.5"
+                    style={{
+                      background: `${pos.color}20`,
+                      borderColor: pos.color,
+                      color: pos.color,
+                    }}
+                  >
+                    {pos.type}
+                  </button>
+                ))}
+              </div>
             </div>
             );
           })()}

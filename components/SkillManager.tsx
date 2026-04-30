@@ -79,11 +79,11 @@ export const SkillManager: React.FC<SkillManagerProps> = ({ enemyBulletsDataRef,
 
   const performStomp = (stage: number) => {
       stampVisualTimer.current = 0.5;
-      
+
       const enemies = enemiesDataRef ? enemiesDataRef.current : [];
       for (let i = 0; i < enemies.length; i++) {
           const enemy = enemies[i];
-          if (enemy.active && enemy.position.distanceTo(playerPosition) < 16.0) { 
+          if (enemy.active && enemy.position.distanceTo(playerPosition) < 8.0) { 
               const dmg = stats.damage * 1.5 * stats.skillDamage;
               enemy.health -= dmg;
 

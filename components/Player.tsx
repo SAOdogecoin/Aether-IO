@@ -125,14 +125,14 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
               setPiercingShotBoostTimer(2.5);
           } else if (ability === 'GRAVITY_SPELL') {
               const limit = 8 + (skillLevels.gravity * 1);
-              spawnBullet('BLACKHOLE', 0, 5.0, { pierce: 99, lifetime: 2.6, trailTimer: 0.1, maxPullCount: limit });
+              spawnBullet('BLACKHOLE', 0, 10.0, { pierce: 99, lifetime: 2.6, trailTimer: 0.1, maxPullCount: limit });
           } else if (ability === 'ARROW_RAIN') {
               arrowRainState.current.active = true;
               arrowRainState.current.wavesLeft = 6;
               arrowRainState.current.timer = 0;
           } else if (ability === 'FIREBALL') {
               // Wizard Q: Slightly longer range and 2x burn damage
-              spawnBullet('FIREBALL', 5, 2.0 * 0.63, {
+              spawnBullet('FIREBALL', 5, 4.0 * 0.63, {
                   pierce: 100,
                   lifetime: 4.0,
                   effect: { type: 'BURN', duration: 5, value: stats.damage * 0.6 }
@@ -208,7 +208,8 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
     }
 
     if (keys['KeyE']) {
-        handleSkillE();
+        if (skills.q > 0) notifyCooldown("Skill E");
+        else if (activeAbilityQ) handleAbility(activeAbilityQ, true);
     }
 
     if (arrowRainState.current.active) {
@@ -242,10 +243,10 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
         axeDamageTimer.current += delta;
         if (axeSpinRef.current) {
             axeSpinRef.current.visible = true;
-            axeSpinRef.current.rotation.y += delta * 20; 
-            // Range Increased by 50% (7->10.5, 8->12)
-            const barrierRadius = 10.5; 
-            const damageRange = 12.0;
+            axeSpinRef.current.rotation.y += delta * 20;
+            // Range Reduced by 50% (10.5->5.25, 12->6.0)
+            const barrierRadius = 5.25;
+            const damageRange = 6.0;
             
             const tickRate = 0.2; 
             if (axeDamageTimer.current >= tickRate) {
