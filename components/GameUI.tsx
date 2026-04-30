@@ -390,7 +390,7 @@ export const GameUI: React.FC = () => {
     status, health, stats, score, gems, level, experience, experienceToNextLevel, skillPoints,
     inventory, maxInventorySlots, materials, equipment, setStatus, skills, skillMaxCooldowns, skillLevels, passiveSkillState,
     startGame, resetGame, applyUpgrade, selectUpgrade, upgradeOptions, equipItem, unequipItem, buyItem, upgradeItem, sellItem, sellItems, autoEquip, selectHero, hero, hpPotionCooldown,
-    wave, waveTimer, recentRuns, bossData, gameStats, portalActive, portalPosition, activatePortal, advanceWave,
+    wave, waveTimer, recentRuns, bossData, gameStats, portalActive, portalPosition, activatePortal, advanceWave, activeEnemyCount,
     isInventoryOpen, isShopOpen, toggleInventory, activeShopTab, closeAllUI, openSpecificShop,
     notifications, removeNotification, addNotification, upgradeSkill, toggleCharacterSheet, isCharacterSheetOpen, baseStats, activeAbilityQ, activeAbilityR,
     recycleItem, massRecycle, combineMaterials, craftItem, buyInventorySlots, actionResult, clearActionResult, massSell,
@@ -835,8 +835,13 @@ export const GameUI: React.FC = () => {
                          <div className="text-sm text-white/70 font-bold">Click to enter</div>
                      </motion.div>
                  ) : (
-                     <div className="text-2xl font-black text-white rpg-text" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)', WebkitTextStroke: '0.5px rgba(0,0,0,0.7)' }}>
-                         WAVE {wave}
+                     <div className="flex flex-col items-center gap-1">
+                         <div className="text-2xl font-black text-white rpg-text" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)', WebkitTextStroke: '0.5px rgba(0,0,0,0.7)' }}>
+                             WAVE {wave}
+                         </div>
+                         <div className="text-xs text-red-400 font-bold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>
+                             👾 {activeEnemyCount} enemies
+                         </div>
                      </div>
                  )}
              </div>

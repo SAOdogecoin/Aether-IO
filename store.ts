@@ -90,6 +90,7 @@ interface GameState {
   petReviveCooldown: number;
 
   bossData: BossData;
+  activeEnemyCount: number;
 
   isInventoryOpen: boolean;
   isShopOpen: boolean;
@@ -140,7 +141,7 @@ interface GameState {
   upgradeItem: (item: Item) => { success: boolean, msg: string, newItem?: Item };
   resetGame: () => void;
   
-  spawnDrop: (position: Vector3, type: 'ITEM' | 'XP' | 'GOLD' | 'GEM' | 'HEALTH' | 'MAGNET', value: number, rarityOverride?: Rarity, orbMultiplier?: 5 | 10) => void;
+  spawnDrop: (position: Vector3, type: 'ITEM' | 'HEALTH', value: number, rarityOverride?: Rarity) => void;
   collectDrop: (id: number) => void;
   triggerSkillCooldown: (skill: 'dash' | 'q' | 'r' | 'e') => void;
   activateRage: () => void;
@@ -155,7 +156,8 @@ interface GameState {
   advanceWave: () => void;
   activatePortal: (position: Vector3) => void;
   setBossData: (data: Partial<BossData>) => void;
-  
+  updateActiveEnemyCount: (count: number) => void;
+
   addNotification: (message: string, color?: string, type?: 'ITEM' | 'BOSS' | 'SYSTEM' | 'WARNING', action?: { label: string, onClick: () => void }, persistent?: boolean) => void;
   removeNotification: (id: string) => void;
   handleInventoryFull: () => void;
@@ -327,14 +329,39 @@ const calculateStats = (base: PlayerStats, equipment: GameState['equipment'], ra
 const generateObstacles = (): Obstacle[] => {
     const obs: Obstacle[] = [];
     const coreRadius = ARENA_SIZE / 2;
-    const mapBoundary = coreRadius - 2; // Boundary of the playable area
+    const mapBoundary = coreRadius - 2;
 
-    // Place trees OUTSIDE the map boundary
-    for(let i=0; i<50; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const r = mapBoundary + 5 + Math.random() * 40; // Start 5 units outside boundary
-        const x = Math.cos(angle) * r;
-        const z = Math.sin(angle) * r;
+    // Randomly choose a map shape
+    const shapeType = Math.floor(Math.random() * 5);
+    const isPointInBounds = (x: number, z: number): boolean => {
+        const dist = Math.sqrt(x*x + z*z);
+
+        switch(shapeType) {
+            case 0: // Circle
+                return dist < mapBoundary;
+            case 1: // Square
+                return Math.abs(x) < mapBoundary && Math.abs(z) < mapBoundary;
+            case 2: // Diamond
+                return Math.abs(x) + Math.abs(z) < mapBoundary;
+            case 3: // Rectangle (wider)
+                return Math.abs(x) < mapBoundary * 1.3 && Math.abs(z) < mapBoundary * 0.7;
+            case 4: // Octagon
+                const maxVal = Math.max(Math.abs(x), Math.abs(z));
+                const minVal = Math.min(Math.abs(x), Math.abs(z));
+                return maxVal < mapBoundary && minVal + maxVal * 0.414 < mapBoundary;
+            default: return dist < mapBoundary;
+        }
+    };
+
+    // Boundary trees - form the outer edge of the map shape
+    for(let i=0; i<40; i++) {
+        let x, z, angle, dist;
+        do {
+            angle = Math.random() * Math.PI * 2;
+            dist = mapBoundary * 0.8 + Math.random() * mapBoundary * 0.4;
+            x = Math.cos(angle) * dist;
+            z = Math.sin(angle) * dist;
+        } while(!isPointInBounds(x, z));
 
         obs.push({
             id: Math.random(),
@@ -345,23 +372,53 @@ const generateObstacles = (): Obstacle[] => {
         });
     }
 
-    // Place a few individual trees INSIDE the map
-    for(let i=0; i<8; i++) {
-        let x, z, distance;
-        // Randomly place trees inside, avoiding center (where player spawns)
-        do {
-            x = (Math.random() - 0.5) * (mapBoundary - 10);
-            z = (Math.random() - 0.5) * (mapBoundary - 10);
-            distance = Math.sqrt(x*x + z*z);
-        } while(distance < 15); // Keep minimum 15 units from center
+    // Inner scattered trees - random placements throughout the map
+    let innerAttempts = 0;
+    let innerCount = 0;
+    while(innerCount < 12 && innerAttempts < 100) {
+        innerAttempts++;
+        const x = (Math.random() - 0.5) * mapBoundary * 2;
+        const z = (Math.random() - 0.5) * mapBoundary * 2;
+        const distance = Math.sqrt(x*x + z*z);
 
-        obs.push({
-            id: Math.random(),
-            position: new Vector3(x, 0, z),
-            radius: 1.0,
-            type: 'TREE',
-            scale: 1 + Math.random() * 2
-        });
+        if(isPointInBounds(x, z) && distance > 15) {
+            obs.push({
+                id: Math.random(),
+                position: new Vector3(x, 0, z),
+                radius: 1.0,
+                type: 'TREE',
+                scale: 1 + Math.random() * 2
+            });
+            innerCount++;
+        }
+    }
+
+    // Random rock clusters
+    const clusterCount = Math.floor(Math.random() * 3) + 2;
+    for(let c=0; c<clusterCount; c++) {
+        let cx, cz;
+        do {
+            cx = (Math.random() - 0.5) * mapBoundary * 1.5;
+            cz = (Math.random() - 0.5) * mapBoundary * 1.5;
+        } while(!isPointInBounds(cx, cz) || Math.sqrt(cx*cx + cz*cz) < 15);
+
+        const rocksInCluster = Math.floor(Math.random() * 3) + 2;
+        for(let r=0; r<rocksInCluster; r++) {
+            const angle = Math.random() * Math.PI * 2;
+            const radius = Math.random() * 6 + 2;
+            const rx = cx + Math.cos(angle) * radius;
+            const rz = cz + Math.sin(angle) * radius;
+
+            if(isPointInBounds(rx, rz) && Math.sqrt(rx*rx + rz*rz) > 10) {
+                obs.push({
+                    id: Math.random(),
+                    position: new Vector3(rx, 0, rz),
+                    radius: 0.8,
+                    type: 'ROCK',
+                    scale: 1 + Math.random() * 1.5
+                });
+            }
+        }
     }
 
     return obs;
@@ -611,7 +668,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   petReviveCooldown: 0,
 
   bossData: { active: false, name: '', hp: 0, maxHp: 0 },
-  
+  activeEnemyCount: 0,
+
   isInventoryOpen: false,
   isShopOpen: false,
   isCharacterSheetOpen: false,
@@ -968,7 +1026,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       isInvincible: true 
   })),
 
-  spawnDrop: (position, type, value, rarityOverride, orbMultiplier) => set((state) => {
+  spawnDrop: (position, type, value, rarityOverride) => set((state) => {
       if (state.drops.length > 99) return { drops: state.drops };
 
       const maxDist = (ARENA_SIZE / 2) - 2;
@@ -986,8 +1044,8 @@ export const useGameStore = create<GameState>((set, get) => ({
               if (pool.length === 0) pool = ITEMS_POOL.filter(i => i.type !== 'POTION' && i.type !== 'CORE' && i.type !== 'PET');
           } else {
                const r = Math.random();
-               if (r > 0.90) { pool = pool.filter(i => i.type === 'POTION'); }
-               else if (r > 0.60) { pool = pool.filter(i => i.type === 'CORE'); }
+               if (r > 0.92) { pool = pool.filter(i => i.type === 'POTION'); }
+               else if (r > 0.84) { pool = pool.filter(i => i.type === 'CORE'); }
                else { pool = pool.filter(i => (i.rarity === 'COMMON' || i.rarity === 'RARE') && i.type !== 'POTION' && i.type !== 'CORE'); }
           }
 
@@ -1017,8 +1075,7 @@ export const useGameStore = create<GameState>((set, get) => ({
               }
           }
       }
-      const finalOrbMultiplier = orbMultiplier || ((type === 'GOLD' || type === 'XP') && Math.random() < 0.5 ? 10 : 5);
-      return { drops: [...state.drops, { id: Math.random(), position: position.clone(), type, value, item, active: true, rotation: Math.random() * Math.PI, orbMultiplier: finalOrbMultiplier }] };
+      return { drops: [...state.drops, { id: Math.random(), position: position.clone(), type, value, item, active: true, rotation: Math.random() * Math.PI, orbMultiplier: 5 }] };
   }),
 
   handleInventoryFull: () => {
@@ -1093,14 +1150,6 @@ export const useGameStore = create<GameState>((set, get) => ({
       else if (drop.type === 'HEALTH') {
           const healAmt = Math.floor(state.stats.maxHealth * 0.1);
           return { drops: newDrops, health: Math.min(state.stats.maxHealth, state.health + healAmt) };
-      }
-      else if (drop.type === 'MAGNET') {
-          // Pull all other drops directly to the player position so they get picked up
-          newDrops.forEach(d => { if (d.type !== 'ITEM') d.position.copy(state.playerPosition); });
-          window.dispatchEvent(new CustomEvent('loot-text', {
-              detail: { position: state.playerPosition.clone().add(new Vector3(0, 3.5, 0)), text: '⚡ MAGNET!', color: '#c084fc' }
-          }));
-          return { drops: newDrops };
       }
 
       return { drops: newDrops };
@@ -1183,11 +1232,14 @@ export const useGameStore = create<GameState>((set, get) => ({
           portalActive: false,
           accumulatedWaveGold: state.accumulatedWaveGold + 100,
           status: GameStatusEnum.LEVEL_UP,
-          upgradeOptions: options
+          upgradeOptions: options,
+          obstacles: generateObstacles()
       }));
   },
   
   setBossData: (data) => set(state => ({ bossData: { ...state.bossData, ...data } })),
+
+  updateActiveEnemyCount: (count: number) => set({ activeEnemyCount: count }),
 
   tickCooldowns: (delta) => {
       const state = get();

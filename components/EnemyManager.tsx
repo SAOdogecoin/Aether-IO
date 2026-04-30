@@ -28,7 +28,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
   const meshRef = useRef<InstancedMesh>(null);
   const stunIconsRef = useRef<InstancedMesh>(null);
   const playerPositionRef = useRef<{ x: number; z: number }>({ x: 0, z: 0 });
-  const { playerPosition, addScore, takeDamage, status, level, stats, spawnDrop, wave, waveTimer, advanceWave, addNotification, setBossData, earthwall, updateMinimapEnemies, obstacles, bossData, activatePortal, portalActive } = useGameStore();
+  const { playerPosition, addScore, takeDamage, status, level, stats, spawnDrop, wave, waveTimer, advanceWave, addNotification, setBossData, earthwall, updateMinimapEnemies, obstacles, bossData, activatePortal, portalActive, updateActiveEnemyCount } = useGameStore();
 
   const enemies = enemiesDataRef;
 
@@ -39,6 +39,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
   const bossDefeatedTimer = useRef(0);
   const minimapThrottle = useRef(0);
   const [stunnedEnemies, setStunnedEnemies] = useState<Array<{id: number; x: number; y: number; z: number}>>([]);
+  const [statusEffects, setStatusEffects] = useState<Array<{id: number; x: number; y: number; z: number; effects: string[]}>>([]);
   const stunnedUpdateTimer = useRef(0); 
 
   useEffect(() => {
@@ -480,46 +481,31 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
 
             if (e.health <= 0) {
                 e.active = false;
-                const isGoldDrop = Math.random() < 0.6;
-
-                addScore(0);
+                const { addExperience } = useGameStore.getState();
 
                 if (e.type === 2) {
                     setBossData({ active: false });
+                    addScore(200 + wave * 50);
+                    addExperience((200 + wave * 50) * 10);
                     const roll = Math.random();
                     let dropped = false;
                     if (wave >= 60 && roll < Math.min(0.20, (wave - 50) * 0.01)) { spawnDrop(e.position, 'ITEM', 0, 'MYTHIC'); dropped = true; }
                     if (!dropped && wave >= 30 && Math.random() < Math.min(0.50, (wave - 20) * 0.02)) { spawnDrop(e.position, 'ITEM', 0, 'LEGENDARY'); dropped = true; }
                     if (!dropped) spawnDrop(e.position, 'ITEM', 0, 'EPIC');
-                    if (isGoldDrop) spawnDrop(e.position.clone().add(tempVec.set(1,0,0)), 'GOLD', 100, undefined, 10);
-                    else spawnDrop(e.position.clone().add(tempVec.set(1,0,0)), 'XP', (20 + (wave - 1) * 5) * 10, undefined, 10);
                 }
                 else if (e.type === 1 || e.type === 5) {
-                     if (Math.random() > 0.5) spawnDrop(e.position, 'ITEM', 0);
-                     if (isGoldDrop) spawnDrop(e.position.clone().add(tempVec.set(1,0,0)), 'GOLD', 50, undefined, 5);
-                     else {
-                         for(let k=0; k<5; k++) {
-                             const offset = tempVec.set((Math.random()-0.5)*2, 0, (Math.random()-0.5)*2);
-                             spawnDrop(e.position.clone().add(offset), 'XP', 20 + (wave - 1) * 5, undefined, 5);
-                         }
-                     }
+                    addScore(50);
+                    addExperience(100 + wave * 10);
+                    if (Math.random() > 0.6) spawnDrop(e.position, 'ITEM', 0);
                 }
                 else {
-                    if (Math.random() > 0.90) spawnDrop(e.position, 'ITEM', 0);
-                    else {
-                        const blackOrbChance = Math.max(0, (wave - 10) * 0.02);
-                        const orbMult = Math.random() < blackOrbChance ? 10 : 5;
-                        if (isGoldDrop) spawnDrop(e.position, 'GOLD', e.type >= 3 ? 10 : 5, undefined, orbMult);
-                        else spawnDrop(e.position, 'XP', 20 + (wave - 1) * 5, undefined, orbMult);
-                    }
+                    addScore(10 + wave * 2);
+                    addExperience(20 + wave * 5);
+                    if (Math.random() > 0.85) spawnDrop(e.position, 'ITEM', 0);
                 }
                 // 5% chance to drop a health orb
                 if (Math.random() < 0.05) {
                     spawnDrop(e.position.clone(), 'HEALTH', 0);
-                }
-                // 0.5% chance to drop a magnet orb (pulls all map drops)
-                if (Math.random() < 0.005) {
-                    spawnDrop(e.position.clone(), 'MAGNET', 0);
                 }
                 dummy.position.set(0, -100, 0);
                 if (stunIconsRef.current) stunIconsRef.current.setMatrixAt(i, dummy.matrix);
@@ -559,9 +545,20 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
     stunnedUpdateTimer.current += delta;
     if (stunnedUpdateTimer.current > 0.1) {
         stunnedUpdateTimer.current = 0;
-        const newStunned = (enemies.current || [])
-            .filter(e => e && e.active && e.freezeTimer > 0)
-            .map(e => ({ id: e.id, x: e.position.x, y: e.position.y + e.scale * 2.8, z: e.position.z }));
+        const activeCount = (enemies.current || []).filter(e => e && e.active).length;
+        updateActiveEnemyCount(activeCount);
+        const newStatusEffects = (enemies.current || [])
+            .filter(e => e && e.active && (e.freezeTimer > 0 || e.burnTimer > 0 || e.poisonTimer > 0 || e.slowTimer > 0))
+            .map(e => {
+                const effects: string[] = [];
+                if (e.freezeTimer && e.freezeTimer > 0) effects.push('STUNNED');
+                if (e.burnTimer && e.burnTimer > 0) effects.push('BURNED');
+                if (e.poisonTimer && e.poisonTimer > 0) effects.push('POISONED');
+                if (e.slowTimer && e.slowTimer > 0) effects.push('SLOWED');
+                return { id: e.id, x: e.position.x, y: e.position.y + e.scale * 2.8, z: e.position.z, effects };
+            });
+        setStatusEffects(newStatusEffects);
+        const newStunned = newStatusEffects.filter(e => e.effects.includes('STUNNED'));
         setStunnedEnemies(newStunned);
     }
 
@@ -605,9 +602,28 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
           </Suspense>
         )}
 
-        {stunnedEnemies.map(s => (
-            <Html key={s.id} position={[s.x, s.y, s.z]} center zIndexRange={[40, 0]} style={{ pointerEvents: 'none' }}>
-                <div style={{ color: '#facc15', fontWeight: 900, fontSize: 18, textShadow: '0 0 6px black, 0 0 6px black', whiteSpace: 'nowrap', letterSpacing: 2 }}>STUNNED</div>
+        {statusEffects.map(effect => (
+            <Html key={`${effect.id}-${effect.effects.join('-')}`} position={[effect.x, effect.y, effect.z]} center zIndexRange={[40, 0]} style={{ pointerEvents: 'none' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'center' }}>
+                    {effect.effects.map((effectName, i) => {
+                        let color = '#facc15';
+                        if (effectName === 'BURNED') color = '#ef4444';
+                        else if (effectName === 'POISONED') color = '#22c55e';
+                        else if (effectName === 'SLOWED') color = '#3b82f6';
+                        return (
+                            <div key={i} style={{
+                                color,
+                                fontWeight: 900,
+                                fontSize: 14,
+                                textShadow: '0 0 6px black, 0 0 6px black',
+                                whiteSpace: 'nowrap',
+                                letterSpacing: 1
+                            }}>
+                                {effectName}
+                            </div>
+                        );
+                    })}
+                </div>
             </Html>
         ))}
     </>

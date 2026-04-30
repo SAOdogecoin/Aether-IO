@@ -141,7 +141,7 @@ export const DropManager: React.FC = () => {
         // Limit simple drops rendering count for performance
         if (instanceIndex >= 200) return;
 
-        // Magnet Logic for Instanced Drops (XP/Gold always magnetizes)
+        // Magnet Logic for Instanced Drops (Health drops)
         const distToPlayer = drop.position.distanceTo(playerPosition);
         
         // Snap Logic for Orbs
@@ -160,23 +160,9 @@ export const DropManager: React.FC = () => {
         dummy.position.y = 1 + Math.sin(state.clock.elapsedTime * 3 + drop.id) * 0.3;
         dummy.rotation.set(0, drop.rotation, 0);
 
-        if (drop.type === 'MAGNET') {
-            dummy.scale.set(0.5, 0.5, 0.5);
-            tempColor.set('#c084fc');
-        } else if (drop.type === 'GOLD') {
-            dummy.scale.set(0.4, 0.4, 0.4);
-            tempColor.set('#fbbf24');
-        } else if (drop.type === 'HEALTH') {
+        if (drop.type === 'HEALTH') {
             dummy.scale.set(0.35, 0.35, 0.35);
             tempColor.set('#22c55e');
-        } else if (drop.type === 'XP') {
-            if (drop.orbMultiplier === 10) {
-                dummy.scale.set(0.35, 0.35, 0.35);
-                tempColor.set('#000000');
-            } else {
-                dummy.scale.set(0.25, 0.25, 0.25);
-                tempColor.set('#ec4899');
-            }
         }
 
         dummy.updateMatrix();
