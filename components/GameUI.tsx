@@ -861,22 +861,13 @@ export const GameUI: React.FC = () => {
                     onHover={(text) => setHoveredSkillText(text)}
                 />
 
-                {/* E = special */}
-                <UniversalSkillSlot
-                    icon={eIcon} level={skillLevels.special} cooldown={skills.e} maxCooldown={skillMaxCooldowns.e * (1 - stats.cooldownReduction)}
-                    label="E" desc={eAbilityDesc} active={skillLevels.special > 0}
-                    manaCost={getManaCost('e')} currentMana={mana} heroClass={hero}
-                    onClick={() => fireKey('KeyE')}
-                    onHover={(text) => setHoveredSkillText(text)}
-                />
-
-                {/* R = active skill */}
+                {/* E = active skill (previous R) */}
                 <UniversalSkillSlot
                     icon={qIcon}
                     level={1} cooldown={skills.q} maxCooldown={skillMaxCooldowns.q * (1 - stats.cooldownReduction)}
-                    label="R" desc={qAbilityDesc} active={!!activeAbilityQ}
+                    label="E" desc={qAbilityDesc} active={!!activeAbilityQ}
                     manaCost={getManaCost('q')} currentMana={mana} heroClass={hero}
-                    onClick={() => fireKey('KeyR')}
+                    onClick={() => fireKey('KeyE')}
                     onHover={(text) => setHoveredSkillText(text)}
                 />
 
@@ -921,30 +912,27 @@ export const GameUI: React.FC = () => {
 
                 <div className="w-px h-12 bg-white/15 self-center mx-0.5" />
 
-                <UniversalSkillSlot icon={fiC(Heart, '#f87171', 20)} level={hpPotion?.quantity || 0} cooldown={hpPotionCooldown} maxCooldown={10} desc="HP Potion" active={true} label="1" onHover={(text) => setHoveredSkillText(text)} />
-                <UniversalSkillSlot icon={fiC(FlaskConical, '#60a5fa', 20)} level={manaPotion?.quantity || 0} cooldown={mpPotionCooldown} maxCooldown={10} desc="MP Potion" active={true} label="2" onHover={(text) => setHoveredSkillText(text)} />
-              </div>
-              {hoveredSkillText && (
-                <div className="mt-2 text-xs text-slate-200 font-bold text-center max-w-5xl mx-auto px-2">{hoveredSkillText}</div>
-              )}
-
-              {/* Shop Position Shortcuts */}
-              <div className="flex justify-center items-center gap-2 mt-3">
+                {/* Shop Position Shortcuts */}
                 {SHOP_POSITIONS.map((pos) => (
                   <button
                     key={pos.type}
                     onClick={() => setPlayerPosition(new Vector3(pos.position[0], 0, pos.position[2]))}
-                    className="px-3 py-1 text-xs font-bold rounded-lg border-2 transition-all active:translate-y-0.5"
+                    className="w-20 h-20 rounded-lg flex items-center justify-center flex-col gap-1 transition-all active:scale-95 text-center"
                     style={{
                       background: `${pos.color}20`,
-                      borderColor: pos.color,
-                      color: pos.color,
+                      border: `1.5px solid ${pos.color}60`,
+                      boxShadow: `0 0 14px ${pos.color}28, inset 0 0 10px rgba(0,0,0,0.5)`,
                     }}
+                    onMouseEnter={() => setHoveredSkillText(pos.type)}
+                    onMouseLeave={() => setHoveredSkillText(null)}
                   >
-                    {pos.type}
+                    <span style={{ fontSize: 11, color: pos.color, fontWeight: 'bold' }}>{pos.type}</span>
                   </button>
                 ))}
               </div>
+              {hoveredSkillText && (
+                <div className="mt-2 text-xs text-slate-200 font-bold text-center max-w-5xl mx-auto px-2">{hoveredSkillText}</div>
+              )}
             </div>
             );
           })()}
