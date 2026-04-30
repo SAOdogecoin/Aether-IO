@@ -614,6 +614,43 @@ export const GameUI: React.FC = () => {
   return (
     <div className="absolute inset-0 pointer-events-none z-10 font-sans text-slate-800 select-none">
 
+      {/* TOP-RIGHT STAT BAR */}
+      {status === GameStatus.PLAYING && (
+        <div className="absolute top-6 right-6 flex items-start gap-4 pointer-events-auto">
+          {/* Level Square */}
+          <div className="w-16 h-16 rounded-lg flex items-center justify-center" style={{
+            background: 'radial-gradient(circle at 35% 35%, #1e293b, #0a0a12)',
+            border: '2px solid rgba(250,204,21,0.8)',
+            boxShadow: '0 0 8px rgba(250,204,21,0.5)',
+          }}>
+            <span style={{ fontSize: 24, fontWeight: 900, color: '#fde047', lineHeight: 1 }}>LV{level}</span>
+          </div>
+
+          {/* Stats Container */}
+          <div className="flex flex-col gap-2">
+            {/* Hero Name */}
+            <div style={{ fontSize: 16, fontWeight: 900, color: '#ffffff', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+              {hero}
+            </div>
+
+            {/* HP Bar */}
+            <div className="flex items-center gap-2">
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#ef4444', minWidth: '24px' }}>HP</span>
+              <div style={{ width: 120, height: 12, background: 'rgba(0,0,0,0.7)', borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.8)' }}>
+                <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, (health / stats.maxHealth) * 100))}%`, background: 'linear-gradient(90deg,#b91c1c,#ef4444)', borderRadius: 3, transition: 'width 0.1s' }} />
+              </div>
+            </div>
+
+            {/* MP Bar */}
+            <div className="flex items-center gap-2">
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#3b82f6', minWidth: '24px' }}>MP</span>
+              <div style={{ width: 120, height: 12, background: 'rgba(0,0,0,0.7)', borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.8)' }}>
+                <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, (mana / stats.maxMana) * 100))}%`, background: 'linear-gradient(90deg,#1d4ed8,#3b82f6)', borderRadius: 3, transition: 'width 0.1s' }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* WARNING NOTIFICATIONS - TOP CENTER */}
       <div className="absolute top-24 left-1/2 -translate-x-1/2 flex flex-col gap-2 items-center pointer-events-none z-[100] w-full">
@@ -912,23 +949,53 @@ export const GameUI: React.FC = () => {
 
                 <div className="w-px h-12 bg-white/15 self-center mx-0.5" />
 
-                {/* Shop Position Shortcuts */}
-                {SHOP_POSITIONS.map((pos) => (
-                  <button
-                    key={pos.type}
-                    onClick={() => setPlayerPosition(new Vector3(pos.position[0], 0, pos.position[2]))}
-                    className="w-20 h-20 rounded-lg flex items-center justify-center flex-col gap-1 transition-all active:scale-95 text-center"
-                    style={{
-                      background: `${pos.color}20`,
-                      border: `1.5px solid ${pos.color}60`,
-                      boxShadow: `0 0 14px ${pos.color}28, inset 0 0 10px rgba(0,0,0,0.5)`,
-                    }}
-                    onMouseEnter={() => setHoveredSkillText(pos.type)}
-                    onMouseLeave={() => setHoveredSkillText(null)}
-                  >
-                    <span style={{ fontSize: 11, color: pos.color, fontWeight: 'bold' }}>{pos.type}</span>
-                  </button>
-                ))}
+                {/* HP Potion - Clickable to use */}
+                <button
+                  onClick={() => {
+                    if (hpPotion && hpPotion.quantity > 0) {
+                      heal(hpPotion.restoreAmount || 50);
+                      const updatedPotions = inventory.filter(i => i.id !== 'potion_hp');
+                      updatedPotions.push({ ...hpPotion, quantity: (hpPotion.quantity || 1) - 1 });
+                      setInventory(updatedPotions);
+                    }
+                  }}
+                  disabled={!hpPotion || hpPotion.quantity === 0}
+                  className="w-20 h-20 rounded-lg flex items-center justify-center flex-col gap-1 transition-all active:scale-95 disabled:opacity-35"
+                  style={{
+                    background: 'rgba(239,68,68,0.1)',
+                    border: '1.5px solid rgba(239,68,68,0.6)',
+                    boxShadow: '0 0 14px rgba(239,68,68,0.28), inset 0 0 10px rgba(0,0,0,0.5)',
+                  }}
+                  onMouseEnter={() => setHoveredSkillText('HP Potion: Use to restore health')}
+                  onMouseLeave={() => setHoveredSkillText(null)}
+                >
+                  <Heart size={24} color="#f87171" />
+                  <span style={{ fontSize: 10, color: '#f87171', fontWeight: 'bold' }}>{hpPotion?.quantity || 0}</span>
+                </button>
+
+                {/* MP Potion - Clickable to use */}
+                <button
+                  onClick={() => {
+                    if (manaPotion && manaPotion.quantity > 0) {
+                      useMana(-1 * (manaPotion.restoreAmount || 50));
+                      const updatedPotions = inventory.filter(i => i.id !== 'potion_mana');
+                      updatedPotions.push({ ...manaPotion, quantity: (manaPotion.quantity || 1) - 1 });
+                      setInventory(updatedPotions);
+                    }
+                  }}
+                  disabled={!manaPotion || manaPotion.quantity === 0}
+                  className="w-20 h-20 rounded-lg flex items-center justify-center flex-col gap-1 transition-all active:scale-95 disabled:opacity-35"
+                  style={{
+                    background: 'rgba(96,165,250,0.1)',
+                    border: '1.5px solid rgba(96,165,250,0.6)',
+                    boxShadow: '0 0 14px rgba(96,165,250,0.28), inset 0 0 10px rgba(0,0,0,0.5)',
+                  }}
+                  onMouseEnter={() => setHoveredSkillText('MP Potion: Use to restore mana')}
+                  onMouseLeave={() => setHoveredSkillText(null)}
+                >
+                  <FlaskConical size={24} color="#60a5fa" />
+                  <span style={{ fontSize: 10, color: '#60a5fa', fontWeight: 'bold' }}>{manaPotion?.quantity || 0}</span>
+                </button>
               </div>
               {hoveredSkillText && (
                 <div className="mt-2 text-xs text-slate-200 font-bold text-center max-w-5xl mx-auto px-2">{hoveredSkillText}</div>

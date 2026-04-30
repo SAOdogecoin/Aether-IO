@@ -396,8 +396,8 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
 
       <group ref={meshRef} position={[0, 1, 0]}>
         
-        {/* Floating HP/MP bars — hidden during menus/reward/revive */}
-        {status !== GameStatus.LEVEL_UP && !isInventoryOpen && !isShopOpen && !isCharacterSheetOpen && revivingCountdown <= 0 && (
+        {/* Floating HP/MP bars — hidden (now shown in top-right) */}
+        {false && status !== GameStatus.LEVEL_UP && !isInventoryOpen && !isShopOpen && !isCharacterSheetOpen && revivingCountdown <= 0 && (
         <Html position={[0, 3.4, 0]} center zIndexRange={[50, 0]} style={{ pointerEvents: 'none' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,0,0,0.4)', padding: '8px 12px', borderRadius: '8px' }}>
                 {/* Level square */}
