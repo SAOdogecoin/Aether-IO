@@ -332,24 +332,43 @@ const calculateStats = (base: PlayerStats, equipment: GameState['equipment'], ra
 const generateObstacles = (): Obstacle[] => {
     const obs: Obstacle[] = [];
     const coreRadius = ARENA_SIZE / 2;
-    for(let i=0; i<60; i++) {
-        const x = (Math.random() - 0.5) * ARENA_SIZE * 1.5; 
-        const z = (Math.random() - 0.5) * ARENA_SIZE * 1.5;
-        const c1 = x*x + z*z < (coreRadius * 0.8)**2;
-        const c2 = (x-40)*(x-40) + (z+30)*(z+30) < (coreRadius * 0.6)**2;
-        const c3 = (x+30)*(x+30) + (z-40)*(z-40) < (coreRadius * 0.6)**2;
-        
-        if ((c1 || c2 || c3) && Math.sqrt(x*x + z*z) > 20) {
-             obs.push({
-                id: Math.random(),
-                position: new Vector3(x, 0, z),
-                radius: 1.0, 
-                type: 'TREE',
-                scale: 1 + Math.random() * 2
-            });
-        }
+    const mapBoundary = coreRadius - 2; // Boundary of the playable area
+
+    // Place trees OUTSIDE the map boundary
+    for(let i=0; i<50; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const r = mapBoundary + 5 + Math.random() * 40; // Start 5 units outside boundary
+        const x = Math.cos(angle) * r;
+        const z = Math.sin(angle) * r;
+
+        obs.push({
+            id: Math.random(),
+            position: new Vector3(x, 0, z),
+            radius: 1.0,
+            type: 'TREE',
+            scale: 1 + Math.random() * 2
+        });
     }
-    
+
+    // Place a few individual trees INSIDE the map
+    for(let i=0; i<8; i++) {
+        let x, z, distance;
+        // Randomly place trees inside, avoiding center (where player spawns)
+        do {
+            x = (Math.random() - 0.5) * (mapBoundary - 10);
+            z = (Math.random() - 0.5) * (mapBoundary - 10);
+            distance = Math.sqrt(x*x + z*z);
+        } while(distance < 15); // Keep minimum 15 units from center
+
+        obs.push({
+            id: Math.random(),
+            position: new Vector3(x, 0, z),
+            radius: 1.0,
+            type: 'TREE',
+            scale: 1 + Math.random() * 2
+        });
+    }
+
     return obs;
 };
 
