@@ -285,7 +285,7 @@ export const SkillManager: React.FC<SkillManagerProps> = ({ enemyBulletsDataRef,
                 
                 dummy.position.copy(orbitalBlades.current[i].pos);
                 dummy.rotation.set(0, -angle, 0);
-                dummy.scale.set(3.0, 3.0, 3.0); 
+                dummy.scale.set(6.0, 6.0, 6.0);
                 dummy.updateMatrix();
                 orbitalRef.current?.setMatrixAt(i, dummy.matrix);
 
@@ -364,7 +364,7 @@ export const SkillManager: React.FC<SkillManagerProps> = ({ enemyBulletsDataRef,
                     if (blade.active) {
                          dummy.position.copy(blade.pos);
                          dummy.rotation.set(0, time * 10, 0);
-                         dummy.scale.set(3.0, 3.0, 3.0); 
+                         dummy.scale.set(6.0, 6.0, 6.0);
                          dummy.updateMatrix();
                          orbitalRef.current?.setMatrixAt(i, dummy.matrix);
                          activeCount++;

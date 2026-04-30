@@ -103,14 +103,8 @@ export const HERO_STATS: Record<HeroClass, { stats: Partial<PlayerStats>, weapon
 // type: 'ACTIVE' (Q) or 'PASSIVE' (Always on / Periodic)
 export const SKILLS_INFO = {
     // Universal Passives
-    regen: { name: 'Regeneration', description: 'Recover HP over time.', type: 'PASSIVE' },
-    magnet: { name: 'Looter', description: 'Increases pickup range.', type: 'PASSIVE' },
-    dash: { name: 'Dash Mastery', description: 'Reduces dash cooldown. Level 5 grants +1 Dash Charge.', type: 'PASSIVE' },
     weapon: { name: 'Weapon Mastery', description: 'Improves weapon ability cooldown.', type: 'PASSIVE' },
     barrier: { name: 'Energy Shield', description: 'Grants temporary invulnerability and knockback when hit.', type: 'PASSIVE' },
-    
-    // Class Special (E)
-    special: { name: 'Class Special (E)', description: 'Unlocks your unique Class Ability. Costs 5 SP.', type: 'ACTIVE' },
 
     // Archer Only
     piercing: { name: 'Piercing Arrow', description: 'Active (Q): Giant piercing arrow.', classType: 'ARCHER', type: 'ACTIVE' },
@@ -142,8 +136,6 @@ export const UPGRADES_POOL: Upgrade[] = [
   { id: 'u_critr', type: 'CRIT_RATE', name: 'Precision', description: 'Crit Rate Up', rarity: 'RARE', value: 0.05 },
   { id: 'u_critd', type: 'CRIT_DAMAGE', name: 'Lethality', description: 'Crit Dmg Up', rarity: 'RARE', value: 0.25 },
   
-  { id: 'u_mag', type: 'SKILL_MAGNET', name: 'Looter', description: 'Magnet Range Level Up', rarity: 'COMMON', value: 1 },
-  { id: 'u_dash', type: 'SKILL_DASH', name: 'Agility Training', description: 'Dash Level Up', rarity: 'RARE', value: 1 }, 
   { id: 'u_wep', type: 'SKILL_WEAPON', name: 'Ability Mastery', description: 'Ability Level Up', rarity: 'EPIC', value: 1 },
   { id: 'u_bar', type: 'SKILL_BARRIER', name: 'Energy Shield', description: 'Shield Level Up', rarity: 'EPIC', value: 1 },
 

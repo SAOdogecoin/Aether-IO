@@ -247,7 +247,7 @@ const UniversalSkillSlot: React.FC<{
     const isDimmed = !active || level === 0;
     const isPotion = label === '1' || label === '2';
     const qty = isPotion ? level : 0;
-    const slotSize = 'w-14 h-14';
+    const slotSize = 'w-20 h-20';
 
     return (
         <div className="flex flex-col items-center gap-0.5">
@@ -314,7 +314,7 @@ const UniversalSkillSlot: React.FC<{
             </div>
 
             {/* Skill name — below slot */}
-            <div className="text-[10px] font-bold leading-tight text-center max-w-[56px] truncate"
+            <div className="text-[11px] font-bold leading-tight text-center max-w-[70px] truncate"
                 style={{ color: isDimmed ? 'rgba(100,100,110,0.5)' : 'rgba(220,210,190,0.9)', textShadow: '0 1px 3px rgba(0,0,0,0.8)', WebkitTextStroke: '0.2px rgba(0,0,0,0.5)' }}>
                 {desc.split('.')[0].split(':')[0].slice(0, 12)}
             </div>
@@ -848,8 +848,8 @@ export const GameUI: React.FC = () => {
             const eIcon = hero === 'BARBARIAN' ? fi(Heart) : hero === 'WIZARD' ? fi(ShieldCheck) : fi(Wind);
 
             return (
-            <div className="flex flex-col gap-1 w-full max-w-5xl mx-auto pb-4 items-center z-20 pointer-events-auto">
-              <div className="flex justify-center items-end gap-3">
+            <div className="flex flex-col gap-3 w-full max-w-6xl mx-auto pb-4 items-center z-20 pointer-events-auto">
+              <div className="flex justify-center items-end gap-5">
 
                 {/* Q = weapon ability */}
                 <UniversalSkillSlot
@@ -1803,6 +1803,11 @@ export const GameUI: React.FC = () => {
                     </motion.div>
                 </div>
             )}
+
+          {/* XP BAR - FULL WIDTH AT BOTTOM */}
+          <div className="absolute bottom-0 left-0 right-0 h-2 bg-black/30 z-20 pointer-events-none">
+            <div className="h-full bg-white" style={{ width: `${xpPercent}%`, transition: 'width 0.2s' }} />
+          </div>
 
         </AnimatePresence>
       </div>
