@@ -563,26 +563,59 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                 const { addExperience } = useGameStore.getState();
                 recordEnemyKill();
 
+                let goldGained = 0;
+                let xpGained = 0;
+
                 if (e.type === 2) {
                     setBossData({ active: false });
-                    addScore(200 + wave * 50);
-                    addExperience((200 + wave * 50) * 10);
+                    goldGained = 200 + stage * 50;
+                    xpGained = (200 + stage * 50) * 10;
+                    addScore(goldGained);
+                    addExperience(xpGained);
                     const roll = Math.random();
                     let dropped = false;
-                    if (wave >= 60 && roll < Math.min(0.20, (wave - 50) * 0.01)) { spawnDrop(e.position, 'ITEM', 0, 'MYTHIC'); dropped = true; }
-                    if (!dropped && wave >= 30 && Math.random() < Math.min(0.50, (wave - 20) * 0.02)) { spawnDrop(e.position, 'ITEM', 0, 'LEGENDARY'); dropped = true; }
+                    if (stage >= 60 && roll < Math.min(0.20, (stage - 50) * 0.01)) { spawnDrop(e.position, 'ITEM', 0, 'MYTHIC'); dropped = true; }
+                    if (!dropped && stage >= 30 && Math.random() < Math.min(0.50, (stage - 20) * 0.02)) { spawnDrop(e.position, 'ITEM', 0, 'LEGENDARY'); dropped = true; }
                     if (!dropped) spawnDrop(e.position, 'ITEM', 0, 'EPIC');
                 }
                 else if (e.type === 1 || e.type === 5) {
-                    addScore(50);
-                    addExperience(100 + wave * 10);
+                    goldGained = 50;
+                    xpGained = 100 + stage * 10;
+                    addScore(goldGained);
+                    addExperience(xpGained);
                     if (Math.random() > 0.6) spawnDrop(e.position, 'ITEM', 0);
                 }
+                else if (e.type === 7 || e.type === 8) {
+                    goldGained = e.type === 8 ? 30 + stage * 3 : 20 + stage * 2;
+                    xpGained = e.type === 8 ? 80 + stage * 8 : 50 + stage * 5;
+                    addScore(goldGained);
+                    addExperience(xpGained);
+                    if (Math.random() > 0.7) spawnDrop(e.position, 'ITEM', 0);
+                }
                 else {
-                    addScore(10 + wave * 2);
-                    addExperience(20 + wave * 5);
+                    goldGained = 10 + stage * 2;
+                    xpGained = 20 + stage * 5;
+                    addScore(goldGained);
+                    addExperience(xpGained);
                     if (Math.random() > 0.85) spawnDrop(e.position, 'ITEM', 0);
                 }
+
+                // Floating text for XP and Gold
+                window.dispatchEvent(new CustomEvent('loot-text', {
+                    detail: {
+                        position: e.position.clone().add(new Vector3(0, 2, 0)),
+                        text: `+${goldGained}G`,
+                        color: '#fbbf24'
+                    }
+                }));
+                window.dispatchEvent(new CustomEvent('loot-text', {
+                    detail: {
+                        position: e.position.clone().add(new Vector3(1, 2.5, 0)),
+                        text: `+${xpGained}XP`,
+                        color: '#a3e635'
+                    }
+                }));
+
                 // 5% chance to drop a health orb
                 if (Math.random() < 0.05) {
                     spawnDrop(e.position.clone(), 'HEALTH', 0);
