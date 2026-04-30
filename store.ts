@@ -20,12 +20,17 @@ interface GameState {
   baseStats: PlayerStats;
 
   wave: number;
+  stage: number;
+  stageWaveIndex: number;
+  stageTotalWaves: number;
+  stageEnemiesKilled: number;
+  stageTotalEnemies: number;
   waveTimer: number;
   portalActive: boolean;
   portalPosition: Vector3;
   recentRuns: number[];
 
-  
+
   gameStats: GameStatistics;
 
   skillLevels: SkillLevels;
@@ -157,6 +162,8 @@ interface GameState {
   activatePortal: (position: Vector3) => void;
   setBossData: (data: Partial<BossData>) => void;
   updateActiveEnemyCount: (count: number) => void;
+  recordEnemyKill: () => void;
+  startStage: (stageNum: number) => void;
 
   addNotification: (message: string, color?: string, type?: 'ITEM' | 'BOSS' | 'SYSTEM' | 'WARNING', action?: { label: string, onClick: () => void }, persistent?: boolean) => void;
   removeNotification: (id: string) => void;
@@ -323,6 +330,71 @@ const calculateStats = (base: PlayerStats, equipment: GameState['equipment'], ra
   if (final.multishot > 7) final.multishot = 7;
 
   return final;
+};
+
+interface WaveComposition {
+  normalEnemies: number;
+  eliteEnemies: number;
+  normalMages: number;
+  eliteMages: number;
+}
+
+interface StageSpec {
+  totalWaves: number;
+  waves: WaveComposition[];
+}
+
+const generateStageSpec = (stage: number): StageSpec => {
+  if (stage === 1) {
+    // Stage 1: 3 waves, no elites, 5 normal per wave (1 ranged per wave)
+    return {
+      totalWaves: 3,
+      waves: [
+        { normalEnemies: 4, eliteEnemies: 0, normalMages: 1, eliteMages: 0 },
+        { normalEnemies: 4, eliteEnemies: 0, normalMages: 1, eliteMages: 0 },
+        { normalEnemies: 4, eliteEnemies: 0, normalMages: 1, eliteMages: 0 },
+      ]
+    };
+  } else if (stage === 2) {
+    // Stage 2: Mix of normal and some elites
+    return {
+      totalWaves: 4,
+      waves: [
+        { normalEnemies: 4, eliteEnemies: 1, normalMages: 1, eliteMages: 0 },
+        { normalEnemies: 3, eliteEnemies: 2, normalMages: 0, eliteMages: 1 },
+        { normalEnemies: 5, eliteEnemies: 0, normalMages: 1, eliteMages: 0 },
+        { normalEnemies: 2, eliteEnemies: 3, normalMages: 0, eliteMages: 1 },
+      ]
+    };
+  } else if (stage === 3) {
+    // Stage 3: More elites and mages
+    return {
+      totalWaves: 4,
+      waves: [
+        { normalEnemies: 2, eliteEnemies: 3, normalMages: 0, eliteMages: 1 },
+        { normalEnemies: 0, eliteEnemies: 3, normalMages: 0, eliteMages: 1 },
+        { normalEnemies: 3, eliteEnemies: 2, normalMages: 1, eliteMages: 1 },
+        { normalEnemies: 1, eliteEnemies: 4, normalMages: 0, eliteMages: 1 },
+      ]
+    };
+  } else {
+    // Stage 4+: Heavy on elites, multiple mages
+    const waveCount = 4 + Math.floor((stage - 4) * 0.5);
+    const waves: WaveComposition[] = [];
+    for (let i = 0; i < waveCount; i++) {
+      const eliteCount = Math.floor(Math.random() * 3) + 3 + Math.floor((stage - 4) * 0.5);
+      const normalCount = Math.random() > 0.6 ? Math.floor(Math.random() * 2) : 0;
+      const eliteMageCount = Math.random() > 0.5 ? 1 : 0;
+      const normalMageCount = Math.random() > 0.7 ? 1 : 0;
+      waves.push({
+        normalEnemies: normalCount,
+        eliteEnemies: eliteCount,
+        normalMages: normalMageCount,
+        eliteMages: eliteMageCount
+      });
+    }
+    return { totalWaves: waveCount, waves };
+  }
 };
 
 // ... generateObstacles, generateCrates ...
@@ -606,6 +678,11 @@ export const useGameStore = create<GameState>((set, get) => ({
   baseStats: { ...INITIAL_STATS },
   
   wave: 1,
+  stage: 1,
+  stageWaveIndex: 0,
+  stageTotalWaves: 3,
+  stageEnemiesKilled: 0,
+  stageTotalEnemies: 15,
   waveTimer: 0,
   portalActive: false,
   portalPosition: INITIAL_PLAYER_POS(),
@@ -1195,51 +1272,88 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   advanceWave: () => {
       const state = get();
-      const options = generateUpgradeOptions(state.hero, state.skillLevels);
+      const isLastWaveOfStage = state.stageWaveIndex >= state.stageTotalWaves - 1;
 
-      options.forEach(opt => {
-          if (opt.type.startsWith('SKILL_')) {
-              let skillKey: keyof SkillLevels | null = null;
-              if (opt.type === 'SKILL_ORBITAL') skillKey = 'orbital';
-              else if (opt.type === 'SKILL_THUNDER') skillKey = 'thunder';
-              else if (opt.type === 'SKILL_REGEN') skillKey = 'regen';
-              else if (opt.type === 'SKILL_MAGNET') skillKey = 'magnet';
-              else if (opt.type === 'SKILL_DASH') skillKey = 'dash';
-              else if (opt.type === 'SKILL_WEAPON') skillKey = 'weapon';
-              else if (opt.type === 'SKILL_BARRIER') skillKey = 'barrier';
-              else if (opt.type === 'SKILL_STORM') skillKey = 'storm';
-              else if (opt.type === 'SKILL_PIERCING') skillKey = 'piercing';
-              else if (opt.type === 'SKILL_BURNING') skillKey = 'burning';
-              else if (opt.type === 'SKILL_FREEZING') skillKey = 'freezing';
-              else if (opt.type === 'SKILL_GRAVITY') skillKey = 'gravity';
-              else if (opt.type === 'SKILL_FREEZE_SPELL') skillKey = 'freezeSpell';
-              else if (opt.type === 'SKILL_RAGE') skillKey = 'rage';
-              else if (opt.type === 'SKILL_STAMP') skillKey = 'stamp';
+      if (isLastWaveOfStage) {
+          // Last wave of stage - show upgrades and advance to next stage
+          const options = generateUpgradeOptions(state.hero, state.skillLevels);
 
-              if (skillKey) {
-                  const currentLevel = state.skillLevels[skillKey];
-                  if (currentLevel === 0) {
-                      opt.name = `UNLOCK: ${opt.name}`;
+          options.forEach(opt => {
+              if (opt.type.startsWith('SKILL_')) {
+                  let skillKey: keyof SkillLevels | null = null;
+                  if (opt.type === 'SKILL_ORBITAL') skillKey = 'orbital';
+                  else if (opt.type === 'SKILL_THUNDER') skillKey = 'thunder';
+                  else if (opt.type === 'SKILL_REGEN') skillKey = 'regen';
+                  else if (opt.type === 'SKILL_MAGNET') skillKey = 'magnet';
+                  else if (opt.type === 'SKILL_DASH') skillKey = 'dash';
+                  else if (opt.type === 'SKILL_WEAPON') skillKey = 'weapon';
+                  else if (opt.type === 'SKILL_BARRIER') skillKey = 'barrier';
+                  else if (opt.type === 'SKILL_STORM') skillKey = 'storm';
+                  else if (opt.type === 'SKILL_PIERCING') skillKey = 'piercing';
+                  else if (opt.type === 'SKILL_BURNING') skillKey = 'burning';
+                  else if (opt.type === 'SKILL_FREEZING') skillKey = 'freezing';
+                  else if (opt.type === 'SKILL_GRAVITY') skillKey = 'gravity';
+                  else if (opt.type === 'SKILL_FREEZE_SPELL') skillKey = 'freezeSpell';
+                  else if (opt.type === 'SKILL_RAGE') skillKey = 'rage';
+                  else if (opt.type === 'SKILL_STAMP') skillKey = 'stamp';
+
+                  if (skillKey) {
+                      const currentLevel = state.skillLevels[skillKey];
+                      if (currentLevel === 0) {
+                          opt.name = `UNLOCK: ${opt.name}`;
+                      }
+                      opt.description = getSkillCardDetails(skillKey, currentLevel, state.stats);
                   }
-                  opt.description = getSkillCardDetails(skillKey, currentLevel, state.stats);
               }
-          }
-      });
+          });
 
-      set((state) => ({
-          wave: state.wave + 1,
-          waveTimer: 0,
-          portalActive: false,
-          accumulatedWaveGold: state.accumulatedWaveGold + 100,
-          status: GameStatusEnum.LEVEL_UP,
-          upgradeOptions: options,
-          obstacles: generateObstacles()
-      }));
+          // Mark stage completed and setup for next stage
+          get().startStage(state.stage + 1);
+          set((s) => ({
+              wave: s.wave + 1,
+              accumulatedWaveGold: s.accumulatedWaveGold + 100,
+              status: GameStatusEnum.LEVEL_UP,
+              upgradeOptions: options,
+              portalActive: false
+          }));
+      } else {
+          // Just advance to next wave within stage
+          set((s) => ({
+              stageWaveIndex: s.stageWaveIndex + 1,
+              wave: s.wave + 1,
+              waveTimer: 0,
+              portalActive: false
+          }));
+      }
   },
   
   setBossData: (data) => set(state => ({ bossData: { ...state.bossData, ...data } })),
 
   updateActiveEnemyCount: (count: number) => set({ activeEnemyCount: count }),
+
+  recordEnemyKill: () => set(state => {
+      const newKilled = state.stageEnemiesKilled + 1;
+      const allKilled = newKilled >= state.stageTotalEnemies;
+      return {
+          stageEnemiesKilled: newKilled
+      };
+  }),
+
+  startStage: (stageNum: number) => {
+      const stageSpec = generateStageSpec(stageNum);
+      const totalEnemies = stageSpec.waves.reduce((sum, w) =>
+          sum + w.normalEnemies + w.eliteEnemies + w.normalMages + w.eliteMages, 0);
+      set({
+          stage: stageNum,
+          stageWaveIndex: 0,
+          stageTotalWaves: stageSpec.totalWaves,
+          stageEnemiesKilled: 0,
+          stageTotalEnemies: totalEnemies,
+          waveTimer: 0,
+          portalActive: false,
+          obstacles: generateObstacles()
+      });
+  },
 
   tickCooldowns: (delta) => {
       const state = get();
@@ -1483,6 +1597,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       stats: { ...INITIAL_STATS },
       baseStats: { ...INITIAL_STATS },
       wave: 1,
+      stage: 1,
+      stageWaveIndex: 0,
+      stageTotalWaves: 3,
+      stageEnemiesKilled: 0,
+      stageTotalEnemies: 15,
       waveTimer: 0,
       portalActive: false,
       portalPosition: new Vector3(0, 0, 0),

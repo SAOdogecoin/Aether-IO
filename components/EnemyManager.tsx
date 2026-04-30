@@ -28,13 +28,24 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
   const meshRef = useRef<InstancedMesh>(null);
   const stunIconsRef = useRef<InstancedMesh>(null);
   const playerPositionRef = useRef<{ x: number; z: number }>({ x: 0, z: 0 });
-  const { playerPosition, addScore, takeDamage, status, level, stats, spawnDrop, wave, waveTimer, advanceWave, addNotification, setBossData, earthwall, updateMinimapEnemies, obstacles, bossData, activatePortal, portalActive, updateActiveEnemyCount } = useGameStore();
+  const { playerPosition, addScore, takeDamage, status, level, stats, spawnDrop, wave, waveTimer, advanceWave, addNotification, setBossData, earthwall, updateMinimapEnemies, obstacles, bossData, activatePortal, portalActive, updateActiveEnemyCount, stage, stageWaveIndex, stageTotalWaves, stageEnemiesKilled, stageTotalEnemies, recordEnemyKill } = useGameStore();
 
   const enemies = enemiesDataRef;
 
   const spawnTimer = useRef(0);
   const dotTicker = useRef(0);
-  const waveState = useRef({ wave: 1, bossSpawned: false, eliteSpawned: false, elitesSpawned: 0, eliteQuota: 1 });
+  const waveState = useRef({
+      stage: 1,
+      waveIndex: 0,
+      normalSpawned: 0,
+      eliteSpawned: 0,
+      normalMageSpawned: 0,
+      eliteMageSpawned: 0,
+      normalTarget: 0,
+      eliteTarget: 0,
+      normalMageTarget: 0,
+      eliteMageTarget: 0
+  });
   const bossActiveRef = useRef(false);
   const bossDefeatedTimer = useRef(0);
   const minimapThrottle = useRef(0);
@@ -482,6 +493,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
             if (e.health <= 0) {
                 e.active = false;
                 const { addExperience } = useGameStore.getState();
+                recordEnemyKill();
 
                 if (e.type === 2) {
                     setBossData({ active: false });
