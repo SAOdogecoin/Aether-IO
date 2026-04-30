@@ -690,39 +690,90 @@ export const GameUI: React.FC = () => {
   return (
     <div className="absolute inset-0 pointer-events-none z-10 font-sans text-slate-800 select-none">
 
-      {/* TOP-RIGHT STAT BAR */}
+      {/* TOP-RIGHT STAT BAR - Modern MMORPG Style */}
       {status === GameStatus.PLAYING && (
-        <div className="absolute top-6 right-6 flex items-start gap-4 pointer-events-auto">
-          {/* Level Square */}
-          <div className="w-16 h-16 rounded-lg flex items-center justify-center" style={{
-            background: 'radial-gradient(circle at 35% 35%, #1e293b, #0a0a12)',
-            border: '2px solid rgba(250,204,21,0.8)',
-            boxShadow: '0 0 8px rgba(250,204,21,0.5)',
-          }}>
-            <span style={{ fontSize: 24, fontWeight: 900, color: '#fde047', lineHeight: 1 }}>LV{level}</span>
+        <div className="absolute top-6 right-6 pointer-events-auto" style={{
+          background: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(20,28,48,0.95) 100%)',
+          border: '2px solid rgba(120,100,70,0.6)',
+          borderRadius: '12px',
+          padding: '16px',
+          boxShadow: '0 0 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(120,100,70,0.1), 0 0 20px rgba(184,134,11,0.2)',
+          minWidth: '280px'
+        }}>
+          <div className="flex items-center gap-3 mb-3">
+            {/* Level Badge */}
+            <div style={{
+              width: 52,
+              height: 52,
+              borderRadius: '8px',
+              background: 'linear-gradient(135deg, rgba(184,134,11,0.3) 0%, rgba(139,100,10,0.2) 100%)',
+              border: '2px solid rgba(184,134,11,0.8)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 0 15px rgba(184,134,11,0.4), inset 0 0 10px rgba(184,134,11,0.1)',
+            }}>
+              <span style={{ fontSize: 20, fontWeight: 900, color: '#fbbf24', textShadow: '0 0 10px rgba(184,134,11,0.8)' }}>LV{level}</span>
+            </div>
+
+            {/* Hero Name */}
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 900, color: '#fbbf24', textShadow: '0 0 8px rgba(184,134,11,0.6)', letterSpacing: '1px' }}>
+                {hero}
+              </div>
+              <div style={{ fontSize: 10, color: '#a0a0a0', fontWeight: 600, letterSpacing: '0.5px' }}>
+                CHARACTER STATS
+              </div>
+            </div>
           </div>
 
-          {/* Stats Container */}
-          <div className="flex flex-col gap-2">
-            {/* Hero Name */}
-            <div style={{ fontSize: 16, fontWeight: 900, color: '#ffffff', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
-              {hero}
+          {/* HP Bar */}
+          <div className="mb-3">
+            <div className="flex items-center justify-between mb-1">
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#f87171', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Health</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: '#a0a0a0' }}>{Math.ceil(health)} / {stats.maxHealth}</span>
             </div>
-
-            {/* HP Bar */}
-            <div className="flex items-center gap-2">
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#ef4444', minWidth: '24px' }}>HP</span>
-              <div style={{ width: 120, height: 12, background: 'rgba(0,0,0,0.7)', borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.8)' }}>
-                <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, (health / stats.maxHealth) * 100))}%`, background: 'linear-gradient(90deg,#b91c1c,#ef4444)', borderRadius: 3, transition: 'width 0.1s' }} />
-              </div>
+            <div style={{
+              width: '100%',
+              height: 16,
+              background: 'linear-gradient(90deg, rgba(0,0,0,0.6) 0%, rgba(30,30,40,0.6) 100%)',
+              borderRadius: 4,
+              overflow: 'hidden',
+              border: '1px solid rgba(120,50,50,0.5)',
+              boxShadow: 'inset 0 0 10px rgba(0,0,0,0.8)'
+            }}>
+              <div style={{
+                height: '100%',
+                width: `${Math.max(0, Math.min(100, (health / stats.maxHealth) * 100))}%`,
+                background: 'linear-gradient(90deg, #dc2626 0%, #ef4444 50%, #f87171 100%)',
+                boxShadow: '0 0 10px rgba(239,68,68,0.6)',
+                transition: 'width 0.15s ease-out'
+              }} />
             </div>
+          </div>
 
-            {/* MP Bar */}
-            <div className="flex items-center gap-2">
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#3b82f6', minWidth: '24px' }}>MP</span>
-              <div style={{ width: 120, height: 12, background: 'rgba(0,0,0,0.7)', borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.8)' }}>
-                <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, (mana / stats.maxMana) * 100))}%`, background: 'linear-gradient(90deg,#1d4ed8,#3b82f6)', borderRadius: 3, transition: 'width 0.1s' }} />
-              </div>
+          {/* MP Bar */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#60a5fa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Mana</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: '#a0a0a0' }}>{Math.ceil(mana)} / {stats.maxMana}</span>
+            </div>
+            <div style={{
+              width: '100%',
+              height: 16,
+              background: 'linear-gradient(90deg, rgba(0,0,0,0.6) 0%, rgba(30,30,40,0.6) 100%)',
+              borderRadius: 4,
+              overflow: 'hidden',
+              border: '1px solid rgba(50,80,150,0.5)',
+              boxShadow: 'inset 0 0 10px rgba(0,0,0,0.8)'
+            }}>
+              <div style={{
+                height: '100%',
+                width: `${Math.max(0, Math.min(100, (mana / stats.maxMana) * 100))}%`,
+                background: 'linear-gradient(90deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%)',
+                boxShadow: '0 0 10px rgba(59,130,246,0.6)',
+                transition: 'width 0.15s ease-out'
+              }} />
             </div>
           </div>
         </div>
