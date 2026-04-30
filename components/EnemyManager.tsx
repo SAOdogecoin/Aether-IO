@@ -35,8 +35,8 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
   const spawnTimer = useRef(0);
   const dotTicker = useRef(0);
   const waveState = useRef({
-      stage: 1,
-      waveIndex: 0,
+      stage: 0,
+      waveIndex: -1,
       normalSpawned: 0,
       eliteSpawned: 0,
       normalMageSpawned: 0,
