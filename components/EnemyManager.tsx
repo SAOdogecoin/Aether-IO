@@ -136,28 +136,25 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                 { normalEnemies: 4, eliteEnemies: 0, normalMages: 1, eliteMages: 0 },
             ]
         } : stageData.stage === 2 ? {
-            totalWaves: 4,
+            totalWaves: 3,
             waves: [
                 { normalEnemies: 4, eliteEnemies: 1, normalMages: 1, eliteMages: 0 },
                 { normalEnemies: 3, eliteEnemies: 2, normalMages: 0, eliteMages: 1 },
                 { normalEnemies: 5, eliteEnemies: 0, normalMages: 1, eliteMages: 0 },
-                { normalEnemies: 2, eliteEnemies: 3, normalMages: 0, eliteMages: 1 },
             ]
         } : stageData.stage === 3 ? {
-            totalWaves: 4,
+            totalWaves: 3,
             waves: [
                 { normalEnemies: 2, eliteEnemies: 3, normalMages: 0, eliteMages: 1 },
                 { normalEnemies: 0, eliteEnemies: 3, normalMages: 0, eliteMages: 1 },
                 { normalEnemies: 3, eliteEnemies: 2, normalMages: 1, eliteMages: 1 },
-                { normalEnemies: 1, eliteEnemies: 4, normalMages: 0, eliteMages: 1 },
             ]
         } : {
-            totalWaves: 4,
+            totalWaves: 3,
             waves: [
                 { normalEnemies: 0, eliteEnemies: 4, normalMages: 1, eliteMages: 1 },
                 { normalEnemies: 1, eliteEnemies: 3, normalMages: 0, eliteMages: 2 },
                 { normalEnemies: 0, eliteEnemies: 5, normalMages: 1, eliteMages: 1 },
-                { normalEnemies: 0, eliteEnemies: 4, normalMages: 0, eliteMages: 2 },
             ]
         };
 

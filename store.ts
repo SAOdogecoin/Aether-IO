@@ -1282,40 +1282,40 @@ export const useGameStore = create<GameState>((set, get) => ({
       const state = get();
       const isLastWaveOfStage = state.stageWaveIndex >= state.stageTotalWaves - 1;
 
-      if (isLastWaveOfStage) {
-          // Last wave of stage - show upgrades and advance to next stage
-          const options = generateUpgradeOptions(state.hero, state.skillLevels);
+      // Generate upgrade options for every wave completion
+      const options = generateUpgradeOptions(state.hero, state.skillLevels);
 
-          options.forEach(opt => {
-              if (opt.type.startsWith('SKILL_')) {
-                  let skillKey: keyof SkillLevels | null = null;
-                  if (opt.type === 'SKILL_ORBITAL') skillKey = 'orbital';
-                  else if (opt.type === 'SKILL_THUNDER') skillKey = 'thunder';
-                  else if (opt.type === 'SKILL_REGEN') skillKey = 'regen';
-                  else if (opt.type === 'SKILL_MAGNET') skillKey = 'magnet';
-                  else if (opt.type === 'SKILL_DASH') skillKey = 'dash';
-                  else if (opt.type === 'SKILL_WEAPON') skillKey = 'weapon';
-                  else if (opt.type === 'SKILL_BARRIER') skillKey = 'barrier';
-                  else if (opt.type === 'SKILL_STORM') skillKey = 'storm';
-                  else if (opt.type === 'SKILL_PIERCING') skillKey = 'piercing';
-                  else if (opt.type === 'SKILL_BURNING') skillKey = 'burning';
-                  else if (opt.type === 'SKILL_FREEZING') skillKey = 'freezing';
-                  else if (opt.type === 'SKILL_GRAVITY') skillKey = 'gravity';
-                  else if (opt.type === 'SKILL_FREEZE_SPELL') skillKey = 'freezeSpell';
-                  else if (opt.type === 'SKILL_RAGE') skillKey = 'rage';
-                  else if (opt.type === 'SKILL_STAMP') skillKey = 'stamp';
+      options.forEach(opt => {
+          if (opt.type.startsWith('SKILL_')) {
+              let skillKey: keyof SkillLevels | null = null;
+              if (opt.type === 'SKILL_ORBITAL') skillKey = 'orbital';
+              else if (opt.type === 'SKILL_THUNDER') skillKey = 'thunder';
+              else if (opt.type === 'SKILL_REGEN') skillKey = 'regen';
+              else if (opt.type === 'SKILL_MAGNET') skillKey = 'magnet';
+              else if (opt.type === 'SKILL_DASH') skillKey = 'dash';
+              else if (opt.type === 'SKILL_WEAPON') skillKey = 'weapon';
+              else if (opt.type === 'SKILL_BARRIER') skillKey = 'barrier';
+              else if (opt.type === 'SKILL_STORM') skillKey = 'storm';
+              else if (opt.type === 'SKILL_PIERCING') skillKey = 'piercing';
+              else if (opt.type === 'SKILL_BURNING') skillKey = 'burning';
+              else if (opt.type === 'SKILL_FREEZING') skillKey = 'freezing';
+              else if (opt.type === 'SKILL_GRAVITY') skillKey = 'gravity';
+              else if (opt.type === 'SKILL_FREEZE_SPELL') skillKey = 'freezeSpell';
+              else if (opt.type === 'SKILL_RAGE') skillKey = 'rage';
+              else if (opt.type === 'SKILL_STAMP') skillKey = 'stamp';
 
-                  if (skillKey) {
-                      const currentLevel = state.skillLevels[skillKey];
-                      if (currentLevel === 0) {
-                          opt.name = `UNLOCK: ${opt.name}`;
-                      }
-                      opt.description = getSkillCardDetails(skillKey, currentLevel, state.stats);
+              if (skillKey) {
+                  const currentLevel = state.skillLevels[skillKey];
+                  if (currentLevel === 0) {
+                      opt.name = `UNLOCK: ${opt.name}`;
                   }
+                  opt.description = getSkillCardDetails(skillKey, currentLevel, state.stats);
               }
-          });
+          }
+      });
 
-          // Mark stage completed and setup for next stage
+      if (isLastWaveOfStage) {
+          // Last wave - advance to next stage after showing upgrades
           get().startStage(state.stage + 1);
           set((s) => ({
               wave: s.wave + 1,
@@ -1325,11 +1325,13 @@ export const useGameStore = create<GameState>((set, get) => ({
               portalActive: false
           }));
       } else {
-          // Just advance to next wave within stage
+          // Mid-stage wave - show upgrades then prepare next wave
           set((s) => ({
               stageWaveIndex: s.stageWaveIndex + 1,
               wave: s.wave + 1,
               waveTimer: 0,
+              status: GameStatusEnum.LEVEL_UP,
+              upgradeOptions: options,
               portalActive: false
           }));
       }
