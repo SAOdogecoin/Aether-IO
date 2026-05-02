@@ -326,7 +326,11 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
     meshRef.current.position.copy(pos);
     setPlayerPosition(pos.clone());
 
-    meshRef.current.lookAt(targetPosRef.current);
+    // Rotate character to face movement direction
+    if (moveDir.lengthSq() > 0) {
+      const targetRotation = Math.atan2(moveDir.x, moveDir.z);
+      meshRef.current.rotation.y = targetRotation;
+    }
 
     const enemyBullets = enemyBulletsDataRef.current;
     if (dashTime.current <= 0) {

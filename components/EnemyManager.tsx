@@ -115,17 +115,6 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
         }
     }
 
-    // Auto-advance wave when all enemies killed (but not last wave)
-    const totalSpawned = waveState.current.normalSpawned + waveState.current.eliteSpawned +
-                        waveState.current.normalMageSpawned + waveState.current.eliteMageSpawned;
-    const totalTarget = waveState.current.normalTarget + waveState.current.eliteTarget +
-                       waveState.current.normalMageTarget + waveState.current.eliteMageTarget;
-    const isLastWave = stageWaveIndex >= stageTotalWaves - 1;
-
-    if (!isLastWave && totalSpawned === totalTarget && totalTarget > 0 && activeEnemyCount === 0 && waveTimer > 0.5) {
-        advanceWave();
-    }
-
     // Initialize wave for new stage
     if (stage !== waveState.current.stage || stageWaveIndex !== waveState.current.waveIndex) {
         waveState.current.stage = stage;
@@ -266,6 +255,12 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
 
             enemy.maxHealth = enemy.health;
         }
+    }
+
+    // Auto-advance wave when all enemies killed (but not last wave)
+    const isLastWave = stageWaveIndex >= stageTotalWaves - 1;
+    if (!isLastWave && totalSpawned === totalTarget && totalTarget > 0 && activeEnemyCount === 0 && waveTimer > 0.5) {
+        advanceWave();
     }
 
     dotTicker.current += delta;
