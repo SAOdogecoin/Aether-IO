@@ -129,8 +129,26 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
               bullet.active = true;
               bullet.lifetime = 8.0;
               bullet.position.copy(pos).add(new Vector3(0, 40, 0)); // Spawn high in sky
-              let aimDir = new Vector3().subVectors(targetPosRef.current, pos).normalize();
-              bullet.velocity.copy(aimDir).multiplyScalar(8); // Reduced horizontal velocity
+
+              // Auto-aim to nearest enemy
+              let aimDir = new Vector3(0, 0, 1); // Default direction
+              if (enemiesDataRef && enemiesDataRef.current) {
+                  let nearestDist = stats.attackRange * 1.5;
+                  let nearestEnemy: Vector3 | null = null;
+                  for (const e of enemiesDataRef.current) {
+                      if (!e.active) continue;
+                      const d = pos.distanceTo(e.position);
+                      if (d < nearestDist) {
+                          nearestDist = d;
+                          nearestEnemy = e.position;
+                      }
+                  }
+                  if (nearestEnemy) {
+                      aimDir = new Vector3().subVectors(nearestEnemy, pos).normalize();
+                  }
+              }
+
+              bullet.velocity.copy(aimDir).multiplyScalar(8); // Horizontal velocity
               bullet.velocity.y = -45; // Strong downward velocity
               bullet.type = 'METEOR';
               bullet.pierce = 50;

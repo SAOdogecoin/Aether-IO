@@ -204,24 +204,25 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
                     if (b.position.y <= 1.0) {
                         b.state = 1; // Switch to rolling
                         b.stateTimer = 0;
-                        // Use current horizontal velocity for rolling, normalize to 15 units/sec
+                        // Use current horizontal velocity for rolling, normalize to 3 units/sec (very slow)
                         const horzVel = new Vector3(b.velocity.x, 0, b.velocity.z);
                         const horzLen = horzVel.length();
                         if (horzLen > 0.1) {
-                            b.velocity.copy(horzVel.normalize().multiplyScalar(15));
+                            b.velocity.copy(horzVel.normalize().multiplyScalar(3));
                         } else {
                             // No horizontal velocity, pick a default direction
-                            b.velocity.set(0, 0, 15);
+                            b.velocity.set(0, 0, 3);
                         }
                         b.rotation = 0;
 
-                        // Impact damage - 2x base damage + shockwave
+                        // Impact damage - 2x base damage + wide shockwave
+                        const shockwaveRadius = 25.0; // Wide shockwave
                         const nearbyIds = grid ? grid.query(b.position.x, b.position.z) : [];
                         const idsToCheck = grid ? nearbyIds : (enemies || []).map((e, idx) => idx);
 
                         for(const id of idsToCheck) {
                             const e = enemies[id];
-                            if (e && e.active && e.position.distanceTo(b.position) < 12.0) {
+                            if (e && e.active && e.position.distanceTo(b.position) < shockwaveRadius) {
                                 const dmg = stats.damage * 2.0 * (b.damageMultiplier || 1); // 2x impact damage
                                 const shockDmg = dmg * 0.5; // 50% shockwave damage
                                 e.health -= (dmg + shockDmg);
@@ -230,6 +231,11 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
                                 }));
                             }
                         }
+
+                        // Emit shockwave visual event
+                        window.dispatchEvent(new CustomEvent('meteor-impact', {
+                            detail: { position: b.position, radius: shockwaveRadius }
+                        }));
                     }
                 } else {
                     // Rolling phase - move horizontally and leave burning trails
