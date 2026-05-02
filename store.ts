@@ -378,14 +378,19 @@ const generateStageSpec = (stage: number): StageSpec => {
       ]
     };
   } else {
-    // Stage 4+: Heavy on elites, multiple mages
-    const waveCount = 4 + Math.floor((stage - 4) * 0.5);
+    // Stage 4+: Heavy on elites, multiple mages - DETERMINISTIC
+    const waveCount = 3; // Keep it simple: 3 waves per stage
     const waves: WaveComposition[] = [];
+
+    // Calculate difficulty scaling
+    const difficulty = Math.min(stage - 3, 5); // Cap at level 5 difficulty
+
     for (let i = 0; i < waveCount; i++) {
-      const eliteCount = Math.floor(Math.random() * 3) + 3 + Math.floor((stage - 4) * 0.5);
-      const normalCount = Math.random() > 0.6 ? Math.floor(Math.random() * 2) : 0;
-      const eliteMageCount = Math.random() > 0.5 ? 1 : 0;
-      const normalMageCount = Math.random() > 0.7 ? 1 : 0;
+      const eliteCount = 3 + difficulty;
+      const normalCount = Math.max(0, 2 - i); // Wave 1: 2 normal, Wave 2: 1 normal, Wave 3: 0
+      const eliteMageCount = i === 1 ? 1 : 0; // Second wave has elite mage
+      const normalMageCount = i === 0 || i === 2 ? 1 : 0; // First and third waves have normal mage
+
       waves.push({
         normalEnemies: normalCount,
         eliteEnemies: eliteCount,

@@ -193,16 +193,26 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
                 }
 
                 if (b.state === 0) {
-                    // Falling phase - apply gravity
-                    if (!b.velocity.y) b.velocity.y = 0;
-                    b.velocity.y -= 20 * delta; // Gravity
+                    // Falling phase - apply gravity, reduce horizontal movement
+                    b.velocity.y -= 35 * delta; // Strong gravity
+                    // Dampen horizontal velocity during fall
+                    b.velocity.x *= 0.85;
+                    b.velocity.z *= 0.85;
                     b.position.add(b.velocity.clone().multiplyScalar(delta));
 
-                    // Check if hit ground (y <= 1 or hit an enemy)
+                    // Check if hit ground (y <= 1)
                     if (b.position.y <= 1.0) {
                         b.state = 1; // Switch to rolling
                         b.stateTimer = 0;
-                        b.velocity.set(b.velocity.x, 0, b.velocity.z).normalize().multiplyScalar(15);
+                        // Use current horizontal velocity for rolling, normalize to 15 units/sec
+                        const horzVel = new Vector3(b.velocity.x, 0, b.velocity.z);
+                        const horzLen = horzVel.length();
+                        if (horzLen > 0.1) {
+                            b.velocity.copy(horzVel.normalize().multiplyScalar(15));
+                        } else {
+                            // No horizontal velocity, pick a default direction
+                            b.velocity.set(0, 0, 15);
+                        }
                         b.rotation = 0;
 
                         // Impact damage - 2x base damage + shockwave
@@ -230,13 +240,15 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
                     // Create burning trail
                     if (b.stateTimer > 0.1) {
                         b.stateTimer = 0;
-                        const trail = trails.find(t => !t.active);
+                        const trail = bullets.current.find(t => !t.active);
                         if (trail) {
                             trail.active = true;
+                            trail.type = 'FIRE_TRAIL';
                             trail.position.copy(b.position);
                             trail.velocity.set(0, 0, 0);
                             trail.lifetime = 2.0;
                             trail.effect = { type: 'BURN', duration: 3, value: stats.damage * 0.4 };
+                            trail.pierce = 9999;
                         }
                     }
                 }

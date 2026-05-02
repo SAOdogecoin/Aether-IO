@@ -124,11 +124,21 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
           const limit = 8 + (skillLevels.gravity * 1);
           spawnBullet('BLACKHOLE', 0, 10.0, { pierce: 99, lifetime: 2.6, trailTimer: 0.1, maxPullCount: limit });
       } else if (ability === 'METEOR') {
-          spawnBullet('METEOR', 15, 2.0, {
-              pierce: 50,
-              lifetime: 8.0,
-              effect: { type: 'BURN', duration: 4, value: stats.damage * 0.5 }
-          });
+          const bullet = bulletsDataRef.current.find(b => !b.active);
+          if (bullet) {
+              bullet.active = true;
+              bullet.lifetime = 8.0;
+              bullet.position.copy(pos).add(new Vector3(0, 40, 0)); // Spawn high in sky
+              let aimDir = new Vector3().subVectors(targetPosRef.current, pos).normalize();
+              bullet.velocity.copy(aimDir).multiplyScalar(8); // Reduced horizontal velocity
+              bullet.velocity.y = -45; // Strong downward velocity
+              bullet.type = 'METEOR';
+              bullet.pierce = 50;
+              bullet.damageMultiplier = 2.0 * stats.skillDamage * 2.0;
+              bullet.hitIds = [];
+              bullet.effect = { type: 'BURN', duration: 4, value: stats.damage * 0.5 };
+              bullet.state = 0;
+          }
       } else if (ability === 'ARROW_RAIN') {
           arrowRainState.current.active = true;
           arrowRainState.current.wavesLeft = 6;
