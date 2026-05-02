@@ -121,12 +121,13 @@ export const SkillManager: React.FC<SkillManagerProps> = ({ enemyBulletsDataRef,
                 burningTimer.current = 0;
                 const baseDir = new Vector3().subVectors(targetPosRef.current, playerPosition).normalize();
                 const damageMult = 0.525;
-                const spread = 0.5;
-                for(let i=-1; i<=1; i++) {
-                    const dir = baseDir.clone().applyAxisAngle(new Vector3(0,1,0), i * spread);
-                    spawnBullet('BURNING_ARROW', 30, damageMult, {
+                const spread = Math.PI * 2 / 6; // 6 arrows spread evenly
+                for(let i=0; i<6; i++) {
+                    const angle = i * spread;
+                    const dir = baseDir.clone().applyAxisAngle(new Vector3(0,1,0), angle);
+                    spawnBullet('POISON_ARROW', 30, damageMult, {
                         pierce: 5,
-                        effect: { type: 'BURN', duration: 4, value: stats.damage * 0.3 }
+                        effect: { type: 'POISON', duration: 4, value: stats.damage * 0.3 }
                     }, dir);
                 }
             } else {
@@ -144,12 +145,13 @@ export const SkillManager: React.FC<SkillManagerProps> = ({ enemyBulletsDataRef,
             if (hasEnemyInRange) {
                 freezingTimer.current = 0;
                 const baseDir = new Vector3().subVectors(targetPosRef.current, playerPosition).normalize();
-                const spread = 0.5;
-                for(let i=-1; i<=1; i++) {
-                    const dir = baseDir.clone().applyAxisAngle(new Vector3(0,1,0), i * spread);
-                    spawnBullet('FREEZING_ARROW', 30, 0.75, {
+                const spread = Math.PI * 2 / 6; // 6 arrows spread evenly
+                for(let i=0; i<6; i++) {
+                    const angle = i * spread;
+                    const dir = baseDir.clone().applyAxisAngle(new Vector3(0,1,0), angle);
+                    spawnBullet('STUN_ARROW', 30, 0.75, {
                         pierce: 5,
-                        effect: { type: 'FREEZE', duration: 1.5 }
+                        effect: { type: 'STUN', duration: 1.5 }
                     }, dir);
                 }
             } else {

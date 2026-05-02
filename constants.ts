@@ -224,8 +224,8 @@ export const ITEMS_POOL: Item[] = [
   // RARE (2 Stats)
   { id: 'staff_rare', name: 'Adept Staff', classType: 'WIZARD', type: 'WEAPON', rarity: 'RARE', price: 600, level: 1, projectileType: 'MAGIC', ability: 'FIREBALL',
     stats: { damage: 25 }, description: 'Balanced magic.' },
-  { id: 'bow_2', name: 'Elven Bow', classType: 'ARCHER', type: 'WEAPON', rarity: 'RARE', price: 600, level: 1, projectileType: 'ARROW', ability: 'ARROW_RAIN', 
-    stats: { damage: 15, fireRate: 0.2 }, onHitEffect: { type: 'POISON', duration: 4, value: 3, chance: 1.0 }, description: 'Poison arrows.' },
+  { id: 'bow_2', name: 'Elven Bow', classType: 'ARCHER', type: 'WEAPON', rarity: 'RARE', price: 600, level: 1, projectileType: 'ARROW', ability: 'ARROW_RAIN',
+    stats: { damage: 15, fireRate: 0.2 }, description: 'Fast bow.' },
   { id: 'axe_2', name: 'Viking Axe', classType: 'BARBARIAN', type: 'WEAPON', rarity: 'RARE', price: 600, level: 1, projectileType: 'AXE', ability: 'AXE_SPIN', 
     stats: { damage: 35, knockback: 1.0 }, onHitEffect: { type: 'STUN', duration: 1.0, chance: 0.25 }, description: 'Stunning blows.' },
 

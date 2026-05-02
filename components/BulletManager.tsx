@@ -262,8 +262,8 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
                         if (b.type === 'MAGIC') hitRadius += 1.0;
                         if (b.type === 'FIREBALL') hitRadius += 2.0; 
                         if (b.type === 'FIRE_TRAIL') hitRadius = e.radius + 1.5; 
-                        if (b.type === 'BURNING_ARROW') hitRadius += 1.5; 
-                        if (b.type === 'FREEZING_ARROW') hitRadius += 1.5; 
+                        if (b.type === 'POISON_ARROW') hitRadius += 1.5; 
+                        if (b.type === 'STUN_ARROW') hitRadius += 1.5; 
                         if (b.type === 'PIERCING_ARROW') hitRadius += 4.0;
                         if (b.type === 'STORM') hitRadius += 4.0;
 
@@ -293,13 +293,13 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
                             }
 
                             let dmgType = 'PHYSICAL';
-                            if (b.type === 'FIREBALL' || b.type === 'BURNING_ARROW' || b.type === ('FIRE_TRAIL' as ProjectileType)) dmgType = 'FIRE';
-                            else if (b.type === 'FREEZING_ARROW' || b.type === 'ICE') dmgType = 'ICE';
+                            if (b.type === 'FIREBALL' || b.type === 'POISON_ARROW' || b.type === ('FIRE_TRAIL' as ProjectileType)) dmgType = 'FIRE';
+                            else if (b.type === 'STUN_ARROW' || b.type === 'ICE') dmgType = 'ICE';
                             else if (b.type === 'MAGIC') dmgType = 'MAGIC';
                             else if (b.type === 'STORM') dmgType = 'MAGIC';
 
                             // AOE Logic
-                            if (b.type === 'MAGIC' || b.type === 'FIREBALL' || b.type === 'BURNING_ARROW' || b.type === 'FREEZING_ARROW' || b.type === ('FIRE_TRAIL' as ProjectileType)) {
+                            if (b.type === 'MAGIC' || b.type === 'FIREBALL' || b.type === 'POISON_ARROW' || b.type === 'STUN_ARROW' || b.type === ('FIRE_TRAIL' as ProjectileType)) {
                                 // For AOE, we can re-query grid or check neighbors of current target
                                 // Simple: Check neighbors of 'e'
                                 const aoeRange = b.type === 'MAGIC' ? 4.0 : 5.0;
@@ -308,15 +308,15 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
                                     const neighbor = enemies[aoeId];
                                     if(neighbor.active && neighbor.id !== e.id && neighbor.position.distanceTo(e.position) < aoeRange) {
                                         neighbor.health -= dmg * 0.5;
-                                        if (b.type === 'BURNING_ARROW') { neighbor.burnTimer = 4.0; neighbor.burnDamage = baseDamage * 0.5; }
-                                        if (b.type === 'FREEZING_ARROW') { neighbor.freezeTimer = 1.5; }
+                                        if (b.type === 'POISON_ARROW') { neighbor.burnTimer = 4.0; neighbor.burnDamage = baseDamage * 0.5; }
+                                        if (b.type === 'STUN_ARROW') { neighbor.freezeTimer = 1.5; }
                                     }
                                 }
                             }
                             
                             // Apply to main target
-                            if (b.type === 'BURNING_ARROW') { e.burnTimer = 4.0; e.burnDamage = baseDamage * 0.5; }
-                            if (b.type === 'FREEZING_ARROW') { e.freezeTimer = 1.5; }
+                            if (b.type === 'POISON_ARROW') { e.burnTimer = 4.0; e.burnDamage = baseDamage * 0.5; }
+                            if (b.type === 'STUN_ARROW') { e.freezeTimer = 1.5; }
                             if (b.type === 'FIREBALL') { e.burnTimer = 3.0; e.burnDamage = 5; }
 
                             e.health -= dmg;
@@ -401,12 +401,12 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
                      dummy.lookAt(lookAtPos);
                      dummy.scale.set(6, 6, 15); 
                      tempColor.set('#0ea5e9');
-                } else if (b.type === 'BURNING_ARROW') {
+                } else if (b.type === 'POISON_ARROW') {
                      const lookAtPos = b.position.clone().add(b.velocity);
                      dummy.lookAt(lookAtPos);
                      dummy.scale.set(3, 3, 3);
                      tempColor.set('#ef4444');
-                } else if (b.type === 'FREEZING_ARROW') {
+                } else if (b.type === 'STUN_ARROW') {
                      const lookAtPos = b.position.clone().add(b.velocity);
                      dummy.lookAt(lookAtPos);
                      dummy.scale.set(3, 3, 3);
@@ -433,7 +433,7 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
   });
 
   const onGeometryUpdate = (geo: BufferGeometry) => {
-      if ((projectileType === 'ARROW' || projectileType === 'PIERCING_ARROW' || projectileType === 'BURNING_ARROW' || projectileType === 'FREEZING_ARROW') && geo) {
+      if ((projectileType === 'ARROW' || projectileType === 'PIERCING_ARROW' || projectileType === 'POISON_ARROW' || projectileType === 'STUN_ARROW') && geo) {
           geo.rotateX(Math.PI / 2); 
       }
   };
