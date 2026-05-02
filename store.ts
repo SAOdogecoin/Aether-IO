@@ -425,35 +425,55 @@ const generateObstacles = (): Obstacle[] => {
         }
     };
 
-    // Boundary trees - form the outer edge of the map shape
-    for(let i=0; i<40; i++) {
+    // Minimal boundary trees - only a few scattered around the edge
+    const boundaryTrees = Math.floor(Math.random() * 3) + 4; // 4-6 trees
+    for(let i=0; i<boundaryTrees; i++) {
         let x, z, angle, dist;
+        let validPlacement = false;
+        let attempts = 0;
+
         do {
             angle = Math.random() * Math.PI * 2;
-            dist = mapBoundary * 0.8 + Math.random() * mapBoundary * 0.4;
+            dist = mapBoundary * 0.7 + Math.random() * mapBoundary * 0.3;
             x = Math.cos(angle) * dist;
             z = Math.sin(angle) * dist;
-        } while(!isPointInBounds(x, z));
 
-        obs.push({
-            id: Math.random(),
-            position: new Vector3(x, 0, z),
-            radius: 1.0,
-            type: 'TREE',
-            scale: 1 + Math.random() * 2
-        });
+            // Check distance from other boundary trees
+            validPlacement = isPointInBounds(x, z) &&
+                obs.filter(o => o.type === 'TREE').every(o => {
+                    const d = new Vector3(x, 0, z).distanceTo(o.position);
+                    return d > 20; // Min 20 units apart
+                });
+            attempts++;
+        } while(!validPlacement && attempts < 20);
+
+        if(validPlacement) {
+            obs.push({
+                id: Math.random(),
+                position: new Vector3(x, 0, z),
+                radius: 1.0,
+                type: 'TREE',
+                scale: 1 + Math.random() * 2
+            });
+        }
     }
 
-    // Inner scattered trees - random placements throughout the map
+    // Minimal inner scattered trees - very few, widely spread
     let innerAttempts = 0;
     let innerCount = 0;
-    while(innerCount < 12 && innerAttempts < 100) {
+    while(innerCount < 3 && innerAttempts < 100) { // Only 3 trees max
         innerAttempts++;
-        const x = (Math.random() - 0.5) * mapBoundary * 2;
-        const z = (Math.random() - 0.5) * mapBoundary * 2;
+        const x = (Math.random() - 0.5) * mapBoundary * 1.8;
+        const z = (Math.random() - 0.5) * mapBoundary * 1.8;
         const distance = Math.sqrt(x*x + z*z);
 
-        if(isPointInBounds(x, z) && distance > 15) {
+        // Check distance from all existing trees
+        const tooClose = obs.filter(o => o.type === 'TREE').some(o => {
+            const d = new Vector3(x, 0, z).distanceTo(o.position);
+            return d < 25; // Min 25 units apart
+        });
+
+        if(isPointInBounds(x, z) && distance > 18 && !tooClose) {
             obs.push({
                 id: Math.random(),
                 position: new Vector3(x, 0, z),
