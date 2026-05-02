@@ -214,7 +214,7 @@ export const ITEMS_POOL: Item[] = [
   { id: 'revive_ankh', name: 'Ankh of Life', type: 'REVIVE', stats: {}, rarity: 'EPIC', price: 2000, level: 1, description: 'Auto-revive on death.' },
 
   // --- WEAPONS (1 Stat Common, 2 Rare, 3 Epic, 4 Leg, 5 Mythic) ---
-  { id: 'staff_1', name: 'Novice Staff', classType: 'WIZARD', type: 'WEAPON', rarity: 'COMMON', price: 100, level: 1, projectileType: 'MAGIC', ability: 'FIREBALL', 
+  { id: 'staff_1', name: 'Novice Staff', classType: 'WIZARD', type: 'WEAPON', rarity: 'COMMON', price: 100, level: 1, projectileType: 'MAGIC', ability: 'METEOR', 
     stats: { damage: 15 }, description: 'Basic magic.' },
   { id: 'bow_1', name: 'Shortbow', classType: 'ARCHER', type: 'WEAPON', rarity: 'COMMON', price: 100, level: 1, projectileType: 'ARROW', ability: 'ARROW_RAIN', 
     stats: { damage: 8 }, description: 'Basic bow.' },
@@ -222,7 +222,7 @@ export const ITEMS_POOL: Item[] = [
     stats: { damage: 18 }, description: 'Basic axe.' },
   
   // RARE (2 Stats)
-  { id: 'staff_rare', name: 'Adept Staff', classType: 'WIZARD', type: 'WEAPON', rarity: 'RARE', price: 600, level: 1, projectileType: 'MAGIC', ability: 'FIREBALL',
+  { id: 'staff_rare', name: 'Adept Staff', classType: 'WIZARD', type: 'WEAPON', rarity: 'RARE', price: 600, level: 1, projectileType: 'MAGIC', ability: 'METEOR',
     stats: { damage: 25 }, description: 'Balanced magic.' },
   { id: 'bow_2', name: 'Elven Bow', classType: 'ARCHER', type: 'WEAPON', rarity: 'RARE', price: 600, level: 1, projectileType: 'ARROW', ability: 'ARROW_RAIN',
     stats: { damage: 15, fireRate: 0.2 }, description: 'Fast bow.' },
@@ -230,7 +230,7 @@ export const ITEMS_POOL: Item[] = [
     stats: { damage: 35, knockback: 1.0 }, onHitEffect: { type: 'STUN', duration: 1.0, chance: 0.25 }, description: 'Stunning blows.' },
 
   // EPIC (3 Stats)
-  { id: 'staff_3', name: 'Inferno Rod', classType: 'WIZARD', type: 'WEAPON', rarity: 'EPIC', price: 1500, level: 1, projectileType: 'MAGIC', ability: 'FIREBALL', 
+  { id: 'staff_3', name: 'Inferno Rod', classType: 'WIZARD', type: 'WEAPON', rarity: 'EPIC', price: 1500, level: 1, projectileType: 'MAGIC', ability: 'METEOR', 
     stats: { damage: 60, critRate: 0.1, skillDamage: 0.2 }, description: 'High Crit Magic.' },
   { id: 'bow_epic', name: 'Composite Bow', classType: 'ARCHER', type: 'WEAPON', rarity: 'EPIC', price: 1500, level: 1, projectileType: 'ARROW', ability: 'ARROW_RAIN', 
     stats: { damage: 30, fireRate: 0.5, critDamage: 0.5 }, description: 'Fast and deadly.' },
@@ -240,13 +240,13 @@ export const ITEMS_POOL: Item[] = [
   // LEGENDARY (4 Stats)
   { id: 'bow_legend', name: 'Windforce', classType: 'ARCHER', type: 'WEAPON', rarity: 'LEGENDARY', price: 3000, level: 1, projectileType: 'ARROW', ability: 'ARROW_RAIN', 
     stats: { damage: 50, fireRate: 1.0, critRate: 0.2, knockback: 2.0 }, onHitEffect: { type: 'SLOW', duration: 3, value: 0.7, chance: 1.0 }, description: 'Knockback king.' },
-  { id: 'staff_legend', name: 'Archon Staff', classType: 'WIZARD', type: 'WEAPON', rarity: 'LEGENDARY', price: 3000, level: 1, projectileType: 'MAGIC', ability: 'FIREBALL',
+  { id: 'staff_legend', name: 'Archon Staff', classType: 'WIZARD', type: 'WEAPON', rarity: 'LEGENDARY', price: 3000, level: 1, projectileType: 'MAGIC', ability: 'METEOR',
     stats: { damage: 120, skillDamage: 0.5, cooldownReduction: 0.1 }, description: 'Spell spam.' },
   { id: 'axe_legend', name: 'World Breaker', classType: 'BARBARIAN', type: 'WEAPON', rarity: 'LEGENDARY', price: 3000, level: 1, projectileType: 'AXE', ability: 'AXE_SPIN', 
     stats: { damage: 150, defense: 30, maxHealth: 50, regen: 2.0 }, description: 'Unstoppable.' }, // HP Halved
 
   // MYTHIC (5 Stats)
-  { id: 'staff_god', name: 'Staff of Aether', classType: 'WIZARD', type: 'WEAPON', rarity: 'MYTHIC', price: 5000, level: 1, projectileType: 'MAGIC', ability: 'FIREBALL', 
+  { id: 'staff_god', name: 'Staff of Aether', classType: 'WIZARD', type: 'WEAPON', rarity: 'MYTHIC', price: 5000, level: 1, projectileType: 'MAGIC', ability: 'METEOR', 
     stats: { damage: 200, critRate: 0.3, critDamage: 1.0, skillDamage: 1.0, cooldownReduction: 0.2 }, description: 'Godly Power' },
   { id: 'bow_god', name: 'Apollo Bow', classType: 'ARCHER', type: 'WEAPON', rarity: 'MYTHIC', price: 5000, level: 1, projectileType: 'ARROW', ability: 'ARROW_RAIN', 
     stats: { damage: 100, fireRate: 2.0, critRate: 0.4, critDamage: 1.0, moveSpeed: 0.5 }, description: 'Rain of Destruction' },

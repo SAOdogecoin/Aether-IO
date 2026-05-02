@@ -185,6 +185,61 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
             } else if (b.type === 'STORM') {
                 b.position.add(b.velocity.clone().multiplyScalar(delta));
                 b.rotation = (b.rotation || 0) + delta * 15; 
+            } else if (b.type === 'METEOR') {
+                // Meteor falls initially then rolls with burning trail
+                if (!b.state) {
+                    b.state = 0; // 0 = falling, 1 = rolling
+                    b.stateTimer = 0;
+                }
+
+                if (b.state === 0) {
+                    // Falling phase - apply gravity
+                    if (!b.velocity.y) b.velocity.y = 0;
+                    b.velocity.y -= 20 * delta; // Gravity
+                    b.position.add(b.velocity.clone().multiplyScalar(delta));
+
+                    // Check if hit ground (y <= 1 or hit an enemy)
+                    if (b.position.y <= 1.0) {
+                        b.state = 1; // Switch to rolling
+                        b.stateTimer = 0;
+                        b.velocity.set(b.velocity.x, 0, b.velocity.z).normalize().multiplyScalar(15);
+                        b.rotation = 0;
+
+                        // Impact damage - 2x base damage + shockwave
+                        const nearbyIds = grid ? grid.query(b.position.x, b.position.z) : [];
+                        const idsToCheck = grid ? nearbyIds : (enemies || []).map((e, idx) => idx);
+
+                        for(const id of idsToCheck) {
+                            const e = enemies[id];
+                            if (e && e.active && e.position.distanceTo(b.position) < 12.0) {
+                                const dmg = stats.damage * 2.0 * (b.damageMultiplier || 1); // 2x impact damage
+                                const shockDmg = dmg * 0.5; // 50% shockwave damage
+                                e.health -= (dmg + shockDmg);
+                                window.dispatchEvent(new CustomEvent('damage', {
+                                    detail: { position: e.position, damage: dmg + shockDmg, isCrit: false, damageType: 'FIRE' }
+                                }));
+                            }
+                        }
+                    }
+                } else {
+                    // Rolling phase - move horizontally and leave burning trails
+                    b.rotation = (b.rotation || 0) + delta * 20;
+                    b.position.add(b.velocity.clone().multiplyScalar(delta));
+                    b.stateTimer += delta;
+
+                    // Create burning trail
+                    if (b.stateTimer > 0.1) {
+                        b.stateTimer = 0;
+                        const trail = trails.find(t => !t.active);
+                        if (trail) {
+                            trail.active = true;
+                            trail.position.copy(b.position);
+                            trail.velocity.set(0, 0, 0);
+                            trail.lifetime = 2.0;
+                            trail.effect = { type: 'BURN', duration: 3, value: stats.damage * 0.4 };
+                        }
+                    }
+                }
             } else if (b.type === ('FIRE_TRAIL' as ProjectileType)) {
                 // Stationary
             } else if (b.type === 'AXE') {
@@ -442,15 +497,18 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
     <instancedMesh key={projectileType} ref={meshRef} args={[undefined, undefined, MAX_BULLETS]} frustumCulled={false}>
       {(projectileType?.includes('ARROW')) && <cylinderGeometry args={[0.05, 0.05, 1.5, 6]} ref={onGeometryUpdate} />}
       {projectileType === 'AXE' && <boxGeometry args={[1, 0.1, 1]} />}
-      {projectileType === 'STORM' && <coneGeometry args={[0.5, 2, 8, 1, true]} />} 
-      {(!projectileType?.includes('ARROW') && projectileType !== 'AXE' && projectileType !== 'STORM') && <dodecahedronGeometry args={[0.3, 0]} />} 
+      {projectileType === 'STORM' && <coneGeometry args={[0.5, 2, 8, 1, true]} />}
+      {projectileType === 'METEOR' && <sphereGeometry args={[0.6, 16, 16]} />}
+      {projectileType === 'BLACKHOLE' && <sphereGeometry args={[0.8, 16, 16]} />}
+      {(!projectileType?.includes('ARROW') && projectileType !== 'AXE' && projectileType !== 'STORM' && projectileType !== 'METEOR' && projectileType !== 'BLACKHOLE') && <dodecahedronGeometry args={[0.3, 0]} />} 
       
-      <meshStandardMaterial 
+      <meshStandardMaterial
         vertexColors
-        emissive={projectileType === 'MAGIC' || projectileType === 'FIRE_TRAIL' || projectileType === 'PIERCING_ARROW' ? (projectileType === 'PIERCING_ARROW' ? '#0ea5e9' : COLORS.bulletPlayer) : '#000'} 
-        emissiveIntensity={projectileType === 'BLACKHOLE' ? 0 : (projectileType === 'MAGIC' || projectileType === 'FIRE_TRAIL' || projectileType === 'PIERCING_ARROW' ? 2 : 0)} 
+        color={projectileType === 'BLACKHOLE' ? '#000000' : (projectileType === 'METEOR' ? '#8B4513' : undefined)}
+        emissive={projectileType === 'METEOR' ? '#FF6B35' : (projectileType === 'MAGIC' || projectileType === 'FIRE_TRAIL' || projectileType === 'PIERCING_ARROW' ? (projectileType === 'PIERCING_ARROW' ? '#0ea5e9' : COLORS.bulletPlayer) : '#000')}
+        emissiveIntensity={projectileType === 'METEOR' ? 0.8 : (projectileType === 'BLACKHOLE' ? 0 : (projectileType === 'MAGIC' || projectileType === 'FIRE_TRAIL' || projectileType === 'PIERCING_ARROW' ? 2 : 0))}
         transparent={true}
-        opacity={projectileType === 'BLACKHOLE' ? 0.9 : (projectileType === 'STORM' ? 0.5 : (projectileType === 'MAGIC' || projectileType === 'FIRE_TRAIL' ? 0.6 : 1.0))}
+        opacity={projectileType === 'BLACKHOLE' ? 1.0 : (projectileType === 'METEOR' ? 0.95 : (projectileType === 'STORM' ? 0.5 : (projectileType === 'MAGIC' || projectileType === 'FIRE_TRAIL' ? 0.6 : 1.0)))}
         depthWrite={projectileType !== 'STORM'}
         side={projectileType === 'STORM' ? 2 : 0}
       />

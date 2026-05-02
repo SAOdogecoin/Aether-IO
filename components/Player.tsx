@@ -123,6 +123,12 @@ export const Player: React.FC<PlayerProps> = ({ bulletsDataRef, enemyBulletsData
       } else if (ability === 'GRAVITY_SPELL') {
           const limit = 8 + (skillLevels.gravity * 1);
           spawnBullet('BLACKHOLE', 0, 10.0, { pierce: 99, lifetime: 2.6, trailTimer: 0.1, maxPullCount: limit });
+      } else if (ability === 'METEOR') {
+          spawnBullet('METEOR', 15, 2.0, {
+              pierce: 50,
+              lifetime: 8.0,
+              effect: { type: 'BURN', duration: 4, value: stats.damage * 0.5 }
+          });
       } else if (ability === 'ARROW_RAIN') {
           arrowRainState.current.active = true;
           arrowRainState.current.wavesLeft = 6;

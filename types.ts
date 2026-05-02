@@ -36,7 +36,7 @@ export interface Upgrade {
   classType?: HeroClass; // Restrict upgrade to class
 }
 
-export type ProjectileType = 'MAGIC' | 'ARROW' | 'AXE' | 'FIREBALL' | 'ICE' | 'FIRE_TRAIL' | 'BLACKHOLE' | 'POISON_ARROW' | 'STUN_ARROW' | 'PIERCING_ARROW' | 'STORM';
+export type ProjectileType = 'MAGIC' | 'ARROW' | 'AXE' | 'FIREBALL' | 'ICE' | 'FIRE_TRAIL' | 'BLACKHOLE' | 'POISON_ARROW' | 'STUN_ARROW' | 'PIERCING_ARROW' | 'STORM' | 'METEOR';
 export type AbilityType = 'METEOR' | 'ARROW_RAIN' | 'AXE_AURA' | 'FIREBALL' | 'AXE_SPIN' | 'NONE' | 'PIERCING_SHOT' | 'FREEZE_SPELL' | 'GRAVITY_SPELL' | 'MEGA_STAMP' | 'RAGE';
 export type ItemType = 'WEAPON' | 'ARMOR' | 'ACCESSORY' | 'POTION' | 'CORE' | 'PET' | 'REVIVE';
 export type StatusEffectType = 'SLOW' | 'BURN' | 'STUN' | 'FREEZE' | 'POISON';
