@@ -97,6 +97,8 @@ interface GameState {
   bossData: BossData;
   activeEnemyCount: number;
 
+  spawnSpeedMultiplier: number;
+
   isInventoryOpen: boolean;
   isShopOpen: boolean;
   isCharacterSheetOpen: boolean;
@@ -169,6 +171,7 @@ interface GameState {
   removeNotification: (id: string) => void;
   handleInventoryFull: () => void;
   setPiercingShotBoostTimer: (duration: number) => void;
+  toggleSpawnSpeed: () => void;
 }
 
 const INITIAL_STATS: PlayerStats = {
@@ -666,7 +669,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   status: GameStatusEnum.MENU,
   hero: 'ARCHER',
   score: 0,
-  accumulatedWaveGold: 0,
+  accumulatedWaveGold: 30000,
   gems: 0,
   level: 1,
   experience: 0,
@@ -690,9 +693,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   
   gameStats: INITIAL_GAME_STATS,
 
-  skillLevels: { 
-      orbital: 0, thunder: 0, regen: 0, magnet: 1, dash: 1, weapon: 1, barrier: 1, storm: 0, special: 0,
-      piercing: 0, burning: 0, freezing: 0, freezeSpell: 0, gravity: 0, stamp: 0, rage: 0
+  skillLevels: {
+      orbital: 10, thunder: 10, regen: 10, magnet: 10, dash: 10, weapon: 10, barrier: 10, storm: 10, special: 10,
+      piercing: 10, burning: 10, freezing: 10, freezeSpell: 10, gravity: 10, stamp: 10, rage: 10
   },
   passiveSkillState: {
       orbitalCooldown: 0, orbitalMaxCooldown: 0.5,
@@ -746,6 +749,8 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   bossData: { active: false, name: '', hp: 0, maxHp: 0 },
   activeEnemyCount: 0,
+
+  spawnSpeedMultiplier: 1,
 
   isInventoryOpen: false,
   isShopOpen: false,
@@ -1646,6 +1651,12 @@ export const useGameStore = create<GameState>((set, get) => ({
   removeNotification: (id) => set(state => ({ notifications: state.notifications.filter(n => n.id !== id) })),
   
   setPiercingShotBoostTimer: (duration) => set({ piercingShotBoostTimer: duration }),
+
+  toggleSpawnSpeed: () => {
+    const state = get();
+    const newMultiplier = state.spawnSpeedMultiplier === 1 ? 2 : 1;
+    set({ spawnSpeedMultiplier: newMultiplier });
+  },
 
   upgradeSkill: (skill) => {
     const state = get();

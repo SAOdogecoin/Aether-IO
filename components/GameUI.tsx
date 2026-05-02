@@ -408,7 +408,7 @@ export const GameUI: React.FC = () => {
     notifications, removeNotification, addNotification, upgradeSkill, toggleCharacterSheet, isCharacterSheetOpen, baseStats, activeAbilityQ, activeAbilityR,
     recycleItem, massRecycle, combineMaterials, craftItem, buyInventorySlots, actionResult, clearActionResult, massSell,
     isCodexOpen, toggleCodex, dashCharges, maxDashCharges, barrierCooldown, shieldCharges, maxShieldCharges,
-    revivingCountdown
+    revivingCountdown, spawnSpeedMultiplier, toggleSpawnSpeed
   } = useGameStore();
 
   const [hoveredItem, setHoveredItem] = useState<Item | null>(null);
@@ -875,6 +875,19 @@ export const GameUI: React.FC = () => {
                  </div>
 
                  <div className="flex items-center gap-2">
+                    <button
+                        onClick={toggleSpawnSpeed}
+                        className="relative w-10 h-10 rounded-lg flex items-center justify-center transition-all hover:bg-white/10"
+                        style={{
+                            background: spawnSpeedMultiplier === 2 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(0,0,0,0.4)',
+                            border: spawnSpeedMultiplier === 2 ? '1px solid rgba(34, 197, 94, 0.5)' : '1px solid rgba(255,255,255,0.1)',
+                            color: spawnSpeedMultiplier === 2 ? '#22c55e' : '#cbd5e1'
+                        }}
+                        title={`Spawn Speed: ${spawnSpeedMultiplier}x`}
+                    >
+                        <Zap size={20} />
+                        <span className="absolute -top-1 -right-1 text-[9px] font-black" style={{ color: spawnSpeedMultiplier === 2 ? '#22c55e' : '#cbd5e1' }}>{spawnSpeedMultiplier}x</span>
+                    </button>
                     {[
                         { id: 'INVENTORY', icon: Backpack, label: 'BAG', action: toggleInventory, dot: hasBetterItem },
                         { id: 'SHOP', icon: ShoppingBag, label: 'SHOP', action: () => openSpecificShop('SUPPLIES'), dot: false },

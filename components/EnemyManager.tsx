@@ -28,7 +28,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
   const meshRef = useRef<InstancedMesh>(null);
   const stunIconsRef = useRef<InstancedMesh>(null);
   const playerPositionRef = useRef<{ x: number; z: number }>({ x: 0, z: 0 });
-  const { playerPosition, addScore, takeDamage, status, level, stats, spawnDrop, wave, waveTimer, advanceWave, addNotification, setBossData, earthwall, updateMinimapEnemies, obstacles, bossData, activatePortal, portalActive, updateActiveEnemyCount, stage, stageWaveIndex, stageTotalWaves, stageEnemiesKilled, stageTotalEnemies, recordEnemyKill } = useGameStore();
+  const { playerPosition, addScore, takeDamage, status, level, stats, spawnDrop, wave, waveTimer, advanceWave, addNotification, setBossData, earthwall, updateMinimapEnemies, obstacles, bossData, activatePortal, portalActive, updateActiveEnemyCount, stage, stageWaveIndex, stageTotalWaves, stageEnemiesKilled, stageTotalEnemies, recordEnemyKill, spawnSpeedMultiplier } = useGameStore();
 
   const enemies = enemiesDataRef;
 
@@ -174,7 +174,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
 
     // Stage-based spawning
     spawnTimer.current += delta;
-    const spawnRate = 0.4; // Spawn rate in seconds
+    const spawnRate = 0.4 / spawnSpeedMultiplier; // Spawn rate in seconds, affected by multiplier
     const totalSpawned = waveState.current.normalSpawned + waveState.current.eliteSpawned +
                         waveState.current.normalMageSpawned + waveState.current.eliteMageSpawned;
     const totalTarget = waveState.current.normalTarget + waveState.current.eliteTarget +
