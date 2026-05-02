@@ -258,8 +258,9 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
     }
 
     // Auto-advance wave when all enemies killed (but not last wave)
+    const currentActiveEnemies = (enemies.current || []).filter(e => e && e.active).length;
     const isLastWave = stageWaveIndex >= stageTotalWaves - 1;
-    if (!isLastWave && totalSpawned === totalTarget && totalTarget > 0 && activeEnemyCount === 0 && waveTimer > 0.5) {
+    if (!isLastWave && totalSpawned === totalTarget && totalTarget > 0 && currentActiveEnemies === 0 && waveTimer > 0.5) {
         advanceWave();
     }
 
