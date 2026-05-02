@@ -419,7 +419,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                 e.bossTimer = (e.bossTimer || 0) + delta;
                 if (e.bossTimer > 5.0) {
                     e.bossTimer = 0;
-                    e.bossPattern = ((e.bossPattern || 0) + 1) % 3;
+                    e.bossPattern = ((e.bossPattern || 0) + 1) % 4;
                 }
 
                 const pattern = e.bossPattern || 0;
@@ -470,6 +470,27 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
                             bullet.velocity.copy(tempVec).multiplyScalar(14 * 1.7);
                         }
                     }
+                }
+                else if (pattern === 3) {
+                    // Charge attack - boss moves aggressively towards player
+                    const chargeDir = new Vector3().subVectors(playerPosition, e.position).normalize();
+                    const chargePos = e.position.clone().add(chargeDir.multiplyScalar(e.speed * 3 * delta));
+
+                    // Check obstacles during charge
+                    let canCharge = true;
+                    for(const obs of obstacles) {
+                        const distToObs = chargePos.distanceTo(obs.position);
+                        if (distToObs < obs.radius + e.radius) {
+                            canCharge = false;
+                            break;
+                        }
+                    }
+
+                    if (canCharge) {
+                        e.position.copy(chargePos);
+                    }
+
+                    // Melee damage during charge (done in general damage section at line 414)
                 }
             }
             else if ((e.type === 3 || e.type === 5 || e.type === 6) && canMove) {
