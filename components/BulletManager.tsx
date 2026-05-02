@@ -465,7 +465,11 @@ export const BulletManager: React.FC<BulletManagerProps & { spatialGrid?: React.
                      const lookAtPos = b.position.clone().add(b.velocity);
                      dummy.lookAt(lookAtPos);
                      dummy.scale.set(3, 3, 3);
-                     tempColor.set('#0ea5e9'); 
+                     tempColor.set('#0ea5e9');
+                } else if (b.type === 'METEOR') {
+                     dummy.rotation.set(b.rotation || 0, (b.rotation || 0) * 0.5, b.rotation || 0);
+                     dummy.scale.set(12, 12, 12);
+                     tempColor.set('#8B4513');
                 } else {
                      const lookAtPos = b.position.clone().add(b.velocity);
                      dummy.lookAt(lookAtPos);

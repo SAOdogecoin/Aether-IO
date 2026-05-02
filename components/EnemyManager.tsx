@@ -126,6 +126,11 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
         waveState.current.eliteMageSpawned = 0;
         waveAdvancedRef.current = false;
 
+        // Clear all enemies when advancing waves to free up slots
+        for (let i = 0; i < enemies.current.length; i++) {
+            enemies.current[i].active = false;
+        }
+
         // Get wave composition from store
         const stageData = useGameStore.getState();
         const stageSpec = stageData.stage === 1 ? {

@@ -458,32 +458,7 @@ const generateObstacles = (): Obstacle[] => {
         }
     }
 
-    // Minimal inner scattered trees - very few, widely spread
-    let innerAttempts = 0;
-    let innerCount = 0;
-    while(innerCount < 3 && innerAttempts < 100) { // Only 3 trees max
-        innerAttempts++;
-        const x = (Math.random() - 0.5) * mapBoundary * 1.8;
-        const z = (Math.random() - 0.5) * mapBoundary * 1.8;
-        const distance = Math.sqrt(x*x + z*z);
-
-        // Check distance from all existing trees
-        const tooClose = obs.filter(o => o.type === 'TREE').some(o => {
-            const d = new Vector3(x, 0, z).distanceTo(o.position);
-            return d < 25; // Min 25 units apart
-        });
-
-        if(isPointInBounds(x, z) && distance > 18 && !tooClose) {
-            obs.push({
-                id: Math.random(),
-                position: new Vector3(x, 0, z),
-                radius: 1.0,
-                type: 'TREE',
-                scale: 1 + Math.random() * 2
-            });
-            innerCount++;
-        }
-    }
+    // No inner trees - keep arena clear for gameplay
 
     // Random rock clusters
     const clusterCount = Math.floor(Math.random() * 3) + 2;
