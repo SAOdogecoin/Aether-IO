@@ -49,6 +49,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
   const bossActiveRef = useRef(false);
   const bossDefeatedTimer = useRef(0);
   const minimapThrottle = useRef(0);
+  const waveAdvancedRef = useRef(false);
   const [stunnedEnemies, setStunnedEnemies] = useState<Array<{id: number; x: number; y: number; z: number}>>([]);
   const [statusEffects, setStatusEffects] = useState<Array<{id: number; x: number; y: number; z: number; effects: string[]}>>([]);
   const stunnedUpdateTimer = useRef(0); 
@@ -123,6 +124,7 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
         waveState.current.eliteSpawned = 0;
         waveState.current.normalMageSpawned = 0;
         waveState.current.eliteMageSpawned = 0;
+        waveAdvancedRef.current = false;
 
         // Get wave composition from store
         const stageData = useGameStore.getState();
@@ -260,7 +262,8 @@ export const EnemyManager: React.FC<EnemyManagerProps> = ({ bulletsDataRef, enem
     // Auto-advance wave when all enemies killed (but not last wave)
     const currentActiveEnemies = (enemies.current || []).filter(e => e && e.active).length;
     const isLastWave = stageWaveIndex >= stageTotalWaves - 1;
-    if (!isLastWave && totalSpawned === totalTarget && totalTarget > 0 && currentActiveEnemies === 0 && waveTimer > 0.5) {
+    if (!waveAdvancedRef.current && !isLastWave && totalSpawned === totalTarget && totalTarget > 0 && currentActiveEnemies === 0) {
+        waveAdvancedRef.current = true;
         advanceWave();
     }
 
